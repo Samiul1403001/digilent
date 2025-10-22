@@ -1,2 +1,0 @@
-matplotlib==3.5.1
-setuptools==58.1.0
