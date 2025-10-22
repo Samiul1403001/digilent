@@ -19,7 +19,7 @@ PIN_TX = 0           # DIO pin used for UART TX (ADP3450 DIO0)
 PIN_RX = 1           # optional RX pin if you want to read back
 BAUDRATE = 115200
 SEND_VALUE = 150
-SEND_INTERVAL = 1.0  # seconds
+SEND_INTERVAL = 5.0  # seconds
 # ------------------------------------------------------
 
 print("Opening ADP3450 device...")
@@ -46,16 +46,12 @@ print(f"UART initialized on DIO{PIN_TX} (TX) @ {BAUDRATE} baud")
 # Main send loop
 try:
     while True:
-        uart.write(dev, SEND_VALUE)   # send single byte 'A'
-        print("sent ", SEND_VALUE)
         data = bytes(uart.read(dev))
         if data:
             # WF_SDK returns a bytes object
-            print("Received:", data.decode('utf-8'))
+            print(data.decode('utf-8'))
+            uart.write(dev, SEND_VALUE)   # send single byte 'A'
         time.sleep(SEND_INTERVAL)
-        uart.write(dev, SEND_VALUE)   # send single byte 'A'
-        print("sent ", SEND_VALUE)
-        time.sleep(SEND_INTERVAL+1)
 except KeyboardInterrupt:
     print("\nStopped by user.")
     uart.close(dev)
