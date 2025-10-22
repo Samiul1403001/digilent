@@ -1,14 +1,14 @@
 """
    DWFConstants (definitions file for DWF library)
    Author:  Digilent, Inc.
-   Revision:  2019-10-15
+   Revision:  2021-12-09
 
    Must install:                       
        Python 2.7 or 3
 """
 
 
-from ctypes import (c_int, c_ubyte)
+from ctypes import *
 
 # device handle
 #HDWF
@@ -16,16 +16,23 @@ hdwfNone = c_int(0)
 
 # device enumeration filters
 enumfilterAll        = c_int(0)
-enumfilterEExplorer  = c_int(1)
-enumfilterDiscovery  = c_int(2)
-enumfilterDiscovery2 = c_int(3)
-enumfilterDDiscovery = c_int(4)
+
+enumfilterType     = c_int(0x8000000)
+enumfilterUSB      = c_int(0x0000001)
+enumfilterNetwork  = c_int(0x0000002)
+enumfilterAXI      = c_int(0x0000004)
+enumfilterRemote   = c_int(0x1000000)
+enumfilterAudio    = c_int(0x2000000)
+enumfilterDemo     = c_int(0x4000000)
 
 # device ID
 devidEExplorer   = c_int(1)
 devidDiscovery   = c_int(2)
 devidDiscovery2  = c_int(3)
 devidDDiscovery  = c_int(4)
+devidADP3X50     = c_int(6)
+devidADP5250     = c_int(8)
+devidDPS3340     = c_int(9)
 
 # device version
 devverEExplorerC   = c_int(2)
@@ -53,6 +60,7 @@ trigsrcExternal3            = c_ubyte(13)
 trigsrcExternal4            = c_ubyte(14)
 trigsrcHigh                 = c_ubyte(15)
 trigsrcLow                  = c_ubyte(16)
+trigsrcClock                = c_ubyte(17)
 
 # instrument states
 DwfStateReady        = c_ubyte(0)
@@ -62,6 +70,7 @@ DwfStateArmed        = c_ubyte(1)
 DwfStateWait         = c_ubyte(7)
 DwfStateTriggered    = c_ubyte(3)
 DwfStateRunning      = c_ubyte(3)
+DwfStateNotDone      = c_ubyte(6)
 DwfStateDone         = c_ubyte(2)
 
 # DwfEnumConfigInfo
@@ -93,6 +102,7 @@ filterMinMax   = c_int(2)
 trigtypeEdge         = c_int(0)
 trigtypePulse        = c_int(1)
 trigtypeTransition   = c_int(2)
+trigtypeWindow       = c_int(3)
 
 # trigger slope:
 DwfTriggerSlopeRise   = c_int(0)
@@ -127,6 +137,8 @@ funcNoise    = c_ubyte(6)
 funcPulse    = c_ubyte(7)
 funcTrapezium= c_ubyte(8)
 funcSinePower= c_ubyte(9)
+funcCustomPattern   = c_ubyte(28)
+funcPlayPattern     = c_ubyte(29)
 funcCustom   = c_ubyte(30)
 funcPlay     = c_ubyte(31)
 
@@ -136,6 +148,23 @@ analogioVoltage     = c_ubyte(2)
 analogioCurrent     = c_ubyte(3)
 analogioPower       = c_ubyte(4)
 analogioTemperature	= c_ubyte(5)
+analogioDmm	        = c_ubyte(6)
+analogioRange	    = c_ubyte(7)
+analogioMeasure	    = c_ubyte(8)
+analogioTime	    = c_ubyte(9)
+analogioFrequency	= c_ubyte(10)
+analogioResistance	= c_ubyte(11)
+
+DwfDmmResistance     = c_double(1)
+DwfDmmContinuity     = c_double(2)
+DwfDmmDiode          = c_double(3)
+DwfDmmDCVoltage      = c_double(4)
+DwfDmmACVoltage      = c_double(5)
+DwfDmmDCCurrent      = c_double(6)
+DwfDmmACCurrent      = c_double(7)
+DwfDmmDCLowCurrent   = c_double(8)
+DwfDmmACLowCurrent   = c_double(9)
+DwfDmmTemperature    = c_double(10)
 
 AnalogOutNodeCarrier  = c_int(0)
 AnalogOutNodeFM       = c_int(1)
@@ -144,6 +173,7 @@ AnalogOutNodeAM       = c_int(2)
 DwfAnalogOutIdleDisable  = c_int(0)
 DwfAnalogOutIdleOffset   = c_int(1)
 DwfAnalogOutIdleInitial  = c_int(2)
+DwfAnalogOutIdleHold     = c_int(3)
 
 DwfDigitalInClockSourceInternal = c_int(0)
 DwfDigitalInClockSourceExternal = c_int(1)
@@ -170,26 +200,64 @@ DwfDigitalOutIdleLow      = c_int(1)
 DwfDigitalOutIdleHigh     = c_int(2)
 DwfDigitalOutIdleZet      = c_int(3)
 
-DwfAnalogImpedanceImpedance = c_int(0)
-DwfAnalogImpedanceImpedancePhase = c_int(1)
-DwfAnalogImpedanceResistance = c_int(2)
-DwfAnalogImpedanceReactance = c_int(3)
-DwfAnalogImpedanceAdmittance = c_int(4)
-DwfAnalogImpedanceAdmittancePhase = c_int(5)
-DwfAnalogImpedanceConductance = c_int(6)
-DwfAnalogImpedanceSusceptance = c_int(7)
-DwfAnalogImpedanceSeriesCapactance = c_int(8)
+DwfAnalogImpedanceImpedance         = c_int(0)
+DwfAnalogImpedanceImpedancePhase    = c_int(1)
+DwfAnalogImpedanceResistance        = c_int(2)
+DwfAnalogImpedanceReactance         = c_int(3)
+DwfAnalogImpedanceAdmittance        = c_int(4)
+DwfAnalogImpedanceAdmittancePhase   = c_int(5)
+DwfAnalogImpedanceConductance       = c_int(6)
+DwfAnalogImpedanceSusceptance       = c_int(7)
+DwfAnalogImpedanceSeriesCapacitance = c_int(8)
 DwfAnalogImpedanceParallelCapacitance = c_int(9)
-DwfAnalogImpedanceSeriesInductance = c_int(10)
+DwfAnalogImpedanceSeriesInductance  = c_int(10)
 DwfAnalogImpedanceParallelInductance = c_int(11)
-DwfAnalogImpedanceDissipation = c_int(12)
-DwfAnalogImpedanceQuality = c_int(13)
+DwfAnalogImpedanceDissipation       = c_int(12)
+DwfAnalogImpedanceQuality           = c_int(13)
+DwfAnalogImpedanceVrms              = c_int(14)
+DwfAnalogImpedanceVreal             = c_int(15)
+DwfAnalogImpedanceVimag             = c_int(16)
+DwfAnalogImpedanceIrms              = c_int(17)
+DwfAnalogImpedanceIreal             = c_int(18)
+DwfAnalogImpedanceIimag             = c_int(19)
 
-DwfParamUsbPower = c_int(2) # 1 keep the USB power enabled even when AUX is connected, Analog Discovery 2
-DwfParamLedBrightness = c_int(3) # LED brightness 0 ... 100%, Digital Discovery
-DwfParamOnClose = c_int(4) # 0 continue, 1 stop, 2 shutdown
-DwfParamAudioOut = c_int(5) # 0 disable / 1 enable audio output, Analog Discovery 1, 2
-DwfParamUsbLimit = c_int(6) # 0..1000 mA USB power limit, -1 no limit, Analog Discovery 1, 2
+DwfParamUsbPower        = c_int(2) # 1 keep the USB power enabled even when AUX is connected, Analog Discovery 2
+DwfParamLedBrightness   = c_int(3) # LED brightness 0 ... 100%, Digital Discovery
+DwfParamOnClose         = c_int(4) # 0 continue, 1 stop, 2 shutdown
+DwfParamAudioOut        = c_int(5) # 0 disable / 1 enable audio output, Analog Discovery 1, 2
+DwfParamUsbLimit        = c_int(6) # 0..1000 mA USB power limit, -1 no limit, Analog Discovery 1, 2
+DwfParamAnalogOut       = c_int(7) # 0 disable / 1 enable
+DwfParamFrequency       = c_int(8) # Hz
+DwfParamExtFreq         = c_int(9) # Hz
+DwfParamClockMode       = c_int(10) # 0 internal, 1 output, 2 input, 3 IO
+
+DwfWindowRectangular    = c_int(0)
+DwfWindowTriangular     = c_int(1)
+DwfWindowHamming        = c_int(2)
+DwfWindowHann           = c_int(3)
+DwfWindowCosine         = c_int(4)
+DwfWindowBlackmanHarris = c_int(5)
+DwfWindowFlatTop        = c_int(6)
+DwfWindowKaiser         = c_int(7)
+DwfWindowBlackman       = c_int(8)
+
+DwfAnalogCouplingDC     = c_int(0)
+DwfAnalogCouplingAC     = c_int(1)
+
+DwfFiirWindow         = c_int(0)
+DwfFiirFir            = c_int(1)
+DwfFiirIirButterworth = c_int(2)
+DwfFiirIirChebyshev   = c_int(3)
+
+DwfFiirLowPass    = c_int(0)
+DwfFiirHighPass   = c_int(1)
+DwfFiirBandPass   = c_int(2)
+DwfFiirBandStop   = c_int(3)
+
+DwfFiirRaw      = c_int(0)
+DwfFiirDecimate = c_int(1)
+DwfFiirAverage  = c_int(2)
+
 
 # obsolate
 #STS
@@ -208,4 +276,11 @@ stsStop		= c_ubyte(10)
 #TRIGCOND
 trigcondRisingPositive   = c_int(0)
 trigcondFallingNegative  = c_int(1)
+
+#use deiceid
+enumfilterEExplorer  = c_int(1)
+enumfilterDiscovery  = c_int(2)
+enumfilterDiscovery2 = c_int(3)
+enumfilterDDiscovery = c_int(4)
+
 
