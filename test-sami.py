@@ -48,10 +48,10 @@ try:
     while True:
         # uart.write(dev, b"A")   # send single byte 'A'
         # print("sent 'A'")
-        data = uart.read(dev)
+        data = bytes(uart.read(dev))
         if data:
             # WF_SDK returns a bytes object
-            print("Received:", data)
+            print("Received:", data.decode('utf-8'))
         time.sleep(SEND_INTERVAL)
 except KeyboardInterrupt:
     print("\nStopped by user.")
