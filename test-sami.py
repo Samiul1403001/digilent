@@ -30,7 +30,7 @@ try:
     while True:
         message = str(SEND_VALUE) + "\n"
         if isinstance(message, str):
-            data = message.encode("ascii")
+            data = message.encode("utf-8")
         else:
             data = message
         uart.write(dev, data)
