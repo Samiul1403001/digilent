@@ -46,11 +46,11 @@ print(f"UART initialized on DIO{PIN_TX} (TX) @ {BAUDRATE} baud")
 # Main send loop
 try:
     while True:
-        data = bytes(uart.read(dev))
-        if data:
-            # WF_SDK returns a bytes object
-            print(data.decode('utf-8'))
-            uart.write(dev, SEND_VALUE)   # send single byte 'A'
+        # data = bytes(uart.read(dev))
+        # if data:
+        #     # WF_SDK returns a bytes object
+        #     print(data.decode('utf-8'))
+        uart.write(dev, SEND_VALUE)   # send single byte 'A'
         time.sleep(SEND_INTERVAL)
 except KeyboardInterrupt:
     print("\nStopped by user.")
