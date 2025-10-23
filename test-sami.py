@@ -29,7 +29,11 @@ print(f"UART initialized on DIO{PIN_TX} (TX) @ {BAUDRATE} baud")
 try:
     while True:
         message = str(SEND_VALUE) + "\n"
-        uart.write(dev, message.encode())
+        if isinstance(message, str):
+            data = message.encode("ascii")
+        else:
+            data = message
+        uart.write(dev, data)
         print(f"Sent: {message.strip()}")
         time.sleep(SEND_INTERVAL)
 except KeyboardInterrupt:
