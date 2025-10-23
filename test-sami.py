@@ -15,9 +15,11 @@ uart.open(device_data=dev, tx=PIN_TX, rx=PIN_RX, baud_rate=BAUDRATE,
 
 try:
     while True:
-        uart.write(dev, b"A")   # send single byte 'A'
-        print("sent 'A'")
-        time.sleep(1.0)
+        data = bytes(uart.read(dev))
+        print(data.decode("utf-8"))
+        uart.write(dev, b"Ahmed Bakr")   # send single byte 'A'
+        print("sent 'AB'")
+        time.sleep(5.0)
 except KeyboardInterrupt:
     print("Disconnecting device...")
     uart.close(dev)
