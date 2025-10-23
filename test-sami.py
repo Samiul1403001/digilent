@@ -4,7 +4,7 @@ from WF_SDK.protocol import uart
 
 def sendStringUART(dev, section):
     i = 0
-    while section[i] != "\n":
+    while section[i] != "~":
         uart.write(dev, section[i])
         i += 1
 
@@ -34,7 +34,7 @@ print(f"UART initialized on DIO{PIN_TX} (TX) @ {BAUDRATE} baud")
 # Main send loop
 try:
     while True:
-        msg = str(SEND_VALUE) + "\n"
+        msg = str(SEND_VALUE) + "~"
         sendStringUART(dev, msg)
         print(f"Sent: {msg.strip()}")
         time.sleep(SEND_INTERVAL)
