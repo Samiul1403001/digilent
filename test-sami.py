@@ -2,6 +2,12 @@ import time
 from WF_SDK import device
 from WF_SDK.protocol import uart
 
+def sendStringUART(dev, section):
+    i = 0
+    while section[i] != "\n":
+        uart.write(dev, section[i])
+        i += 1
+
 # ------------------- USER SETTINGS -------------------
 PIN_TX = 0           # DIO pin used for UART TX (ADP3450 DIO0)
 PIN_RX = 1           # optional RX pin if you want to read back
@@ -28,13 +34,9 @@ print(f"UART initialized on DIO{PIN_TX} (TX) @ {BAUDRATE} baud")
 # Main send loop
 try:
     while True:
-        message = str(SEND_VALUE) + "\n"
-        if isinstance(message, str):
-            data = message.encode("utf-8")
-        else:
-            data = message
-        uart.write(dev, data)
-        print(f"Sent: {message.strip()}")
+        msg = str(SEND_VALUE) + "\n"
+        sendStringUART(dev, msg)
+        print(f"Sent: {msg.strip()}")
         time.sleep(SEND_INTERVAL)
 except KeyboardInterrupt:
     print("\nStopped by user.")
