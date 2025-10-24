@@ -7,7 +7,7 @@ def sendStringUART(dev, section):
     while section[i] != "~":
         uart.write(dev, section[i])
         i += 1
-    uart.write(dev, section[i])
+    # uart.write(dev, section[i])
 
 # ------------------- USER SETTINGS -------------------
 PIN_TX = 0           # DIO pin used for UART TX (ADP3450 DIO0)
@@ -36,7 +36,7 @@ print(f"UART initialized on DIO{PIN_TX} (TX) @ {BAUDRATE} baud")
 try:
     while CMD != "end":
         CMD = input("\nEnter desired frequency: ")
-        msg = CMD
+        msg = CMD + "~"
         sendStringUART(dev, msg)
         time.sleep(1)
         RES = bytes(uart.read(dev))
