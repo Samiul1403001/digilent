@@ -39,10 +39,12 @@ try:
         sendStringUART(dev, msg)
         time.sleep(1)
         RES = bytes(uart.read(dev))
-        while str(RES) != "Done":
+        while RES:
             if str(RES) == "Received":
                 print(f"\nMeasuring EIS at {CMD.strip()} Hz...")
                 time.sleep(1)
+            elif str(RES) == "Done":
+                break
             RES = bytes(uart.read(dev))
         print(f"\n\nDone measuring EIS at {CMD.strip()} Hz! Going for the next one...\n")
         time.sleep(3)
