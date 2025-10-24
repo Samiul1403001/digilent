@@ -33,19 +33,35 @@ print(f"UART initialized on DIO{PIN_TX} (TX) @ {BAUDRATE} baud")
 
 # Main send loop
 try:
-    while CMD != "end":
-        CMD = input("\nEnter desired frequency: ")
-        msg = CMD + "~"
-        sendStringUART(dev, msg)
-        time.sleep(1)
-        RES = bytes(uart.read(dev))
-        while RES.decode("utf-8") != "Done":
-            if RES.decode("utf-8") == "Received":
-                print(f"\nMeasuring EIS at {CMD.strip()} Hz...")
-                time.sleep(1)
-            RES = bytes(uart.read(dev))
-        print(f"\n\nDone measuring EIS at {CMD.strip()} Hz! Going for the next one...\n")
-        time.sleep(3)
+    # while CMD != "end":
+    #     CMD = input("\nEnter desired frequency: ")
+    #     msg = CMD + "~"
+    #     sendStringUART(dev, msg)
+    #     time.sleep(1)
+    #     RES = bytes(uart.read(dev))
+    #     while RES.decode("utf-8") != "Done":
+    #         if RES.decode("utf-8") == "Received":
+    #             print(f"\nMeasuring EIS at {CMD.strip()} Hz...")
+    #             time.sleep(1)
+    #         RES = bytes(uart.read(dev))
+    #     print(f"\n\nDone measuring EIS at {CMD.strip()} Hz! Going for the next one...\n")
+    #     time.sleep(3)
+    while True:
+        # Try reading up to 100 bytes (adjust buffer size as needed)
+        data = bytes(uart.read(dev))
+
+        if data:
+            try:
+                # Try decoding bytes into readable text
+                message = data.decode("utf-8").strip()
+            except:
+                # If decoding fails, show raw bytes
+                message = str(data)
+
+            print("Received:", message)
+
+        time.sleep(0.1)
+
 
 except KeyboardInterrupt:
     print("\nStopped by user.")
