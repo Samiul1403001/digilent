@@ -33,7 +33,7 @@ print(f"UART initialized on DIO{PIN_TX} (TX) @ {BAUDRATE} baud")
 
 # Main send loop
 try:
-    while CMD == "end":
+    while CMD != "end":
         CMD = input("\nEnter desired frequency: ")
         msg = CMD + "~"
         sendStringUART(dev, msg)
