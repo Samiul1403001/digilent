@@ -7,6 +7,7 @@ def sendStringUART(dev, section):
     while section[i] != "~":
         uart.write(dev, section[i])
         i += 1
+    uart.write(dev, section[i])
 
 # ------------------- USER SETTINGS -------------------
 PIN_TX = 0           # DIO pin used for UART TX (ADP3450 DIO0)
