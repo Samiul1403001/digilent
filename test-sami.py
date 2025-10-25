@@ -44,6 +44,7 @@ try:
         time.sleep(1)
         while True:
             RES = bytes(uart.read(dev))
+            print(RES.decode("utf-8"))
             if str(RES) == "Received":
                 print(f"\nMeasuring EIS at {CMD.strip()} Hz...")
                 time.sleep(3)
