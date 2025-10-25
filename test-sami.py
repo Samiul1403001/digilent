@@ -45,10 +45,10 @@ try:
         while True:
             RES = bytes(uart.read(dev))
             print(RES.decode("utf-8"))
-            if str(RES) == "Received":
+            if RES.decode("utf-8") == "Received":
                 print(f"\nMeasuring EIS at {CMD.strip()} Hz...")
                 time.sleep(3)
-            elif str(RES) == "Done":
+            elif RES.decode("utf-8") == "Done":
                 break
             time.sleep(1)
         print(f"\n\nDone measuring EIS at {CMD.strip()} Hz! Going for the next one...\n")
