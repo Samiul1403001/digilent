@@ -8,7 +8,7 @@ def sendStringUART(dev, section):
         if i < len(section):
             uart.write(dev, section[i])
         else:
-            uart.write(dev, "")
+            uart.write(dev, "\0")
         i += 1
     # uart.write(dev, section[i])
 
