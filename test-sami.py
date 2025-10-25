@@ -50,6 +50,7 @@ try:
                 time.sleep(3)
             elif str(RES) == "Done":
                 break
+            time.sleep(1)
         print(f"\n\nDone measuring EIS at {CMD.strip()} Hz! Going for the next one...\n")
         time.sleep(1)
 
