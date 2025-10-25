@@ -4,8 +4,11 @@ from WF_SDK.protocol import uart
 
 def sendStringUART(dev, section):
     i = 0
-    while section[i] != "~":
-        uart.write(dev, section[i])
+    while i < 8:
+        if i < len(section):
+            uart.write(dev, section[i])
+        else:
+            uart.write(dev, "")
         i += 1
     # uart.write(dev, section[i])
 
@@ -36,7 +39,7 @@ print(f"UART initialized on DIO{PIN_TX} (TX) @ {BAUDRATE} baud")
 try:
     while CMD != "end":
         CMD = input("\nEnter desired frequency: ")
-        msg = CMD + "~"
+        msg = CMD
         sendStringUART(dev, msg)
         time.sleep(1)
         RES = bytes(uart.read(dev))
