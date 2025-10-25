@@ -42,16 +42,15 @@ try:
         msg = CMD
         sendStringUART(dev, msg)
         time.sleep(1)
-        RES = bytes(uart.read(dev))
-        while RES:
+        while True:
+            RES = bytes(uart.read(dev))
             if str(RES) == "Received":
                 print(f"\nMeasuring EIS at {CMD.strip()} Hz...")
-                time.sleep(1)
+                time.sleep(3)
             elif str(RES) == "Done":
                 break
-            RES = bytes(uart.read(dev))
         print(f"\n\nDone measuring EIS at {CMD.strip()} Hz! Going for the next one...\n")
-        time.sleep(3)
+        time.sleep(1)
 
 except KeyboardInterrupt:
     print("\nStopped by user.")
