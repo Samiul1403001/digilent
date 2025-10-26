@@ -54,17 +54,27 @@ try:
                 # initialize the scope with default settings
                 # choose sensible values
                 samp_freq = 1e6       # 1 MHz sampling
-                buf_size = int(samp_freq/float(CMD)) if max_buf*.8 >= int(samp_freq/float(CMD)) else int(max_buf*.8)
+                buf_size = int(samp_freq/float(CMD)) if max_buf*.8 >= int(samp_freq/float(CMD)) else int(max_buf*.5)
                 scope.open(dev, sampling_frequency=samp_freq, buffer_size=buf_size, offset=0, amplitude_range=5)
                 sleep(1)
 
-                current = scope.record(dev, channel=1)
-                volt_1 = scope.record(dev, channel=2)
+                if int(samp_freq/float(CMD)) == buf_size:
+                    current = scope.record(dev, channel=1)
+                    volt_1 = scope.record(dev, channel=2)
+                else:
+                    current = []
+                    volt_1 = []
+                    buf_count = int(int(samp_freq/float(CMD)) / buf_size)
+                    while buf_count >= 0:
+                        current = current + scope.record(dev, channel=1)
+                        volt_1 = current + scope.record(dev, channel=2)
+                        buf_count -= 1
+
 
                 # generate buffer for time moments
                 # for index in range(len(current)):
                 #     time.append(index * 1e03 / scope.data.sampling_frequency)
-                print("Buffer size: ", buf_size, "samples")
+                print("Buffer size: ", len(current), "samples")
                 sleep(1)
             RES = bytes(uart.read(dev))
             if mainloop == True:
