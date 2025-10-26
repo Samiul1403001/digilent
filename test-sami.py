@@ -45,11 +45,11 @@ try:
         while True:
             mainloop = False
             RES = bytes(uart.read(dev))
-            if RES.decode("utf-8") == "Received":
+            if RES.decode("utf-16") == "Received":
                 mainloop = True
                 time = []
                 print(f"\nMeasuring EIS at {CMD.strip()} Hz...")
-                while RES.decode("utf-8") != "Done":
+                while RES.decode("utf-16") != "Done":
                     # initialize the scope with default settings
                     # choose sensible values
                     # samp_freq = 1e6       # 1 MHz sampling
