@@ -50,17 +50,17 @@ try:
                 while RES.decode("utf-8") != "Done":
                     print(f"\nMeasuring EIS at {CMD.strip()} Hz...")
                     # initialize the scope with default settings
-                    scope.open(dev)
-                    scope.trigger(dev, enable=True, source=scope.trigger_source.analog, channel=1, level=0)
-                    scope.trigger(dev, enable=True, source=scope.trigger_source.analog, channel=2, level=0)
-                    sleep(1)
+                    # scope.open(dev)
+                    # scope.trigger(dev, enable=True, source=scope.trigger_source.analog, channel=1, level=0)
+                    # scope.trigger(dev, enable=True, source=scope.trigger_source.analog, channel=2, level=0)
+                    # sleep(1)
 
-                    current = scope.record(dev, channel=1)
-                    volt_1 = scope.record(dev, channel=2)
+                    # current = scope.record(dev, channel=1)
+                    # volt_1 = scope.record(dev, channel=2)
 
                     # generate buffer for time moments
-                    for index in range(len(current)):
-                        time.append(index * 1e03 / scope.data.sampling_frequency)
+                    # for index in range(len(current)):
+                    #     time.append(index * 1e03 / scope.data.sampling_frequency)
                     print("current values: ", current)
                     sleep(1)
                     RES = bytes(uart.read(dev))
