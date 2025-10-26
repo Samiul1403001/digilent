@@ -54,16 +54,16 @@ try:
                     # choose sensible values
                     # samp_freq = 1e6       # 1 MHz sampling
                     # buf_size = 5
-                    scope.open(dev)
-                    sleep(1)
+                    # scope.open(dev)
+                    # sleep(1)
 
-                    current = scope.record(dev, channel=1)
-                    volt_1 = scope.record(dev, channel=2)
+                    # current = scope.record(dev, channel=1)
+                    # volt_1 = scope.record(dev, channel=2)
 
                     # generate buffer for time moments
                     # for index in range(len(current)):
                     #     time.append(index * 1e03 / scope.data.sampling_frequency)
-                    print("current value: ", current, "A")
+                    # print("current value: ", current, "A")
                     sleep(1)
                     RES = bytes(uart.read(dev))
             if mainloop == True:
