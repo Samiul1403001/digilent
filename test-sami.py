@@ -53,29 +53,19 @@ try:
                 print(f"\nMeasuring EIS at {CMD.strip()} Hz...")
                 # initialize the scope with default settings
                 # choose sensible values
-                samp_freq = 1e6       # 1 MHz sampling
-                buf_size = int(samp_freq/float(CMD)) if max_buf*.8 >= int(samp_freq/float(CMD)) else int(max_buf*.5)
+                samp_freq = int(100*float(CMD))       # 1 MHz sampling
+                buf_size = 1000
                 scope.open(dev, sampling_frequency=samp_freq, buffer_size=buf_size, offset=0, amplitude_range=5)
                 sleep(1)
 
-                if int(samp_freq/float(CMD)) == buf_size:
-                    current = scope.record(dev, channel=1)
-                    volt_1 = scope.record(dev, channel=2)
-                else:
-                    current = []
-                    volt_1 = []
-                    buf_count = int(int(samp_freq/float(CMD)) / buf_size)
-                    while buf_count >= 0:
-                        current = current + scope.record(dev, channel=1)
-                        volt_1 = current + scope.record(dev, channel=2)
-                        buf_count -= 1
-
+                current = scope.record(dev, channel=1)
+                volt_1 = scope.record(dev, channel=2)
 
                 # generate buffer for time moments
                 # for index in range(len(current)):
                 #     time.append(index * 1e03 / scope.data.sampling_frequency)
                 print("Buffer size: ", len(current), "samples")
-                sleep(1)
+                sleep(.5)
             RES = bytes(uart.read(dev))
             if mainloop == True:
                 scope.close(dev)
