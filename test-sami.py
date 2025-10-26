@@ -53,7 +53,7 @@ try:
                     # initialize the scope with default settings
                     # choose sensible values
                     samp_freq = 1e6       # 1 MHz sampling
-                    buf_size = 5
+                    buf_size = int(samp_freq/float(CMD))
                     scope.open(dev, sampling_frequency=samp_freq, buffer_size=buf_size, offset=0, amplitude_range=5)
                     sleep(1)
 
@@ -63,8 +63,7 @@ try:
                     # generate buffer for time moments
                     # for index in range(len(current)):
                     #     time.append(index * 1e03 / scope.data.sampling_frequency)
-                    print("Current value: ", current, "A\n")
-                    print("Voltage value: ", current, "V\n")
+                    print("Buffer size: ", buf_size, "samples")
                     sleep(1)
                     RES = bytes(uart.read(dev))
             if mainloop == True:
