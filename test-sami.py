@@ -43,6 +43,7 @@ try:
         sendStringUART(dev, msg)
         sleep(1)
         while True:
+            mainloop = False
             RES = bytes(uart.read(dev))
             if RES.decode("utf-8") == "Received":
                 mainloop = True
@@ -51,9 +52,9 @@ try:
                 while RES.decode("utf-8") != "Done":
                     # initialize the scope with default settings
                     # choose sensible values
-                    samp_freq = 1e6       # 1 MHz sampling
-                    buf_size = 5
-                    scope.open(dev, sampling_frequency=samp_freq, buffer_size=buf_size, offset=0, amplitude_range=5)
+                    # samp_freq = 1e6       # 1 MHz sampling
+                    # buf_size = 5
+                    scope.open(dev)
                     sleep(1)
 
                     current = scope.record(dev, channel=1)
