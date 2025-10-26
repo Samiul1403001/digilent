@@ -54,7 +54,7 @@ try:
                 # initialize the scope with default settings
                 # choose sensible values
                 samp_freq = int(100*float(CMD))       # 1 MHz sampling
-                buf_size = 1000
+                buf_size = 300
                 scope.open(dev, sampling_frequency=samp_freq, buffer_size=buf_size, offset=0, amplitude_range=5)
                 sleep(1)
 
