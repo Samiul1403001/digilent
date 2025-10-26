@@ -12,7 +12,7 @@ def sendStringUART(dev, section):
         i += 1
     # uart.write(dev, section[i])
 
-def FFT(scope, buffer, freq_sweep = [0, 100e3]):
+def FFT(buffer, freq_sweep = [0, 100e3]):
     # compute the spectrum from 0Hz to 100KHz
     start_frequency = freq_sweep[0]
     stop_frequency = freq_sweep[1]
@@ -75,8 +75,8 @@ try:
                 current = scope.record(dev, channel=1)
                 volt_1 = scope.record(dev, channel=2)
 
-                I_FFT_abs, I_FFT_freq = FFT(scope, current, freq_sweep = [0, 100e3])
-                V1_FFT_abs, V1_FFT_freq = FFT(scope, volt_1, freq_sweep = [0, 100e3])
+                I_FFT_abs, I_FFT_freq = FFT(current, freq_sweep = [0, 100e3])
+                V1_FFT_abs, V1_FFT_freq = FFT(volt_1, freq_sweep = [0, 100e3])
 
                 # generate buffer for time moments
                 # for index in range(len(current)):
