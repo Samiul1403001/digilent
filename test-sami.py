@@ -1,5 +1,5 @@
-import time
-from WF_SDK import device
+from time import sleep
+from WF_SDK import device, scope
 from WF_SDK.protocol import uart
 
 def sendStringUART(dev, section):
@@ -41,20 +41,38 @@ try:
         CMD = input("\nEnter desired frequency: ")
         msg = CMD
         sendStringUART(dev, msg)
-        time.sleep(1)
+        sleep(1)
         while True:
             RES = bytes(uart.read(dev))
             if RES.decode("utf-8") == "Received":
-                print(f"\nMeasuring EIS at {CMD.strip()} Hz...")
-                time.sleep(3)
-            elif RES.decode("utf-8") == "Done":
+                mainloop = True
+                time = []
+                while RES.decode("utf-8") != "Done":
+                    print(f"\nMeasuring EIS at {CMD.strip()} Hz...")
+                    # initialize the scope with default settings
+                    scope.open(dev)
+                    scope.trigger(dev, enable=True, source=scope.trigger_source.analog, channel=1, level=0)
+                    scope.trigger(dev, enable=True, source=scope.trigger_source.analog, channel=2, level=0)
+                    sleep(1)
+
+                    current = scope.record(dev, channel=1)
+                    volt_1 = scope.record(dev, channel=2)
+
+                    # generate buffer for time moments
+                    for index in range(len(current)):
+                        time.append(index * 1e03 / scope.data.sampling_frequency)
+                    print("current values: ", current)
+                    sleep(1)
+            if mainloop == True:
+                scope.close(dev)
                 break
-            time.sleep(1)
+        sleep(1)
         print(f"\n\nDone measuring EIS at {CMD.strip()} Hz! Going for the next one...\n")
-        time.sleep(1)
+        sleep(1)
 
 except KeyboardInterrupt:
     print("\nStopped by user.")
     uart.close(dev)
+    scope.close(dev)
     device.close(dev)
     print("Device closed.")
