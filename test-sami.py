@@ -1,5 +1,5 @@
 from time import sleep
-from WF_SDK import device, scope
+from WF_SDK import device, scope, tools
 from WF_SDK.protocol import uart
 
 def sendStringUART(dev, section):
@@ -11,6 +11,20 @@ def sendStringUART(dev, section):
             uart.write(dev, "\0")
         i += 1
     # uart.write(dev, section[i])
+
+def FFT(scope, buffer, freq_sweep = [0, 100e3]):
+    # compute the spectrum from 0Hz to 100KHz
+    start_frequency = freq_sweep[0]
+    stop_frequency = freq_sweep[1]
+    spectrum = tools.spectrum(buffer, tools.window.flat_top, scope.data.sampling_frequency, start_frequency, stop_frequency)
+
+    # calculate frequency domain data
+    frequency = []
+    length = len(spectrum)
+    step = (stop_frequency - start_frequency) / (length - 1)
+    for index in range(length):
+        frequency.append((start_frequency + index * step) / 1e06)   # convert frequency in MHz
+    return spectrum, frequency
 
 # ------------------- USER SETTINGS -------------------
 PIN_TX = 0           # DIO pin used for UART TX (ADP3450 DIO0)
@@ -61,10 +75,13 @@ try:
                 current = scope.record(dev, channel=1)
                 volt_1 = scope.record(dev, channel=2)
 
+                I_FFT_abs, I_FFT_freq = FFT(scope, current, freq_sweep = [0, 100e3])
+                V1_FFT_abs, V1_FFT_freq = FFT(scope, volt_1, freq_sweep = [0, 100e3])
+
                 # generate buffer for time moments
                 # for index in range(len(current)):
                 #     time.append(index * 1e03 / scope.data.sampling_frequency)
-                print("Buffer size: ", len(current), "samples")
+                print("Impedance magnitude in ohms: ", V1_FFT_abs[V1_FFT_freq == int(CMD)*1e6]/I_FFT_abs[I_FFT_freq == int(CMD)*1e6])
                 sleep(.5)
             RES = bytes(uart.read(dev))
             if mainloop == True:
