@@ -53,8 +53,8 @@ try:
                     scope.open(dev)
                     sleep(1)
 
-                    current = scope.measure(dev, channel=1)
-                    volt_1 = scope.measure(dev, channel=2)
+                    current = scope.record(dev, channel=1)
+                    volt_1 = scope.record(dev, channel=2)
 
                     # generate buffer for time moments
                     # for index in range(len(current)):
