@@ -54,7 +54,7 @@ try:
                 # initialize the scope with default settings
                 # choose sensible values
                 samp_freq = 1e6       # 1 MHz sampling
-                buf_size = int(samp_freq/float(CMD))
+                buf_size = int(samp_freq/float(CMD)) if max_buf*.8 >= int(samp_freq/float(CMD)) else int(max_buf*.8)
                 scope.open(dev, sampling_frequency=samp_freq, buffer_size=buf_size, offset=0, amplitude_range=5)
                 sleep(1)
 
