@@ -22,6 +22,7 @@ CMD = ""
 
 print("Opening ADP3450 device...")
 dev = device.open()      # open first connected device
+max_buf = dev.analog.input.max_buffer_size
 
 # Configure UART on the chosen DIO pins
 uart.open(
@@ -34,6 +35,7 @@ uart.open(
     stop_bits=1
 )
 print(f"UART initialized on DIO{PIN_TX} (TX) @ {BAUDRATE} baud")
+print("Max buffer size: ", max_buf)
 
 # Main send loop
 try:
