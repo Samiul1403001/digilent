@@ -40,7 +40,7 @@ def FFT(buffer, freq_sweep=[0, 100e3]):
     start_freq = float(freq_sweep[0])
     stop_freq = float(freq_sweep[1])
     mask = (freqs >= start_freq) & (freqs <= stop_freq)
-    freqs_crop = freqs[mask] / 1e6   # convert to MHz for your existing code
+    freqs_crop = freqs[mask]# / 1e6   # convert to MHz for your existing code
     mag_crop = mag[mask]
 
     return mag_crop, freqs_crop
@@ -100,7 +100,7 @@ try:
                 # generate buffer for time moments
                 # for index in range(len(current)):
                 #     time.append(index * 1e03 / scope.data.sampling_frequency)
-                print("Impedance magnitude in ohms: ", V1_FFT_abs[V1_FFT_freq == int(CMD)*1e6]/I_FFT_abs[I_FFT_freq == int(CMD)*1e6])
+                print("Impedance magnitude in ohms: ", V1_FFT_abs[V1_FFT_freq == int(CMD)]/I_FFT_abs[I_FFT_freq == int(CMD)])
                 sleep(.5)
             RES = bytes(uart.read(dev))
             if mainloop == True:
