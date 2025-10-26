@@ -37,7 +37,7 @@ print(f"UART initialized on DIO{PIN_TX} (TX) @ {BAUDRATE} baud")
 
 # Main send loop
 try:
-    while CMD != "end":
+    while True:
         CMD = input("\nEnter desired frequency: ")
         msg = CMD
         sendStringUART(dev, msg)
@@ -49,24 +49,22 @@ try:
                 mainloop = True
                 time = []
                 print(f"\nMeasuring EIS at {CMD.strip()} Hz...")
-                while RES.decode("utf-8") != "Done":
-                    # initialize the scope with default settings
-                    # choose sensible values
-                    samp_freq = 1e6       # 1 MHz sampling
-                    buf_size = int(samp_freq/float(CMD))
-                    scope.open(dev, sampling_frequency=samp_freq, buffer_size=buf_size, offset=0, amplitude_range=5)
-                    sleep(1)
+                # initialize the scope with default settings
+                # choose sensible values
+                samp_freq = 1e6       # 1 MHz sampling
+                buf_size = int(samp_freq/float(CMD))
+                scope.open(dev, sampling_frequency=samp_freq, buffer_size=buf_size, offset=0, amplitude_range=5)
+                sleep(1)
 
-                    current = scope.record(dev, channel=1)
-                    volt_1 = scope.record(dev, channel=2)
+                current = scope.record(dev, channel=1)
+                volt_1 = scope.record(dev, channel=2)
 
-                    # generate buffer for time moments
-                    # for index in range(len(current)):
-                    #     time.append(index * 1e03 / scope.data.sampling_frequency)
-                    print("Buffer size: ", buf_size, "samples")
-                    sleep(1)
-                    RES = bytes(uart.read(dev))
-            if mainloop == True:
+                # generate buffer for time moments
+                # for index in range(len(current)):
+                #     time.append(index * 1e03 / scope.data.sampling_frequency)
+                print("Buffer size: ", buf_size, "samples")
+                sleep(1)
+            if mainloop:
                 scope.close(dev)
                 break
         sleep(1)
