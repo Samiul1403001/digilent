@@ -47,8 +47,8 @@ try:
             if RES.decode("utf-8") == "Received":
                 mainloop = True
                 time = []
+                print(f"\nMeasuring EIS at {CMD.strip()} Hz...")
                 while RES.decode("utf-8") != "Done":
-                    print(f"\nMeasuring EIS at {CMD.strip()} Hz...")
                     # initialize the scope with default settings
                     scope.open(dev)
                     sleep(1)
