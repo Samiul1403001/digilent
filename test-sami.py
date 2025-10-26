@@ -1,6 +1,7 @@
 from time import sleep
 from WF_SDK import device, scope, tools
 from WF_SDK.protocol import uart
+import numpy as np
 
 def sendStringUART(dev, section):
     i = 0
@@ -12,19 +13,37 @@ def sendStringUART(dev, section):
         i += 1
     # uart.write(dev, section[i])
 
-def FFT(buffer, freq_sweep = [0, 100e3]):
-    # compute the spectrum from 0Hz to 100KHz
-    start_frequency = freq_sweep[0]
-    stop_frequency = freq_sweep[1]
-    spectrum = tools.spectrum(buffer, tools.window.flat_top, scope.data.sampling_frequency, start_frequency, stop_frequency)
+def FFT(buffer, freq_sweep=[0, 100e3]):
+    """
+    Compute single-sided magnitude spectrum and frequency vector (in MHz)
+    buffer : iterable of voltage samples (float)
+    freq_sweep : [start_freq, stop_freq] in Hz (only for frequency cropping)
+    Returns: (spectrum_magnitude, frequency_mhz_array)
+    """
+    # convert to numpy array
+    x = np.asarray(buffer, dtype=float)
+    N = x.size
+    if N == 0:
+        return np.array([]), np.array([])
 
-    # calculate frequency domain data
-    frequency = []
-    length = len(spectrum)
-    step = (stop_frequency - start_frequency) / (length - 1)
-    for index in range(length):
-        frequency.append((start_frequency + index * step) / 1e06)   # convert frequency in MHz
-    return spectrum, frequency
+    # Sampling frequency is in scope.data.sampling_frequency (Hz)
+    fs = scope.data.sampling_frequency
+
+    # compute FFT
+    X = np.fft.rfft(x * np.hanning(N))   # window to reduce leakage (Hann)
+    freqs = np.fft.rfftfreq(N, d=1.0 / fs)  # Hz
+
+    # magnitude (abs) and optionally normalize (divide by N)
+    mag = np.abs(X) / N
+
+    # Crop to requested freq_sweep range
+    start_freq = float(freq_sweep[0])
+    stop_freq = float(freq_sweep[1])
+    mask = (freqs >= start_freq) & (freqs <= stop_freq)
+    freqs_crop = freqs[mask] / 1e6   # convert to MHz for your existing code
+    mag_crop = mag[mask]
+
+    return mag_crop, freqs_crop
 
 # ------------------- USER SETTINGS -------------------
 PIN_TX = 0           # DIO pin used for UART TX (ADP3450 DIO0)
