@@ -63,6 +63,7 @@ try:
                         time.append(index * 1e03 / scope.data.sampling_frequency)
                     print("current values: ", current)
                     sleep(1)
+                    RES = bytes(uart.read(dev))
             if mainloop == True:
                 scope.close(dev)
                 break
