@@ -50,7 +50,10 @@ try:
                 print(f"\nMeasuring EIS at {CMD.strip()} Hz...")
                 while RES.decode("utf-8") != "Done":
                     # initialize the scope with default settings
-                    scope.open(dev)
+                    # choose sensible values
+                    samp_freq = 1e6       # 1 MHz sampling
+                    buf_size = 5
+                    scope.open(dev, sampling_frequency=samp_freq, buffer_size=buf_size, offset=0, amplitude_range=5)
                     sleep(1)
 
                     current = scope.record(dev, channel=1)
