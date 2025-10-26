@@ -61,7 +61,7 @@ try:
                     # generate buffer for time moments
                     # for index in range(len(current)):
                     #     time.append(index * 1e03 / scope.data.sampling_frequency)
-                    print("current values: ", current)
+                    # print("current values: ", current)
                     sleep(1)
                     RES = bytes(uart.read(dev))
             if mainloop == True:
