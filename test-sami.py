@@ -64,7 +64,8 @@ try:
                 #     time.append(index * 1e03 / scope.data.sampling_frequency)
                 print("Buffer size: ", buf_size, "samples")
                 sleep(1)
-            if mainloop:
+            RES = bytes(uart.read(dev))
+            if mainloop == True:
                 scope.close(dev)
                 break
         sleep(1)
