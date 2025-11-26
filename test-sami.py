@@ -86,7 +86,7 @@ try:
                 print(f"\nMeasuring EIS at {CMD.strip()} Hz...")
                 # initialize the scope with default settings
                 # choose sensible values
-                samp_freq = int(100*float(CMD))       # 1 MHz sampling
+                samp_freq = int(100*float(CMD))
                 buf_size = 300
                 scope.open(dev, sampling_frequency=samp_freq, buffer_size=buf_size, offset=0, amplitude_range=5)
                 sleep(1)
@@ -100,7 +100,7 @@ try:
                 # generate buffer for time moments
                 # for index in range(len(current)):
                 #     time.append(index * 1e03 / scope.data.sampling_frequency)
-                print("Impedance magnitude in ohms: ", V1_FFT_abs[V1_FFT_freq == int(CMD)]/I_FFT_abs[I_FFT_freq == int(CMD)])
+                print("Impedance magnitude in ohms: ", V1_FFT_abs[V1_FFT_freq == float(CMD)]/I_FFT_abs[I_FFT_freq == float(CMD)])
                 sleep(.5)
             RES = bytes(uart.read(dev))
             if mainloop == True:
