@@ -78,8 +78,7 @@ print("Max buffer size: ", max_buf)
 # Main send loop
 try:
     for f in FREQ:
-        msg = f
-        sendStringUART(dev, msg)
+        sendStringUART(dev, f)
         sleep(1)
         while True:
             mainloop = False
