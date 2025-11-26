@@ -34,22 +34,23 @@ def FFT(buffer, freq_sweep=[0, 100e3]):
     freqs = np.fft.rfftfreq(N, d=1.0 / fs)  # Hz
 
     # magnitude (abs) and optionally normalize (divide by N)
+    # Extract components
+    real_part = X.real
+    imag_part = X.imag
     mag = np.abs(X) / N
 
     # Crop to requested freq_sweep range
     start_freq = float(freq_sweep[0])
     stop_freq = float(freq_sweep[1])
     mask = (freqs >= start_freq) & (freqs <= stop_freq)
-    freqs_crop = freqs[mask]# / 1e6   # convert to MHz for your existing code
-    mag_crop = mag[mask]
 
-    return mag_crop, freqs_crop
+    return freqs[mask], mag[mask], real_part[mask], imag_part[mask]
 
 # ------------------- USER SETTINGS -------------------
 PIN_TX = 0           # DIO pin used for UART TX (ADP3450 DIO0)
 PIN_RX = 1           # optional RX pin if you want to read back
 BAUDRATE = 115200
-FREQ = [1, 3, 5, 7, 9, 10]
+FREQ = [7, 9, 10]
 CMD = ""
 # ------------------------------------------------------
 
@@ -70,22 +71,10 @@ uart.open(
 print(f"UART initialized on DIO{PIN_TX} (TX) @ {BAUDRATE} baud")
 print("Max buffer size: ", max_buf)
 
-# ------------------- ML MODEL SETTINGS -------------------
-# sample shape must be: (1, 3, 61)
-sample = np.random.rand(1, 3, 61).astype(np.float32)
-
-# ----------------------------------------------------------
-# Run model
-# ----------------------------------------------------------
-output = ml.model_forward(sample,
-                       ml.W_ih, ml.W_hh, ml.b_ih, ml.b_hh,
-                       ml.fc1_W, ml.fc1_b,
-                       ml.out_W, ml.out_b)
-
-# ---------------------------------------------------------
-
 # Main send loop
 try:
+    sample = np.zeros([61, 3])
+    i = 0
     for f in FREQ:
         CMD = str(f)
         msg = CMD
@@ -108,13 +97,20 @@ try:
                 current = scope.record(dev, channel=1)
                 volt_1 = scope.record(dev, channel=2)
 
-                I_FFT_abs, I_FFT_freq = FFT(current, freq_sweep = [0, 1e3])
-                V1_FFT_abs, V1_FFT_freq = FFT(volt_1, freq_sweep = [0, 1e3])
+                I_FFT_freqs, I_FFT_abs, I_FFT_real, I_FFT_imag = FFT(current, freq_sweep = [0, 1e3])
+                V1_FFT_freqs, V1_FFT_abs, V1_FFT_real, V1_FFT_imag = FFT(volt_1, freq_sweep = [0, 1e3])
 
                 # generate buffer for time moments
                 # for index in range(len(current)):
                 #     time.append(index * 1e03 / scope.data.sampling_frequency)
-                print("Impedance magnitude in ohms: ", V1_FFT_abs[V1_FFT_freq == float(CMD)]/I_FFT_abs[I_FFT_freq == float(CMD)])
+                V_comp = V1_FFT_real + 1j * V1_FFT_imag
+                I_comp = I_FFT_real + 1j * I_FFT_imag
+                Z = (V_comp / I_comp)
+                print("Impedance in ohms: " + str(Z.real) + "+" + str(Z.imag) + "j")
+                sample[i, 0] = f
+                sample[i, 1] = Z.real
+                sample[i, 2] = -Z.imag
+                i+=1
                 sleep(.5)
             RES = bytes(uart.read(dev))
             if mainloop == True:
@@ -124,7 +120,7 @@ try:
         print(f"\n\nDone measuring EIS at {CMD.strip()} Hz!\n")
         sleep(1)
     
-    output = ml.model_forward(sample,
+    output = ml.model_forward(sample.reshape(1, 3, 61).astype(np.float32),
                        ml.W_ih, ml.W_hh, ml.b_ih, ml.b_hh,
                        ml.fc1_W, ml.fc1_b,
                        ml.out_W, ml.out_b)
