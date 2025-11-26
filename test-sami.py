@@ -1,7 +1,8 @@
 from time import sleep
 from WF_SDK import device, scope, tools
 from WF_SDK.protocol import uart
-import numpy as np
+import numpy as np, torch
+import mlrepo as ml
 
 def sendStringUART(dev, section):
     i = 0
@@ -49,7 +50,7 @@ def FFT(buffer, freq_sweep=[0, 100e3]):
 PIN_TX = 0           # DIO pin used for UART TX (ADP3450 DIO0)
 PIN_RX = 1           # optional RX pin if you want to read back
 BAUDRATE = 115200
-FREQ = [100, 200, 300, 400, 500]
+FREQ = [1, 3, 5, 7, 9, 10]
 CMD = ""
 # ------------------------------------------------------
 
@@ -69,6 +70,21 @@ uart.open(
 )
 print(f"UART initialized on DIO{PIN_TX} (TX) @ {BAUDRATE} baud")
 print("Max buffer size: ", max_buf)
+
+# ------------------- ML MODEL SETTINGS -------------------
+state_dict = torch.load('BestFit.pth')
+model = ml.SoH_Est_LSTM(feat_dim=3, hidden_dim=20, n_layers=1, out_dim=1)
+model.load_state_dict(state_dict)
+
+# test_list.append({
+#     'feats': fts,
+#     'targets': gname
+# })
+
+# test_ds = ml.SeriesDataset(test_list)
+# test_dl = ml.DataLoader(test_ds, batch_size=len(test_ds), collate_fn=ml.collate_fn, shuffle=False)
+
+# ---------------------------------------------------------
 
 # Main send loop
 try:
@@ -94,8 +110,8 @@ try:
                 current = scope.record(dev, channel=1)
                 volt_1 = scope.record(dev, channel=2)
 
-                I_FFT_abs, I_FFT_freq = FFT(current, freq_sweep = [0, 100e3])
-                V1_FFT_abs, V1_FFT_freq = FFT(volt_1, freq_sweep = [0, 100e3])
+                I_FFT_abs, I_FFT_freq = FFT(current, freq_sweep = [0, 1e3])
+                V1_FFT_abs, V1_FFT_freq = FFT(volt_1, freq_sweep = [0, 1e3])
 
                 # generate buffer for time moments
                 # for index in range(len(current)):
