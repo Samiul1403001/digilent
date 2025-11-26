@@ -48,7 +48,7 @@ def FFT(buffer, freq_sweep=[0, 100e3]):
 PIN_TX = 0           # DIO pin used for UART TX (ADP3450 DIO0)
 PIN_RX = 1           # optional RX pin if you want to read back
 BAUDRATE = 115200
-FREQ = [1, 3, 5, 7, 9, 10]
+FREQ = ['1', '3', '5', '7', '9', '10']
 CMD = ""
 # ------------------------------------------------------
 
@@ -78,7 +78,7 @@ print("Max buffer size: ", max_buf)
 try:
     for f in FREQ:
         msg = f
-        sendStringUART(dev, str(msg))
+        sendStringUART(dev, msg)
         sleep(1)
         while True:
             mainloop = False
