@@ -99,12 +99,15 @@ try:
 
                 I_FFT_freqs, I_FFT_abs, I_FFT_real, I_FFT_imag = FFT(current, freq_sweep = [0, 1e3])
                 V1_FFT_freqs, V1_FFT_abs, V1_FFT_real, V1_FFT_imag = FFT(volt_1, freq_sweep = [0, 1e3])
+                
+                Iidx = np.argmin(np.abs(I_FFT_freqs - f))
+                V1idx = np.argmin(np.abs(V1_FFT_freqs - f))
 
                 # generate buffer for time moments
                 # for index in range(len(current)):
                 #     time.append(index * 1e03 / scope.data.sampling_frequency)
-                V_comp = V1_FFT_real + 1j * V1_FFT_imag
-                I_comp = I_FFT_real + 1j * I_FFT_imag
+                V_comp = V1_FFT_real[V1idx] + 1j * V1_FFT_imag[V1idx]
+                I_comp = I_FFT_real[Iidx] + 1j * I_FFT_imag[Iidx]
                 Z = (V_comp / I_comp)
                 print("Impedance in ohms: " + str(Z.real) + "+" + str(Z.imag) + "j")
                 sample[i, 0] = f
