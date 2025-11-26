@@ -1,7 +1,7 @@
 from time import sleep
 from WF_SDK import device, scope
 from WF_SDK.protocol import uart
-import numpy as np
+import numpy as np, mlrepo as ml
 
 def sendStringUART(dev, section):
     i = 0
@@ -71,7 +71,16 @@ print(f"UART initialized on DIO{PIN_TX} (TX) @ {BAUDRATE} baud")
 print("Max buffer size: ", max_buf)
 
 # ------------------- ML MODEL SETTINGS -------------------
+# sample shape must be: (1, 3, 61)
+sample = np.random.rand(1, 3, 61).astype(np.float32)
 
+# ----------------------------------------------------------
+# Run model
+# ----------------------------------------------------------
+output = ml.model_forward(sample,
+                       ml.W_ih, ml.W_hh, ml.b_ih, ml.b_hh,
+                       ml.fc1_W, ml.fc1_b,
+                       ml.out_W, ml.out_b)
 
 # ---------------------------------------------------------
 
@@ -112,8 +121,15 @@ try:
                 scope.close(dev)
                 break
         sleep(1)
-        print(f"\n\nDone measuring EIS at {CMD.strip()} Hz! Going for the next one...\n")
+        print(f"\n\nDone measuring EIS at {CMD.strip()} Hz!\n")
         sleep(1)
+    
+    output = ml.model_forward(sample,
+                       ml.W_ih, ml.W_hh, ml.b_ih, ml.b_hh,
+                       ml.fc1_W, ml.fc1_b,
+                       ml.out_W, ml.out_b)
+    
+    print(f"\n\nThe estimated SoH is: {str(output*100)}\n")
 
 except KeyboardInterrupt:
     print("\nStopped by user.")

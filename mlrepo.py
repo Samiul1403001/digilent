@@ -1,56 +1,73 @@
-import torch, numpy as np, random, optuna, pandas as pd
-import torch.nn as nn
-from torch.utils.data import DataLoader, Dataset, random_split
-import torch.nn.functional as F
+import numpy as np
 
-class SoH_Est_LSTM(nn.Module):
-    def __init__(self, feat_dim, hidden_dim, n_layers, out_dim):
-        super(SoH_Est_LSTM, self).__init__()
-        self.hidden_dim = hidden_dim
-        self.n_layers = n_layers
+# LSTM parameters (PyTorch-style)
+W_ih = np.load("npweights/lstm.weight_ih_l0.npy")   # (4*H, input_size)
+W_hh = np.load("npweights/lstm.weight_hh_l0.npy")   # (4*H, H)
+b_ih = np.load("npweights/lstm.bias_ih_l0.npy")     # (4*H,)
+b_hh = np.load("npweights/lstm.bias_hh_l0.npy")     # (4*H,)
 
-        self.lstm = nn.LSTM(feat_dim, hidden_dim, n_layers, batch_first=True)
-        self.act1 = nn.GELU()
-        self.act2 = nn.Sigmoid()
-        self.fc1 = nn.Linear(hidden_dim, 8)
-        self.olayer = nn.Linear(8, out_dim)
+# Fully connected layer 1
+fc1_W = np.load("npweights/fc1.weight.npy")         # (fc1_out, H)
+fc1_b = np.load("npweights/fc1.bias.npy")           # (fc1_out,)
 
-    def forward(self, x):
-        h0 = torch.zeros(self.n_layers, x.size(0), self.hidden_dim)
-        c0 = torch.zeros(self.n_layers, x.size(0), self.hidden_dim)
+# Output layer
+out_W = np.load("npweights/olayer.weight.npy")      # (out_dim, fc1_out)
+out_b = np.load("npweights/olayer.bias.npy")        # (out_dim,)
 
-        out, _ = self.lstm(x, (h0, c0))
-        out = self.olayer(self.act1(self.fc1(out[:, -1, :])))
-        return self.act2(out.squeeze(-1))
+# ----------------------------------------------------------
+# Utility activation functions
+# ----------------------------------------------------------
+def sigmoid(x):
+    return 1 / (1 + np.exp(-x))
 
-class SeriesDataset(Dataset):
-    """
-    items: pandas dataframe
-    """
-    def __init__(self, items):
-        self.items = items
+# ----------------------------------------------------------
+# LSTM forward pass (PyTorch-compatible)
+# ----------------------------------------------------------
+def lstm_forward(X, W_ih, W_hh, b_ih, b_hh, hidden_size=20):
+    seq_len = X.shape[0]
 
-    def __len__(self):
-        return len(self.items)
+    h = np.zeros((hidden_size,))
+    c = np.zeros((hidden_size,))
 
-    def __getitem__(self, idx):
-        return {'feat': self.items[idx]['feats'], 'target': self.items[idx]['targets']}
+    # PyTorch gate order: input, forget, cell, output
+    W_i, W_f, W_g, W_o = np.split(W_ih, 4)
+    U_i, U_f, U_g, U_o = np.split(W_hh, 4)
+    b_i, b_f, b_g, b_o = np.split(b_ih + b_hh, 4)
 
-def collate_fn(batch):
-    # Extract features and targets from the batch of dictionaries
-    sequences = [torch.as_tensor(x['feat'], dtype=torch.float32) for x in batch]
+    for t in range(seq_len):
+        x_t = X[t]
 
-    max_len = 61  # fixed max sequence length
+        i = sigmoid(W_i @ x_t + U_i @ h + b_i)
+        f = sigmoid(W_f @ x_t + U_f @ h + b_f)
+        g = np.tanh(W_g @ x_t + U_g @ h + b_g)
+        o = sigmoid(W_o @ x_t + U_o @ h + b_o)
 
-    padded_sequences = []
-    for seq in sequences:
-        pad_len = max_len - seq.size(0)
-        pad = torch.zeros(pad_len, seq.size(1))  # shape: (pad_len, 4)
-        padded_seq = torch.cat([pad, seq], dim=0)
-        padded_sequences.append(padded_seq)
+        c = f * c + i * g
+        h = o * np.tanh(c)
 
-    batch_tensor = torch.stack(padded_sequences)
-    targets = torch.stack([torch.as_tensor(x['target'], dtype=torch.float32) for x in batch]).flatten()
+    return h  # final hidden state
 
-    return batch_tensor, targets
+# ----------------------------------------------------------
+# Fully connected layers
+# ----------------------------------------------------------
+def fc1_forward(h, W, b):
+    return np.tanh(W @ h + b)
 
+def out_forward(h, W, b):
+    return W @ h + b
+
+# ----------------------------------------------------------
+# Full model forward
+# ----------------------------------------------------------
+def model_forward(sample,
+                  W_ih, W_hh, b_ih, b_hh,
+                  fc1_W, fc1_b,
+                  out_W, out_b):
+
+    # sample shape: (1, 3, 61)
+    X = sample[0].T  # => (61, 3) sequence-first
+
+    h = lstm_forward(X, W_ih, W_hh, b_ih, b_hh)
+    z = fc1_forward(h, fc1_W, fc1_b)
+    y = out_forward(z, out_W, out_b)
+    return y
