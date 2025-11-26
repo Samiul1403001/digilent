@@ -1,8 +1,6 @@
 from time import sleep
-from WF_SDK import device, scope, tools
+from WF_SDK import device, scope
 from WF_SDK.protocol import uart
-import numpy as np, torch
-import mlrepo as ml
 
 def sendStringUART(dev, section):
     i = 0
@@ -72,25 +70,14 @@ print(f"UART initialized on DIO{PIN_TX} (TX) @ {BAUDRATE} baud")
 print("Max buffer size: ", max_buf)
 
 # ------------------- ML MODEL SETTINGS -------------------
-state_dict = torch.load('BestFit.pth')
-model = ml.SoH_Est_LSTM(feat_dim=3, hidden_dim=20, n_layers=1, out_dim=1)
-model.load_state_dict(state_dict)
 
-# test_list.append({
-#     'feats': fts,
-#     'targets': gname
-# })
-
-# test_ds = ml.SeriesDataset(test_list)
-# test_dl = ml.DataLoader(test_ds, batch_size=len(test_ds), collate_fn=ml.collate_fn, shuffle=False)
 
 # ---------------------------------------------------------
 
 # Main send loop
 try:
-    while True:
-        CMD = input("\nEnter desired frequency: ")
-        msg = CMD
+    for f in FREQ:
+        msg = f
         sendStringUART(dev, msg)
         sleep(1)
         while True:
