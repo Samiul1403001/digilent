@@ -1,6 +1,7 @@
 from time import sleep
 from WF_SDK import device, scope
 from WF_SDK.protocol import uart
+import numpy as np
 
 def sendStringUART(dev, section):
     i = 0
