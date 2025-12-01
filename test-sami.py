@@ -50,7 +50,7 @@ def FFT(buffer, freq_sweep=[0, 100e3]):
 PIN_TX = 0           # DIO pin used for UART TX (ADP3450 DIO0)
 PIN_RX = 1           # optional RX pin if you want to read back
 BAUDRATE = 115200
-FREQ = [7, 9, 10]
+FREQ = [1, 5, 10]
 CMD = ""
 # ------------------------------------------------------
 
