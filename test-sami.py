@@ -128,7 +128,7 @@ try:
                        ml.fc1_W, ml.fc1_b,
                        ml.out_W, ml.out_b)
     
-    print(f"\n\nThe estimated SoH is: {str(output*100)}\n")
+    print(f"\n\nThe estimated SoH is: {str(np.round(output*100, 2))}%\n")
 
 except KeyboardInterrupt:
     print("\nStopped by user.")
