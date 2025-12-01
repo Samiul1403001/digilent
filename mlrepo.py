@@ -17,6 +17,8 @@ out_b = np.load("npweights/olayer.bias.npy")        # (out_dim,)
 # ----------------------------------------------------------
 # Utility activation functions
 # ----------------------------------------------------------
+def gelu(x):
+    return 0.5 * x * (1 + np.tanh(np.sqrt(2/np.pi) * (x + 0.044715 * x**3)))
 def sigmoid(x):
     return 1 / (1 + np.exp(-x))
 
@@ -51,10 +53,10 @@ def lstm_forward(X, W_ih, W_hh, b_ih, b_hh, hidden_size=20):
 # Fully connected layers
 # ----------------------------------------------------------
 def fc1_forward(h, W, b):
-    return np.tanh(W @ h + b)
+    return gelu(W @ h + b)
 
 def out_forward(h, W, b):
-    return W @ h + b
+    return sigmoid(W @ h + b)
 
 # ----------------------------------------------------------
 # Full model forward

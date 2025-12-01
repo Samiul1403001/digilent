@@ -109,7 +109,7 @@ try:
                 V_comp = V1_FFT_real[V1idx] + 1j * V1_FFT_imag[V1idx]
                 I_comp = I_FFT_real[Iidx] + 1j * I_FFT_imag[Iidx]
                 Z = (V_comp / I_comp)
-                print("Impedance in ohms: " + str(Z.real) + "+" + str(Z.imag) + "j")
+                print("Impedance in ohms: " + str(Z.real) + "+(" + str(Z.imag) + "j)")
                 sample[i, 0] = f
                 sample[i, 1] = Z.real
                 sample[i, 2] = -Z.imag
