@@ -104,9 +104,12 @@ try:
 
                 I_FFT_freqs, I_FFT_abs, I_FFT_real, I_FFT_imag = FFT(current, freq_sweep = [0, 1e3])
                 V1_FFT_freqs, V1_FFT_abs, V1_FFT_real, V1_FFT_imag = FFT(volt_1, freq_sweep = [0, 1e3])
-                
-                Iidx = np.argmin(np.abs(I_FFT_freqs - f))
-                V1idx = np.argmin(np.abs(V1_FFT_freqs - f))
+
+                Ifreq_mask = (I_FFT_freqs >= f - f*0.05) & (I_FFT_freqs <= f + f*0.05)
+                V1freq_mask = (V1_FFT_freqs >= f - f*0.05) & (V1_FFT_freqs <= f + f*0.05)
+
+                Iidx = np.argmax(I_FFT_abs[Ifreq_mask])
+                V1idx = np.argmax(V1_FFT_abs[V1freq_mask])
 
                 # generate buffer for time moments
                 # for index in range(len(current)):
