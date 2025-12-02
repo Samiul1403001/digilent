@@ -116,6 +116,7 @@ try:
                 #     time.append(index * 1e03 / scope.data.sampling_frequency)
                 V_comp = V1_FFT_real[V1idx] + 1j * V1_FFT_imag[V1idx]
                 I_comp = I_FFT_real[Iidx] + 1j * I_FFT_imag[Iidx]
+                print(V_comp)
                 Z = (V_comp / (10*I_comp))
                 print("Impedance in ohms: " + str(Z.real) + "+(" + str(Z.imag) + "j)")
                 sample[i, 0] = f
