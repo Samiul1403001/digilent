@@ -44,7 +44,12 @@ def FFT(buffer, freq_sweep=[0, 100e3]):
     stop_freq = float(freq_sweep[1])
     mask = (freqs >= start_freq) & (freqs <= stop_freq)
 
-    return freqs[mask], mag[mask], real_part[mask], imag_part[mask]
+    freqs = freqs[mask]
+    mag = mag[mask]
+    real_part = real_part[mask]
+    imag_part = imag_part[mask]
+
+    return freqs, mag, real_part, imag_part
 
 # ------------------- USER SETTINGS -------------------
 PIN_TX = 0           # DIO pin used for UART TX (ADP3450 DIO0)
