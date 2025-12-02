@@ -126,7 +126,7 @@ try:
                 break
         sleep(1)
         print(f"\n\nDone measuring EIS at {CMD.strip()} Hz!\n")
-        sleep(1)
+        sleep(2)
     
     output = ml.model_forward(sample.reshape(1, 3, 61).astype(np.float32),
                        ml.W_ih, ml.W_hh, ml.b_ih, ml.b_hh,
