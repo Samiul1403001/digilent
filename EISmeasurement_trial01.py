@@ -54,8 +54,8 @@ try:
                 I_clean, Iparams = clean_buffer(100*(data_sets[0]-np.mean(data_sets[0])), signal_freq=sfreq, sample_rate=sample_rate)
                 V_clean, Vparams = clean_buffer(data_sets[1]-np.mean(data_sets[1]), signal_freq=sfreq, sample_rate=sample_rate)
 
-                print(f"Recovered Amplitude: {Vparams[0]:.3f}")
-                print(f"Recovered Phase:     {Vparams[1]:.3f}")
+                print(f"Recovered Amplitudes: V: {Vparams[0]:.3f}, I: {Iparams[0]:.3f}")
+                print(f"Recovered Phases: V: {Vparams[1]:.3f}, I: {Iparams[1]:.3f}")
 
                 I_FFT_real = Iparams[0] * np.cos(Iparams[1])
                 I_FFT_imag = Iparams[0] * np.sin(Iparams[1])
