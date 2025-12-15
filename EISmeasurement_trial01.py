@@ -28,7 +28,7 @@ try:
     for f in FREQ:
         CMD = str(f)
         Digi_1.sendStringUART(CMD)
-        sleep(1)
+        sleep(0.5)
 
         mainloop = True
         while mainloop == True:
@@ -38,7 +38,7 @@ try:
                 mainloop = False
                 # initialize the scope with default settings
                 # choose sensible values
-                buffer_size = 300
+                buffer_size = 500
                 sample_rate = int(100*float(CMD))
 
                 data_sets = Digi_1.scope_record(sample_rate, buffer_size)
@@ -56,6 +56,9 @@ try:
 
                 print(f"Recovered Amplitudes: V: {Vparams[0]:.3f}, I: {Iparams[0]:.3f}")
                 print(f"Recovered Phases: V: {Vparams[1]:.3f}, I: {Iparams[1]:.3f}")
+
+                if Iparams[1] > Vparams[1]:
+                    break
 
                 I_FFT_real = Iparams[0] * np.cos(Iparams[1])
                 I_FFT_imag = Iparams[0] * np.sin(Iparams[1])
