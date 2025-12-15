@@ -45,7 +45,7 @@ def freq_selection_signal(y_buffer, freq_sweep, sample_rate):
             c += 1
             if c >= 2:
                 break
-    return freq
+    return freq[-1]
 
 class data:
     """ stores the device handle, the device name and the device data """
