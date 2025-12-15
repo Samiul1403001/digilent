@@ -28,7 +28,7 @@ try:
     for f in FREQ:
         CMD = str(f)
         Digi_1.sendStringUART(CMD)
-        sleep(3)
+        sleep(1)
 
         mainloop = True
         while mainloop == True:
@@ -71,7 +71,7 @@ try:
                 sample[i, 1] = Z.real
                 sample[i, 2] = -Z.imag
                 i+=1
-            sleep(.5)
+            sleep(3)
     rows_to_keep = ~ (sample == 0).all(axis=1)
     sample = sample[rows_to_keep]
 
