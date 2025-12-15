@@ -28,7 +28,7 @@ try:
     for f in FREQ:
         CMD = str(f)
         Digi_1.sendStringUART(CMD)
-        sleep(1)
+        sleep(3)
 
         mainloop = True
         while mainloop == True:
