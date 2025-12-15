@@ -13,7 +13,6 @@ FREQ = [#10000,7943.282227,6309.573242,5011.87207,3981.071289,3162.277344,2511.8
 PIN_TX = 0           # DIO pin used for UART TX (ADP3450 DIO0)
 PIN_RX = 1           # optional RX pin if you want to read back
 BAUDRATE = 115200
-
 # Device object generation
 Digi_1 = MyDigilent(tx=PIN_TX,
                     rx=PIN_RX,
@@ -62,7 +61,7 @@ try:
                 print(f"Recovered Amplitudes: V: {Vparams[0]:.3f}, I: {Iparams[0]:.3f}")
                 print(f"Recovered Phases: V: {Vparams[1]:.3f}, I: {Iparams[1]:.3f}")
 
-                if Iparams[1] > Vparams[1]:
+                if Iparams[1] < Vparams[1]:
                     break
 
                 I_FFT_real = Iparams[0] * np.cos(Iparams[1])
