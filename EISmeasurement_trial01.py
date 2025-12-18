@@ -42,7 +42,7 @@ try:
                 mainloop = False
                 # initialize the scope with default settings
                 # choose sensible values
-                buffer_size = 500
+                buffer_size = 1000
                 sample_rate = int(100*float(CMD))
 
                 data_sets = Digi_1.scope_record(sample_rate, buffer_size)
