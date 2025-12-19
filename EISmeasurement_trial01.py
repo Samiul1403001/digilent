@@ -48,7 +48,7 @@ try:
 
                 data_sets = Digi_1.scope_record(sample_rate, buffer_size)
 
-                I_freq = freq_selection_signal(10*(data_sets[0]-np.mean(data_sets[0])), freq_sweep=[f*0.8, f*1.2], sample_rate=sample_rate)
+                I_freq = freq_selection_signal(100*(data_sets[0]-np.mean(data_sets[0])), freq_sweep=[f*0.8, f*1.2], sample_rate=sample_rate)
                 V_freq = freq_selection_signal(data_sets[1]-np.mean(data_sets[1]), freq_sweep=[f*0.8, f*1.2], sample_rate=sample_rate)
 
                 sfreq = V_freq
@@ -56,7 +56,7 @@ try:
                 if sfreq == None:
                     sfreq = f
                 
-                I_clean, Iparams = clean_buffer(10*(data_sets[0]-np.mean(data_sets[0])), signal_freq=sfreq, sample_rate=sample_rate)
+                I_clean, Iparams = clean_buffer(100*(data_sets[0]-np.mean(data_sets[0])), signal_freq=sfreq, sample_rate=sample_rate)
                 V_clean, Vparams = clean_buffer(data_sets[1]-np.mean(data_sets[1]), signal_freq=sfreq, sample_rate=sample_rate)
 
                 print(f"Recovered Amplitudes: V: {Vparams[0]:.3f}, I: {Iparams[0]:.3f}")
@@ -79,7 +79,7 @@ try:
                 sample[i, 1] = Z.real
                 sample[i, 2] = -Z.imag
                 i+=1
-            sleep(1)
+            sleep(3)
     rows_to_keep = ~ (sample == 0).all(axis=1)
     sample = sample[rows_to_keep]
 
