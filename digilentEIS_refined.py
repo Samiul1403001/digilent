@@ -1,0 +1,147 @@
+from time import sleep
+from WF_SDK import device, scope
+from WF_SDK.protocol import uart
+import numpy as np, mlrepo as ml
+
+def sendStringUART(dev, section):
+    i = 0
+    while i < 8:
+        if i < len(section):
+            uart.write(dev, section[i])
+        else:
+            uart.write(dev, "\0")
+        i += 1
+    # uart.write(dev, section[i])
+
+def FFT(buffer, freq_sweep=[0, 100e3]):
+    """
+    Compute single-sided magnitude spectrum and frequency vector (in MHz)
+    buffer : iterable of voltage samples (float)
+    freq_sweep : [start_freq, stop_freq] in Hz (only for frequency cropping)
+    Returns: (spectrum_magnitude, frequency_mhz_array)
+    """
+    # convert to numpy array
+    x = np.asarray(buffer, dtype=float)
+    N = x.size
+    if N == 0:
+        return np.array([]), np.array([])
+
+    # Sampling frequency is in scope.data.sampling_frequency (Hz)
+    fs = scope.data.sampling_frequency
+
+    # compute FFT
+    X = np.fft.rfft(x * np.hanning(N))   # window to reduce leakage (Hann)
+    freqs = np.fft.rfftfreq(N, d=1.0 / fs)  # Hz
+
+    # magnitude (abs) and optionally normalize (divide by N)
+    # Extract components
+    real_part = X.real
+    imag_part = X.imag
+    mag = np.abs(X) / N
+
+    # Crop to requested freq_sweep range
+    start_freq = float(freq_sweep[0])
+    stop_freq = float(freq_sweep[1])
+    mask = (freqs >= start_freq) & (freqs <= stop_freq)
+
+    freqs = freqs[mask]
+    mag = mag[mask]
+    real_part = real_part[mask]
+    imag_part = imag_part[mask]
+
+    return freqs, mag, real_part, imag_part
+
+# ------------------- USER SETTINGS -------------------
+PIN_TX = 0           # DIO pin used for UART TX (ADP3450 DIO0)
+PIN_RX = 1           # optional RX pin if you want to read back
+BAUDRATE = 115200
+FREQ = [1, 5, 10]
+CMD = ""
+# ------------------------------------------------------
+
+print("Opening ADP3450 device...")
+dev = device.open()      # open first connected device
+max_buf = dev.analog.input.max_buffer_size
+
+# Configure UART on the chosen DIO pins
+uart.open(
+    device_data=dev,
+    tx=PIN_TX,
+    rx=PIN_RX,
+    baud_rate=BAUDRATE,
+    parity="none",
+    data_bits=8,
+    stop_bits=1
+)
+print(f"UART initialized on DIO{PIN_TX} (TX) @ {BAUDRATE} baud")
+print("Max buffer size: ", max_buf)
+
+# Main send loop
+try:
+    sample = np.zeros([61, 3])
+    i = 0
+    for f in FREQ:
+        CMD = str(f)
+        msg = CMD
+        sendStringUART(dev, msg)
+        sleep(1)
+        while True:
+            mainloop = False
+            RES = bytes(uart.read(dev))
+            if RES.decode("utf-8") == "Received":
+                mainloop = True
+                time = []
+                print(f"\nMeasuring EIS at {CMD.strip()} Hz...")
+                # initialize the scope with default settings
+                # choose sensible values
+                samp_freq = int(100*float(CMD))
+                buf_size = 300
+                scope.open(dev, sampling_frequency=samp_freq, buffer_size=buf_size, offset=0, amplitude_range=5)
+                sleep(1)
+
+                current = scope.record(dev, channel=1)
+                volt_1 = scope.record(dev, channel=2)
+
+                I_FFT_freqs, I_FFT_abs, I_FFT_real, I_FFT_imag = FFT(current, freq_sweep = [0, 1e3])
+                V1_FFT_freqs, V1_FFT_abs, V1_FFT_real, V1_FFT_imag = FFT(volt_1, freq_sweep = [0, 1e3])
+
+                Ifreq_mask = (I_FFT_freqs >= f - f*0.05) & (I_FFT_freqs <= f + f*0.05)
+                V1freq_mask = (V1_FFT_freqs >= f - f*0.05) & (V1_FFT_freqs <= f + f*0.05)
+
+                Iidx = np.argmax(I_FFT_abs[Ifreq_mask])
+                V1idx = np.argmax(V1_FFT_abs[V1freq_mask])
+
+                # generate buffer for time moments
+                # for index in range(len(current)):
+                #     time.append(index * 1e03 / scope.data.sampling_frequency)
+                V_comp = V1_FFT_real[V1idx] + 1j * V1_FFT_imag[V1idx]
+                I_comp = I_FFT_real[Iidx] + 1j * I_FFT_imag[Iidx]
+                print(V_comp)
+                Z = (V_comp / (10*I_comp))
+                print("Impedance in ohms: " + str(Z.real) + "+(" + str(Z.imag) + "j)")
+                sample[i, 0] = f
+                sample[i, 1] = Z.real
+                sample[i, 2] = -Z.imag
+                i+=1
+                sleep(.5)
+            RES = bytes(uart.read(dev))
+            if mainloop == True:
+                scope.close(dev)
+                break
+        sleep(1)
+        print(f"\n\nDone measuring EIS at {CMD.strip()} Hz!\n")
+        sleep(2)
+    
+    output = ml.model_forward(sample.reshape(1, 3, 61).astype(np.float32),
+                       ml.W_ih, ml.W_hh, ml.b_ih, ml.b_hh,
+                       ml.fc1_W, ml.fc1_b,
+                       ml.out_W, ml.out_b)
+    
+    print(f"\n\nThe estimated SoH is: {str(np.round(output*100))}%\n")
+
+except KeyboardInterrupt:
+    print("\nStopped by user.")
+    uart.close(dev)
+    scope.close(dev)
+    device.close(dev)
+    print("Device closed.")
