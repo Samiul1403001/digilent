@@ -43,7 +43,7 @@ try:
                 mainloop = False
                 # initialize the scope with default settings
                 # choose sensible values
-                buffer_size = 1000
+                buffer_size = 400
                 sample_rate = int(100*float(CMD))
 
                 data_sets = Digi_1.scope_record(sample_rate, buffer_size)
@@ -79,7 +79,7 @@ try:
                 sample[i, 1] = Z.real
                 sample[i, 2] = -Z.imag
                 i+=1
-            sleep(3)
+            sleep(0.5)
     rows_to_keep = ~ (sample == 0).all(axis=1)
     sample = sample[rows_to_keep]
 
