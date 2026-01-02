@@ -79,7 +79,7 @@ try:
                 sample[i, 1] = Z.real
                 sample[i, 2] = -Z.imag
                 i+=1
-            sleep(0.5)
+            sleep(1)
     rows_to_keep = ~ (sample == 0).all(axis=1)
     sample = sample[rows_to_keep]
 
