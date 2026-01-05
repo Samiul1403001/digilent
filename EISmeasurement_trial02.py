@@ -80,6 +80,7 @@ try:
                 i+=1
                 mainloop = False
                 print(f"\nMeasuring EIS at {CMD.strip()} Hz is done.")
+        sleep(10)
     rows_to_keep = ~ (sample == 0).all(axis=1)
     sample = sample[rows_to_keep]
 
