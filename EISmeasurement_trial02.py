@@ -38,7 +38,6 @@ try:
                 sleep(0.5)
                 print(f"\nMeasuring EIS at {CMD.strip()} Hz...")
                 while status == True:
-                    sleep(0.1)
                     if bytes(Digi_1.uart_read()).decode("utf-8") == "Done":
                         status = False
                         mainloop = False
