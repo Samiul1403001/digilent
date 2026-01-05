@@ -77,6 +77,9 @@ try:
     rows_to_keep = ~ (sample == 0).all(axis=1)
     sample = sample[rows_to_keep]
 
+    np.savetxt("EIS_Data/Test-1.csv", sample, delimiter=',')
+    print("Data has been saved...")
+
     Digi_1.close()
     print("Device closed.")
 
