@@ -44,7 +44,7 @@ try:
                 data_sets = Digi_1.scope_record(sample_rate, buffer_size)
 
             if RES.decode("utf-8") == "DoneRecv":
-                I_freq = freq_selection_signal(-100*(data_sets[0]-np.mean(data_sets[0])), freq_sweep=[f*0.8, f*1.2], sample_rate=sample_rate)
+                I_freq = freq_selection_signal(100*(data_sets[0]-np.mean(data_sets[0])), freq_sweep=[f*0.8, f*1.2], sample_rate=sample_rate)
                 V_freq = freq_selection_signal(data_sets[1]-np.mean(data_sets[1]), freq_sweep=[f*0.8, f*1.2], sample_rate=sample_rate)
 
                 sfreq = V_freq
@@ -56,7 +56,7 @@ try:
                 V_clean, Vparams = clean_buffer(data_sets[1]-np.mean(data_sets[1]), signal_freq=sfreq, sample_rate=sample_rate)
 
                 print(f"Recovered Amplitudes: V: {Vparams[0]:.3f}, I: {Iparams[0]:.3f}")
-                print(f"Recovered Phases: V: {Vparams[1]:.3f}, I: {Iparams[1]:.3f}")
+                print(f"Recovered Phases: V: {Vparams[1]*180/np.pi:.3f}, I: {Iparams[1]*180/np.pi:.3f}")
 
                 I_FFT_real = Iparams[0] * np.cos(Iparams[1])
                 I_FFT_imag = Iparams[0] * np.sin(Iparams[1])
