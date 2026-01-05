@@ -34,13 +34,11 @@ try:
         while mainloop == True:
             RES = bytes(Digi_1.uart_read())
             if RES.decode("utf-8") == "Received":
-                status = True
                 sleep(0.5)
                 print(f"\nMeasuring EIS at {CMD.strip()} Hz...")
-                # while status == True:
-                #     ST = bytes(Digi_1.uart_read())
-                #     if ST.decode("utf-8") == "Done":
-                #         status = False
+
+            if RES.decode("utf-8") == "Done":
+                sleep(0.5)
                 mainloop = False
                 print(f"\nMeasuring EIS at {CMD.strip()} Hz is done.")
 
