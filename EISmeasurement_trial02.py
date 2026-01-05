@@ -58,8 +58,8 @@ try:
                 print(f"Recovered Amplitudes: V: {Vparams[0]:.3f}, I: {Iparams[0]:.3f}")
                 print(f"Recovered Phases: V: {Vparams[1]*180/np.pi:.3f}, I: {Iparams[1]*180/np.pi:.3f}")
 
-                I_FFT_real = Iparams[0] * np.cos(Iparams[1])
-                I_FFT_imag = Iparams[0] * np.sin(Iparams[1])
+                I_FFT_real = Iparams[0] * np.cos(Iparams[1]+np.pi)
+                I_FFT_imag = Iparams[0] * np.sin(Iparams[1]+np.pi)
                 V1_FFT_real = Vparams[0] * np.cos(Vparams[1])
                 V1_FFT_imag = Vparams[0] * np.sin(Vparams[1])
 
