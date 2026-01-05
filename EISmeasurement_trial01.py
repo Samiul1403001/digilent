@@ -9,7 +9,7 @@ FREQ = [#10000,7943.282227,6309.573242,5011.87207,3981.071289,3162.277344,2511.8
         #0.999998927,0.794327378,0.63095665,0.501186669,0.398106724,0.316227406,0.251188338,0.199525982,0.158489123,0.125892386#,
         #0.099999875,0.079432718,0.063095652,0.050118655,0.039810661,0.03162273,0.025118826,0.019952592,0.015848907,0.012589234,0.01
         #] 
-        0.1, 1, 2, 5, 10]
+        1, 2, 5, 10]
 FREQ = np.round(FREQ, decimals=2)
 # UART specs
 PIN_TX = 0           # DIO pin used for UART TX (ADP3450 DIO0)
@@ -45,7 +45,7 @@ try:
                 mainloop = False
                 # initialize the scope with default settings
                 # choose sensible values
-                buffer_size = 1000
+                buffer_size = f * 100
                 sample_rate = int(100*float(CMD))
 
                 data_sets = Digi_1.scope_record(sample_rate, buffer_size)
