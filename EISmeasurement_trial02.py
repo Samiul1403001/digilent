@@ -37,10 +37,10 @@ try:
                 status = True
                 sleep(0.5)
                 print(f"\nMeasuring EIS at {CMD.strip()} Hz...")
-                while status == True:
-                    ST = bytes(Digi_1.uart_read())
-                    if ST.decode("utf-8") == "Done":
-                        status = False
+                # while status == True:
+                #     ST = bytes(Digi_1.uart_read())
+                #     if ST.decode("utf-8") == "Done":
+                #         status = False
                 mainloop = False
                 print(f"\nMeasuring EIS at {CMD.strip()} Hz is done.")
 
