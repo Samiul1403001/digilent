@@ -37,7 +37,7 @@ try:
                 sleep(0.5)
                 print(f"\nMeasuring EIS at {CMD.strip()} Hz...")
 
-            if RES.decode("utf-8") == "Done":
+            if RES.decode("utf-8") == "DoneRecv":
                 sleep(0.5)
                 mainloop = False
                 print(f"\nMeasuring EIS at {CMD.strip()} Hz is done.")
