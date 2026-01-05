@@ -2,7 +2,7 @@ from MyDigilent import MyDigilent, clean_buffer, freq_selection_signal
 from time import sleep
 import numpy as np
 
-FREQ = [1, 2, 5, 10]
+FREQ = [1]
 
 FREQ = np.round(FREQ, decimals=2)
 
