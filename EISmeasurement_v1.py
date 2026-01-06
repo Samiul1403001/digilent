@@ -78,8 +78,7 @@ try:
 
                 Z = (V_comp / I_comp)
                 print("Impedance in ohms: " + str(Z.real) + "+(" + str(Z.imag) + "j)")
-                print(sample[-1, 1])
-                if i > 0 and Z.real < sample[i, 1]:
+                if i > 0 and Z.real < sample[i-1, 1]:
                     print("\nFrequency skipped...\n")
                     break
                 sample[i, 0] = sfreq
