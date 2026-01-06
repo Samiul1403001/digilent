@@ -54,8 +54,8 @@ try:
                 data_sets = Digi_1.scope_record(sample_rate, buffer_size)
 
             if RES.decode("utf-8") == "DoneRecv":
-                I_freq = freq_selection_signal(100*(data_sets[0]-np.mean(data_sets[0])), freq_sweep=[f*0.8, f*1.2], sample_rate=sample_rate)
-                V_freq = freq_selection_signal(data_sets[1]-np.mean(data_sets[1]), freq_sweep=[f*0.8, f*1.2], sample_rate=sample_rate)
+                I_freq = freq_selection_signal(100*(data_sets[0]-np.mean(data_sets[0])), freq_sweep=[f*0.9, f*1.1], sample_rate=sample_rate)
+                V_freq = freq_selection_signal(data_sets[1]-np.mean(data_sets[1]), freq_sweep=[f*0.9, f*1.1], sample_rate=sample_rate)
 
                 sfreq = I_freq
                 print(sfreq)
@@ -78,6 +78,7 @@ try:
 
                 Z = (V_comp / I_comp)
                 print("Impedance in ohms: " + str(Z.real) + "+(" + str(Z.imag) + "j)")
+                print(sample[-1, 1])
                 if Z.real < sample[-1, 1]:
                     print("\nFrequency skipped...\n")
                     break
