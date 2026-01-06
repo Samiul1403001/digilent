@@ -54,11 +54,11 @@ try:
                 data_sets = Digi_1.scope_record(sample_rate, buffer_size)
 
             if RES.decode("utf-8") == "DoneRecv":
-                I_FFT_freqs, I_FFT_abs, I_FFT_real, I_FFT_imag = FFT(-100*(data_sets[0]-np.mean(data_sets[0])), freq_sweep=[f*0.2, f*2], sample_rate=sample_rate)
-                V1_FFT_freqs, V1_FFT_abs, V1_FFT_real, V1_FFT_imag = FFT(data_sets[1]-np.mean(data_sets[1]), freq_sweep=[f*0.2, f*2], sample_rate=sample_rate)
+                I_FFT_freqs, I_FFT_abs, I_FFT_real, I_FFT_imag = FFT(-100*data_sets[0], freq_sweep=[f*0.5, f*1.5], sample_rate=sample_rate)
+                V1_FFT_freqs, V1_FFT_abs, V1_FFT_real, V1_FFT_imag = FFT(data_sets[1], freq_sweep=[f*0.5, f*1.5], sample_rate=sample_rate)
 
-                Ifreq_mask = (I_FFT_freqs >= f - f*0.5) & (I_FFT_freqs <= f + f*0.5)
-                V1freq_mask = (V1_FFT_freqs >= f - f*0.5) & (V1_FFT_freqs <= f + f*0.5)
+                Ifreq_mask = (I_FFT_freqs >= f - f*0.2) & (I_FFT_freqs <= f + f*0.2)
+                V1freq_mask = (V1_FFT_freqs >= f - f*0.2) & (V1_FFT_freqs <= f + f*0.2)
                 Iidx = np.argmax(I_FFT_abs[Ifreq_mask])
                 V1idx = np.argmax(V1_FFT_abs[V1freq_mask])
 
