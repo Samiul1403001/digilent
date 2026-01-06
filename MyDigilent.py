@@ -47,6 +47,44 @@ def freq_selection_signal(y_buffer, freq_sweep, sample_rate):
                 break
     return freq[-1]
 
+def FFT(buffer, freq_sweep=[0, 100e3], sample_rate=100):
+    """
+    Compute single-sided magnitude spectrum and frequency vector (in MHz)
+    buffer : iterable of voltage samples (float)
+    freq_sweep : [start_freq, stop_freq] in Hz (only for frequency cropping)
+    Returns: (spectrum_magnitude, frequency_mhz_array)
+    """
+    # convert to numpy array
+    x = np.asarray(buffer, dtype=float)
+    N = x.size
+    if N == 0:
+        return np.array([]), np.array([])
+
+    # Sampling frequency is in scope.data.sampling_frequency (Hz)
+    fs = sample_rate
+
+    # compute FFT
+    X = np.fft.rfft(x * np.hanning(N))   # window to reduce leakage (Hann)
+    freqs = np.fft.rfftfreq(N, d=1.0 / fs)  # Hz
+
+    # magnitude (abs) and optionally normalize (divide by N)
+    # Extract components
+    real_part = X.real
+    imag_part = X.imag
+    mag = np.abs(X) / N
+
+    # Crop to requested freq_sweep range
+    start_freq = float(freq_sweep[0])
+    stop_freq = float(freq_sweep[1])
+    mask = (freqs >= start_freq) & (freqs <= stop_freq)
+
+    freqs = freqs[mask]
+    mag = mag[mask]
+    real_part = real_part[mask]
+    imag_part = imag_part[mask]
+
+    return freqs, mag, real_part, imag_part
+
 class data:
     """ stores the device handle, the device name and the device data """
     handle = ctypes.c_int(0)
