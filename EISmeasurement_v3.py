@@ -8,7 +8,7 @@ fperdecade = 10
 
 FREQ = []
 FREQ.append(f_freq[finit_idx])
-for i in range(finit_idx, finit_idx+2):
+for i in range(finit_idx, finit_idx+3):
     for k in range(1, fperdecade+1):
         FREQ.append(10**(np.log10(f_freq[i]).item()-k/fperdecade))
 
