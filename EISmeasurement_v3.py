@@ -2,13 +2,15 @@ from MyDigilent import MyDigilent, FFT, clean_buffer, freq_selection_signal, dua
 from time import sleep
 import numpy as np
 
-seed_freq = [1,0.8,0.65,0.5,0.4,0.3,0.25,0.2,0.15,0.125]
+f_freq = [1e3, 1e2, 1e1, 1e0, 1e-1, 1e-2]
+finit_idx = 2
+fperdecade = 10
+
 FREQ = []
-
-for i in range(1, -2, -1):
-    FREQ.extend([item * 10**i for item in seed_freq])
-
-FREQ = np.round(FREQ, decimals=4)
+FREQ.append(f_freq[finit_idx])
+for i in range(finit_idx, finit_idx+2):
+    for k in range(1, fperdecade+1):
+        FREQ.append(10**(np.log10(f_freq[i]).item()-k/fperdecade))
 
 # UART specs
 PIN_TX = 0           # DIO pin used for UART TX (ADP3450 DIO0)
@@ -23,7 +25,6 @@ Digi_1 = MyDigilent(tx=PIN_TX,
                     stop_bits=1)
 
 Digi_1.scope_setup(channels=[1, 2])
-
 sleep(1)
 
 # Main loop
