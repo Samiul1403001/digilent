@@ -64,6 +64,7 @@ try:
                 V1idx = np.argmax(V1_FFT_abs[V1freq_mask])
 
                 print(f"Recovered Amplitudes: V: {V1_FFT_abs[V1idx]:.3E}, I: {I_FFT_abs[Iidx]:.3E}")
+                print(f"Recovered frequency: F: {I_FFT_freqs[Iidx]:.3f}")
                 V_comp = V1_FFT_real[V1idx] + 1j * V1_FFT_imag[V1idx]
                 I_comp = I_FFT_real[Iidx] + 1j * I_FFT_imag[Iidx]
                 Z = V_comp / I_comp
