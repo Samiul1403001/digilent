@@ -69,7 +69,7 @@ try:
                 Z = V_comp / I_comp
                 print("Impedance in ohms: " + str(Z.real) + "+(" + str(Z.imag) + "j)")
 
-                sample[i, 0] = np.round(I_FFT_freqs, decimals=4)
+                sample[i, 0] = np.round(I_FFT_freqs[Iidx], decimals=4)
                 sample[i, 1] = Z.real
                 sample[i, 2] = -Z.imag
                 i+=1
