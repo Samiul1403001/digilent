@@ -69,6 +69,7 @@ try:
                 Z = V_comp / I_comp
                 print("Impedance in ohms: " + str(Z.real) + "+(" + str(Z.imag) + "j)")
                 if Z.real < sample[i, 1]:
+                    print("\nFrequency skipped...\n")
                     break
 
                 sample[i, 0] = np.round(I_FFT_freqs[Iidx], decimals=6)
