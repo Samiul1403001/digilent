@@ -1,4 +1,4 @@
-from MyDigilent import MyDigilent, FFT, clean_buffer, freq_selection_signal
+from MyDigilent import MyDigilent, FFT, clean_buffer, freq_selection_signal, dual_phase_demod
 from time import sleep
 import numpy as np
 
@@ -54,33 +54,39 @@ try:
                 data_sets = Digi_1.scope_record(sample_rate, buffer_size)
 
             if RES.decode("utf-8") == "DoneRecv":
-                I_freq = freq_selection_signal(100*(data_sets[0]-np.mean(data_sets[0])), freq_sweep=[f*0.8, f*1.2], sample_rate=sample_rate)
-                V_freq = freq_selection_signal(data_sets[1]-np.mean(data_sets[1]), freq_sweep=[f*0.8, f*1.2], sample_rate=sample_rate)
+                Imeas = 100*(data_sets[0]-np.mean(data_sets[0]))
+                V1meas = data_sets[1]-np.mean(data_sets[1])
+
+                I_freq = freq_selection_signal(Imeas, freq_sweep=[f*0.9, f*1.1], sample_rate=sample_rate)
+                V1_freq = freq_selection_signal(V1meas, freq_sweep=[f*0.9, f*1.1], sample_rate=sample_rate)
 
                 sfreq = I_freq
                 print(sfreq)
                 if sfreq == None:
                     sfreq = f
                 
-                I_clean, Iparams = clean_buffer(100*(data_sets[0]-np.mean(data_sets[0])), signal_freq=sfreq, sample_rate=sample_rate)
-                V1_clean, V1params = clean_buffer(data_sets[1]-np.mean(data_sets[1]), signal_freq=sfreq, sample_rate=sample_rate)
+                Iamp, Iphase = dual_phase_demod(Imeas, sfreq, sample_rate)
+                V1amp, V1phase = dual_phase_demod(V1meas, sfreq, sample_rate)
 
-                I_FFT_freqs, I_FFT_abs, I_FFT_real, I_FFT_imag = FFT(-I_clean, freq_sweep=[sfreq*0.8, sfreq*1.2], sample_rate=sample_rate)
-                V1_FFT_freqs, V1_FFT_abs, V1_FFT_real, V1_FFT_imag = FFT(V1_clean, freq_sweep=[sfreq*0.8, sfreq*1.2], sample_rate=sample_rate)
+                
+                print(f"Recovered Amplitudes: V: {V1amp:.3E}, I: {Iamp:.3E}")
+                print(f"Recovered Phases: V: {V1phase*180/np.pi:.3f}, I: {(Iphase+np.pi)*180/np.pi:.3f}")
 
-                Ifreq_mask = (I_FFT_freqs >= sfreq - sfreq*0.1) & (I_FFT_freqs <= sfreq + sfreq*0.1)
-                V1freq_mask = (V1_FFT_freqs >= sfreq - sfreq*0.1) & (V1_FFT_freqs <= sfreq + sfreq*0.1)
-                Iidx = np.argmax(I_FFT_abs[Ifreq_mask])
-                V1idx = np.argmax(V1_FFT_abs[V1freq_mask])
+                I_real = Iamp * np.cos(Iphase+np.pi)
+                I_imag = Iamp * np.sin(Iphase+np.pi)
+                V1_real = V1amp * np.cos(V1phase)
+                V1_imag = V1amp * np.sin(V1phase)
 
-                print(f"Recovered Amplitudes: V: {V1_FFT_abs[V1idx]:.3E}, I: {I_FFT_abs[Iidx]:.3E}")
-                print(f"Recovered frequency: F: {I_FFT_freqs[Iidx]:.6f}")
-                V_comp = V1_FFT_real[V1idx] + 1j * V1_FFT_imag[V1idx]
-                I_comp = I_FFT_real[Iidx] + 1j * I_FFT_imag[Iidx]
-                Z = V_comp / I_comp
+                V_comp = V1_real + 1j * V1_imag
+                I_comp = I_real + 1j * I_imag
+
+                Z = (V_comp / I_comp)
                 print("Impedance in ohms: " + str(Z.real) + "+(" + str(Z.imag) + "j)")
+                if i > 0 and Z.real < sample[i-1, 1]:
+                    print("\nFrequency skipped...\n")
+                    break
 
-                sample[i, 0] = np.round(I_FFT_freqs[Iidx], decimals=6)
+                sample[i, 0] = sfreq
                 sample[i, 1] = Z.real
                 sample[i, 2] = -Z.imag
                 i+=1

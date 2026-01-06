@@ -4,6 +4,48 @@ from os import sep                # OS specific file path separators
 import inspect, numpy as np       # caller function data
 import dwfconstants as constants
 
+def dual_phase_demod(y_buffer, signal_freq, sample_rate):
+    """
+    Extracts magnitude and phase from a noisy signal using 
+    dual-phase synchronous demodulation.
+    
+    Parameters:
+    y_buffer (np.array): The measured current or voltage data
+    signal_freq (float): The frequency of the perturbation (Hz)
+    sample_rate (float): The sampling rate (Hz)
+    
+    Returns:
+    magnitude (float), phase_deg (float)
+    """
+    n = len(y_buffer)
+    t = np.arange(n) / sample_rate
+    
+    # 1. Generate local Reference (Sine) and Quadrature (Cosine) waves
+    # Note: 2*pi*f*t ensures we are perfectly in sync with the source frequency
+    ref_i = np.sin(2 * np.pi * signal_freq * t)
+    ref_q = np.cos(2 * np.pi * signal_freq * t)
+    
+    # 2. Multiply (Demodulation)
+    # This creates a DC component proportional to the phase/amp
+    # and a 2*omega component
+    mixed_i = y_buffer * ref_i
+    mixed_q = y_buffer * ref_q
+    
+    # 3. Low Pass Filter (Average)
+    # Taking the mean over an integer number of cycles acts as a 
+    # perfect low-pass filter, removing the 2*omega component.
+    X = np.mean(mixed_i)
+    Y = np.mean(mixed_q)
+    
+    # 4. Extract Magnitude and Phase
+    # Multiplying by 2 accounts for the 1/2 factor in trig identities
+    magnitude = 2 * np.sqrt(X**2 + Y**2)
+    
+    # Phase shift relative to the reference sine wave
+    phase_rad = np.arctan2(Y, X)
+    
+    return magnitude, phase_rad
+
 def clean_buffer(y_buffer, signal_freq, sample_rate):
     # 1. Synthesize the Time Vector based on indices
     # t = [0, 1/fs, 2/fs, ..., N/fs]
