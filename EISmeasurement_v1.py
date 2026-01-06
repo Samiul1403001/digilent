@@ -5,8 +5,8 @@ import numpy as np
 seed_freq = [1,0.8,0.65,0.5,0.4,0.3,0.25,0.2,0.15,0.125]
 FREQ = []
 
-for i in range(1, 2):
-    FREQ.extend(seed_freq*10*i)
+for i in range(1, 0, -1):
+    FREQ.extend(seed_freq*10**i)
 
 FREQ = np.round(FREQ, decimals=4)
 
@@ -51,7 +51,7 @@ try:
                 I_freq = freq_selection_signal(100*(data_sets[0]-np.mean(data_sets[0])), freq_sweep=[f*0.8, f*1.2], sample_rate=sample_rate)
                 V_freq = freq_selection_signal(data_sets[1]-np.mean(data_sets[1]), freq_sweep=[f*0.8, f*1.2], sample_rate=sample_rate)
 
-                sfreq = V_freq
+                sfreq = I_freq
                 print(sfreq)
                 if sfreq == None:
                     sfreq = f
@@ -60,7 +60,7 @@ try:
                 V_clean, Vparams = clean_buffer(data_sets[1]-np.mean(data_sets[1]), signal_freq=sfreq, sample_rate=sample_rate)
 
                 print(f"Recovered Amplitudes: V: {Vparams[0]:.3f}, I: {Iparams[0]:.3f}")
-                print(f"Recovered Phases: V: {Vparams[1]*180/np.pi:.3f}, I: {Iparams[1]*180/np.pi:.3f}")
+                print(f"Recovered Phases: V: {Vparams[1]*180/np.pi:.3f}, I: {(Iparams[1]+np.pi)*180/np.pi:.3f}")
 
                 I_FFT_real = Iparams[0] * np.cos(Iparams[1]+np.pi)
                 I_FFT_imag = Iparams[0] * np.sin(Iparams[1]+np.pi)
@@ -78,7 +78,7 @@ try:
                 i+=1
                 mainloop = False
                 print(f"\nMeasuring EIS at {CMD.strip()} Hz is done.")
-        sleep(10)
+        sleep(3)
     rows_to_keep = ~ (sample == 0).all(axis=1)
     sample = sample[rows_to_keep]
 
