@@ -68,6 +68,8 @@ try:
                 I_comp = I_FFT_real[Iidx] + 1j * I_FFT_imag[Iidx]
                 Z = V_comp / I_comp
                 print("Impedance in ohms: " + str(Z.real) + "+(" + str(Z.imag) + "j)")
+                if Z.real < sample[i, 1]:
+                    break
 
                 sample[i, 0] = np.round(I_FFT_freqs[Iidx], decimals=6)
                 sample[i, 1] = Z.real
