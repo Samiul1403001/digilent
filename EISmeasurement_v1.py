@@ -33,7 +33,7 @@ try:
     for f in FREQ:
         CMD = str(f)
         Digi_1.sendStringUART(CMD)
-        sleep(0.5)
+        sleep(1)
         mainloop = True
         while mainloop == True:
             RES = bytes(Digi_1.uart_read())
@@ -84,7 +84,7 @@ try:
                 i+=1
                 mainloop = False
                 print(f"\nMeasuring EIS at {CMD.strip()} Hz is done.")
-        sleep(3)
+        sleep(5)
     rows_to_keep = ~ (sample == 0).all(axis=1)
     sample = sample[rows_to_keep]
 
