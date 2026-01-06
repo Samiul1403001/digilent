@@ -6,7 +6,6 @@ seed_freq = [1,0.8,0.65,0.5,0.4,0.3,0.25,0.2,0.15,0.125]
 FREQ = []
 
 for i in range(1, -2, -1):
-    freq = seed_freq*10
     FREQ.extend([item * 10**i for item in seed_freq])
 
 FREQ = np.round(FREQ, decimals=4)
@@ -64,13 +63,13 @@ try:
                 V1idx = np.argmax(V1_FFT_abs[V1freq_mask])
 
                 print(f"Recovered Amplitudes: V: {V1_FFT_abs[V1idx]:.3E}, I: {I_FFT_abs[Iidx]:.3E}")
-                print(f"Recovered frequency: F: {I_FFT_freqs[Iidx]:.3f}")
+                print(f"Recovered frequency: F: {I_FFT_freqs[Iidx]:.6f}")
                 V_comp = V1_FFT_real[V1idx] + 1j * V1_FFT_imag[V1idx]
                 I_comp = I_FFT_real[Iidx] + 1j * I_FFT_imag[Iidx]
                 Z = V_comp / I_comp
                 print("Impedance in ohms: " + str(Z.real) + "+(" + str(Z.imag) + "j)")
 
-                sample[i, 0] = np.round(I_FFT_freqs[Iidx], decimals=4)
+                sample[i, 0] = np.round(I_FFT_freqs[Iidx], decimals=6)
                 sample[i, 1] = Z.real
                 sample[i, 2] = -Z.imag
                 i+=1

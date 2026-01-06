@@ -6,7 +6,6 @@ seed_freq = [1,0.8,0.65,0.5,0.4,0.3,0.25,0.2,0.15,0.125]
 FREQ = []
 
 for i in range(1, -2, -1):
-    freq = seed_freq*10
     FREQ.extend([item * 10**i for item in seed_freq])
 
 FREQ = np.round(FREQ, decimals=4)
