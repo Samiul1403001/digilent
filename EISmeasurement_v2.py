@@ -57,13 +57,13 @@ try:
             if RES.decode("utf-8") == "DoneRecv":
                 I_FFT_freqs, I_FFT_abs, I_FFT_real, I_FFT_imag = FFT(-100*(data_sets[0]-np.mean(data_sets[0])), freq_sweep=[f*0.8, f*1.2], sample_rate=sample_rate)
                 V1_FFT_freqs, V1_FFT_abs, V1_FFT_real, V1_FFT_imag = FFT(data_sets[1]-np.mean(data_sets[1]), freq_sweep=[f*0.8, f*1.2], sample_rate=sample_rate)
-                print(f"Recovered Amplitudes: V: {np.mean(V1_FFT_abs):.3E}, I: {np.mean(I_FFT_abs):.3E}")
 
                 Ifreq_mask = (I_FFT_freqs >= f - f*0.05) & (I_FFT_freqs <= f + f*0.05)
                 V1freq_mask = (V1_FFT_freqs >= f - f*0.05) & (V1_FFT_freqs <= f + f*0.05)
                 Iidx = np.argmax(I_FFT_abs[Ifreq_mask])
                 V1idx = np.argmax(V1_FFT_abs[V1freq_mask])
 
+                print(f"Recovered Amplitudes: V: {V1_FFT_abs[V1idx]:.3E}, I: {I_FFT_abs[Iidx]:.3E}")
                 V_comp = V1_FFT_real[V1idx] + 1j * V1_FFT_imag[V1idx]
                 I_comp = I_FFT_real[Iidx] + 1j * I_FFT_imag[Iidx]
                 Z = V_comp / I_comp
