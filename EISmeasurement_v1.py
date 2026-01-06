@@ -43,7 +43,13 @@ try:
 
                 # initialize the scope with default settings
                 # choose sensible values
-                buffer_size = 1000
+                if f < 1:
+                    buffer_size = 200
+                elif (f > 2) and (f <=10):
+                    buffer_size = 500
+                else:
+                    buffer_size = 1000
+                
                 sample_rate = int(100*float(CMD))
 
                 data_sets = Digi_1.scope_record(sample_rate, buffer_size)
@@ -60,7 +66,7 @@ try:
                 I_clean, Iparams = clean_buffer(100*(data_sets[0]-np.mean(data_sets[0])), signal_freq=sfreq, sample_rate=sample_rate)
                 V_clean, Vparams = clean_buffer(data_sets[1]-np.mean(data_sets[1]), signal_freq=sfreq, sample_rate=sample_rate)
 
-                print(f"Recovered Amplitudes: V: {Vparams[0]:.3f}, I: {Iparams[0]:.3f}")
+                print(f"Recovered Amplitudes: V: {Vparams[0]:.3E}, I: {Iparams[0]:.3E}")
                 print(f"Recovered Phases: V: {Vparams[1]*180/np.pi:.3f}, I: {(Iparams[1]+np.pi)*180/np.pi:.3f}")
 
                 I_FFT_real = Iparams[0] * np.cos(Iparams[1]+np.pi)
