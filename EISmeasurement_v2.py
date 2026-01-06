@@ -45,7 +45,7 @@ try:
                 # choose sensible values
                 if f < 1:
                     buffer_size = 200
-                elif (f >= 1) and (f <=10):
+                elif (f >= 1) and (f <= 5):
                     buffer_size = 500
                 else:
                     buffer_size = 1000
