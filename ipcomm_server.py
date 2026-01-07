@@ -18,12 +18,12 @@ except ConnectionRefusedError:
 
 # Initialization
 f_freq = [1e3, 1e2, 1e1, 1e0, 1e-1, 1e-2]
-finit_idx = 2
+finit_idx = 1
 fperdecade = 10
 
 FREQ = []
 FREQ.append(f_freq[finit_idx])
-for i in range(finit_idx, finit_idx+2):
+for i in range(finit_idx, finit_idx+3):
     for k in range(1, fperdecade+1):
         FREQ.append(10**(np.log10(f_freq[i]).item()-k/fperdecade))
 
@@ -98,7 +98,7 @@ try:
 
                 Z = (V_comp / I_comp)
                 print("Impedance in ohms: " + str(Z.real) + "+(" + str(Z.imag) + "j)")
-                if i > 0 and Z.real < sample[i-1, 1]:
+                if i > 0 and Z.real < 0.9*sample[i-1, 1]:
                     print("\nFrequency skipped...\n")
                     break
 
