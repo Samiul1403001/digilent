@@ -59,11 +59,11 @@ try:
                 # initialize the scope with default settings
                 # choose sensible values
                 if f < 1:
-                    buffer_size = 200
+                    buffer_size = 180
                 elif (f >= 1) and (f <= 5):
-                    buffer_size = 500
+                    buffer_size = 450
                 else:
-                    buffer_size = 1000
+                    buffer_size = 900
                 
                 sample_rate = int(100*float(CMD))
 
