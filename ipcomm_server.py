@@ -3,7 +3,7 @@ from time import sleep
 import numpy as np, socket, struct
 
 # --- TCP CONFIGURATION ---
-TCP_IP = '127.0.0.1'  # Localhost (use Host PC IP if running in ADP3450 Linux Mode)
+TCP_IP = '10.115.78.142'  # Localhost (use Host PC IP if running in ADP3450 Linux Mode)
 TCP_PORT = 5005       # Arbitrary port (must match receiver)
 
 print(f"Connecting to server at {TCP_IP}:{TCP_PORT}...")
