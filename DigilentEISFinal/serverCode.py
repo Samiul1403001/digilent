@@ -146,18 +146,21 @@ try:
                         sample[i_idx, 0] = sfreq
                         sample[i_idx, 1] = Z.real
                         sample[i_idx, 2] = -Z.imag
-                        i_idx += 1
-                        mainloop = False # Exit UART wait loop
                         
                         # --- Send Data to Host ---
                         try:
                             # Send accumulated buffer
-                            data_bytes = sample[i_idx-1, :].flatten().tobytes()
+                            print(sample[i_idx, :])
+                            data_bytes = sample[i_idx, :].flatten().tobytes()
+                            print(data_bytes)
                             header = struct.pack('>I', len(data_bytes))
                             sock.sendall(header + data_bytes)
                             print(f"Sent update to host.")
                         except Exception as e:
                             print(f"Send failed: {e}")
+
+                        i_idx += 1
+                        mainloop = False # Exit UART wait loop
 
             # --- End of Run or Stopped ---
             print("Sequence finished or stopped. Saving data...")
