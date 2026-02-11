@@ -34,12 +34,12 @@ class NetworkThread(QThread):
             server_sock.listen(1)
             
             # Update GUI status
-            self.status_update.emit("grey", "Waiting for ADP3450...")
+            self.status_update.emit("orange", "Waiting for ADP3450...")
             
             # This line BLOCKS, but since we are in a thread, the GUI is fine.
             self.conn, addr = server_sock.accept()
             
-            self.status_update.emit("orange", f"Connected to ADP3450 (IP: {addr[0]})")
+            self.status_update.emit("green", f"Connected to ADP3450!")
             
             # --- Data Reception Loop ---
             timestep = 0
@@ -152,6 +152,8 @@ class MainWindow(QMainWindow):
         self.figure = Figure(facecolor='#F0F0F0')
         self.canvas = FigureCanvas(self.figure)
         self.ax = self.figure.add_subplot(111)
+        self.ax.set_ylabel("-Z_imag (\u03A9)")
+        self.ax.set_xlabel("Z_real (\u03A9)")
         self.ax.set_title("Live EIS Data")
         self.ax.grid(True, linestyle='--', alpha=0.5)
         
@@ -207,6 +209,14 @@ class MainWindow(QMainWindow):
 
     # --- BUTTON HANDLERS ---
     def send_start(self):
+        # 1. Clear the historical data list
+        self.recorded_data = [] 
+        
+        # 2. Visually clear the scatter plot immediately
+        # We set the offsets to an empty array (0 points)
+        self.scatter.set_offsets(np.empty((0, 2)))
+        self.canvas.draw()
+
         # We access the worker thread to send data
         self.worker.send_command("START")
         self.btn_start.setEnabled(False)
