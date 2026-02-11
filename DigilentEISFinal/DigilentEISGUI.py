@@ -61,9 +61,10 @@ class NetworkThread(QThread):
                 # 3. Convert bytes back to numpy array
                 data_np = np.frombuffer(data_bytes, dtype=np.float64)
                 eis_data = data_np.reshape(1, 3)
+                print(eis_data)
                 
                 # 4. Send Data to GUI
-                self.data_received.emit(eis_data[:, 1], eis_data[:, 2])
+                self.data_received.emit(1, 1, 1)
                 timestep += 1
                 
         except Exception as e:
@@ -172,9 +173,9 @@ class MainWindow(QMainWindow):
 
     # --- SLOTS (Responding to Signals) ---
     @pyqtSlot(float, float)
-    def update_plot(self, X, Y):
+    def update_plot(self, F, X, Y):
         """Updates the scatter plot points."""
-        self.recorded_data.append((X, Y))
+        self.recorded_data.append((F, X, Y))
         
         # Keep only last 100 points for performance
         recent = self.recorded_data[-65:]
@@ -182,6 +183,7 @@ class MainWindow(QMainWindow):
         # Prepare (x, y) pairs for scatter
         # Scatter plots require a 2D array of [[x1, y1], [x2, y2], ...]
         points = np.array(recent)
+        print(points)
         
         if len(points) > 0:
             self.scatter.set_offsets(points)
