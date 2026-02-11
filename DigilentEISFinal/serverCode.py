@@ -150,9 +150,7 @@ try:
                         # --- Send Data to Host ---
                         try:
                             # Send accumulated buffer
-                            print(sample[i_idx, :])
                             data_bytes = sample[i_idx, :].flatten().tobytes()
-                            print(data_bytes)
                             header = struct.pack('>I', len(data_bytes))
                             sock.sendall(header + data_bytes)
                             print(f"Sent update to host.")
