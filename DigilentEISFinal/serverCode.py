@@ -14,7 +14,7 @@ PIN_RX = 1
 BAUDRATE = 115200
 
 # Initialize Hardware ONCE (before entering the network loop)
-print("Initializing Hardware...")
+print("Initializing Digilent-ADP3450...")
 Digi_1 = MyDigilent(tx=PIN_TX, rx=PIN_RX, baud_rate=BAUDRATE, parity="none", data_bits=8, stop_bits=1)
 Digi_1.scope_setup(channels=[1, 2])
 sleep(1)
@@ -37,14 +37,14 @@ try:
     server_sock.bind((TCP_IP, TCP_PORT))
     server_sock.listen(1)
     print(f"Server listening on {TCP_IP}:{TCP_PORT}")
-    print("Hardware ready. Waiting for Host connection...")
+    print("Digilent is ready. Waiting for Client connection...")
 
     # 2. OUTER LOOP: Keeps the server alive forever
     while True:
         try:
-            # Block here until a Host connects
+            # Block here until a Client connects
             conn, addr = server_sock.accept()
-            print(f"\nHost connected from: {addr}")
+            print(f"\nClient connected from: {addr}")
             
             client_connected = True
 
@@ -58,7 +58,7 @@ try:
                 try:
                     command_raw = conn.recv(1024)
                     if not command_raw:
-                        print("Host disconnected.")
+                        print("Client disconnected.")
                         client_connected = False
                         break 
                     
@@ -95,7 +95,7 @@ try:
                         except BlockingIOError:
                             pass 
                         except Exception as e:
-                            print(f"Socket error during check (Host likely disconnected): {e}")
+                            print(f"Socket error during check (Client likely disconnected): {e}")
                             stop_requested = True
                             client_connected = False
                             break
@@ -146,7 +146,7 @@ try:
                                 print("Impedance: " + str(Z.real) + "+(" + str(Z.imag) + "j)")
 
                                 # Data Quality Check
-                                if i_idx > 0 and Z.real < 0.95*sample[i_idx-1, 1] and Z.real > 1e-7:
+                                if i_idx > 0 and (Z.real < 0.95*sample[i_idx-1, 1] and Z.real > 1e-7):
                                     print("\nFrequency skipped (Impedance Drop)...\n")
                                     break 
 
@@ -160,9 +160,9 @@ try:
                                     data_bytes = sample[i_idx, :].flatten().tobytes()
                                     header = struct.pack('>I', len(data_bytes))
                                     conn.sendall(header + data_bytes)
-                                    print(f"Sent update to host.")
+                                    print(f"Sent measurement to Client.")
                                 except Exception as e:
-                                    print(f"Send failed (Host disconnected?): {e}")
+                                    print(f"Send failed (Client disconnected?): {e}")
                                     client_connected = False
                                     stop_requested = True # Force loop exit
 
