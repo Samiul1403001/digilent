@@ -115,9 +115,9 @@ try:
 
                             if res_str == "Received":
                                 print(f"Measuring EIS at {CMD.strip()} Hz...")
-                                if f < 1: buffer_size = 180
-                                elif 1 <= f <= 5: buffer_size = 450
-                                else: buffer_size = 900
+                                if f < 1: buffer_size = 200
+                                elif 1 <= f <= 10: buffer_size = 800
+                                else: buffer_size = 3400
                                 sample_rate = int(100*float(CMD))
                                 data_sets = Digi_1.scope_record(sample_rate, buffer_size)
 
