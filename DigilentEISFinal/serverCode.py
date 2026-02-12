@@ -138,7 +138,7 @@ try:
                         print("Impedance: " + str(Z.real) + "+(" + str(Z.imag) + "j)")
 
                         # Data Quality Check
-                        if i_idx > 0 and Z.real < 0.95*sample[i_idx-1, 1]:
+                        if i_idx > 0 and (Z.real < 0.95*sample[i_idx-1, 1] or Z.real < 1e-7):
                             print("\nFrequency skipped (Impedance Drop)...\n")
                             break # Breaks the while(mainloop), continues for loop
 
