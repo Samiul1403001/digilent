@@ -5,7 +5,7 @@ import select
 
 # --- TCP Configuration ---
 # 1. SERVER CONFIG: Listen on ALL interfaces
-TCP_IP = '10.115.78.142'  
+TCP_IP = '0.0.0.0'
 TCP_PORT = 5005            
 
 # --- Hardware Initialization ---
