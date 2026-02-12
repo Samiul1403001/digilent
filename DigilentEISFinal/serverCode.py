@@ -132,7 +132,7 @@ try:
                                 Iamp, Iphase = dual_phase_demod(Imeas, sfreq, sample_rate)
                                 V1amp, V1phase = dual_phase_demod(V1meas, sfreq, sample_rate)
 
-                                print(f"Freq: {sfreq:.2f} Hz | Z_Real: {V1amp/Iamp:.2f}")
+                                print(f"Freq: {sfreq:.2f} Hz | V_amp: {V1amp:.2E} | I_amp: {Iamp:.2E}")
 
                                 I_real = Iamp * np.cos(Iphase+np.pi)
                                 I_imag = Iamp * np.sin(Iphase+np.pi)
@@ -146,7 +146,7 @@ try:
                                 print("Impedance: " + str(Z.real) + "+(" + str(Z.imag) + "j)")
 
                                 # Data Quality Check
-                                if (Z.real < 0.95*sample[i_idx-1, 1] and Z.real >= 0):
+                                if i_idx > 0 and Z.real < 0.98*sample[i_idx-1, 1] and Z.real < 0:
                                     print("\nFrequency skipped (Impedance Drop)...\n")
                                     break 
 
