@@ -1,7 +1,6 @@
 from MyDigilent import MyDigilent, freq_selection_signal, dual_phase_demod
 from time import sleep
-import numpy as np, socket, struct
-import select 
+import numpy as np, socket, struct, mlrepo as ml
 
 # --- TCP Configuration ---
 # 1. SERVER CONFIG: Listen on ALL interfaces
@@ -76,7 +75,7 @@ try:
                     print("START received. Beginning Measurement Sequence...")
                     
                     # Initialize run variables
-                    sample = np.zeros([61, 3])
+                    sample = np.zeros([61, 4])
                     i_idx = 0
                     stop_requested = False
 
@@ -149,14 +148,22 @@ try:
                                 if i_idx > 0 and Z.real < 0.98*sample[i_idx-1, 1] and Z.real < 0:
                                     print("\nFrequency skipped (Impedance Drop)...\n")
                                     break 
+                                
+                                sample[i_idx, 0] = np.mean(data_sets[1])
+                                sample[i_idx, 1] = sfreq
+                                sample[i_idx, 2] = Z.real
+                                sample[i_idx, 3] = -Z.imag
 
-                                sample[i_idx, 0] = sfreq
-                                sample[i_idx, 1] = Z.real
-                                sample[i_idx, 2] = -Z.imag
+                                # --- ML based SoH estimation ---
+                                output = ml.model_forward(sample.reshape(1, 4, 61).astype(np.float32),
+                                                            ml.W_ih, ml.W_hh, ml.b_ih, ml.b_hh,
+                                                            ml.fc1_W, ml.fc1_b,
+                                                            ml.out_W, ml.out_b)
+                                print(f"\n\nThe estimated SoH is: {str(np.round(output*100, decimals=2))}%\n")
                                 
                                 # --- Send Data to Host ---
                                 try:
-                                    # Send CURRENT sample row (3 floats)
+                                    # Send CURRENT sample row
                                     data_bytes = sample[i_idx, :].flatten().tobytes()
                                     header = struct.pack('>I', len(data_bytes))
                                     conn.sendall(header + data_bytes)
