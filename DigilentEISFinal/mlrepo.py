@@ -25,7 +25,7 @@ def sigmoid(x):
 # ----------------------------------------------------------
 # LSTM forward pass (PyTorch-compatible)
 # ----------------------------------------------------------
-def lstm_forward(X, W_ih, W_hh, b_ih, b_hh, hidden_size=20):
+def lstm_forward(X, W_ih, W_hh, b_ih, b_hh, hidden_size=10):
     seq_len = X.shape[0]
 
     h = np.zeros((hidden_size,))
@@ -70,7 +70,6 @@ def model_forward(sample,
     X = sample[0].T  # => (61, 3) sequence-first
 
     h = lstm_forward(X, W_ih, W_hh, b_ih, b_hh)
-    print(X.shape)
     z = fc1_forward(h, fc1_W, fc1_b)
     y = out_forward(z, out_W, out_b)
     return y
