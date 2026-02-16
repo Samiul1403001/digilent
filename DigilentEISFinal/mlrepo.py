@@ -66,11 +66,11 @@ def model_forward(sample,
                   fc1_W, fc1_b,
                   out_W, out_b):
 
-    print(sample.shape)
     # sample shape: (1, 3, 61)
     X = sample[0].T  # => (61, 3) sequence-first
 
     h = lstm_forward(X, W_ih, W_hh, b_ih, b_hh)
+    print(X.shape)
     z = fc1_forward(h, fc1_W, fc1_b)
     y = out_forward(z, out_W, out_b)
     return y
