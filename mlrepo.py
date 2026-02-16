@@ -1,18 +1,18 @@
 import numpy as np
 
 # LSTM parameters (PyTorch-style)
-W_ih = np.load("npweights/lstm.weight_ih_l0.npy")   # (4*H, input_size)
-W_hh = np.load("npweights/lstm.weight_hh_l0.npy")   # (4*H, H)
-b_ih = np.load("npweights/lstm.bias_ih_l0.npy")     # (4*H,)
-b_hh = np.load("npweights/lstm.bias_hh_l0.npy")     # (4*H,)
+W_ih = np.load("npweights/lstm_weight_ih_l0.npy")   # (4*H, input_size)
+W_hh = np.load("npweights/lstm_weight_hh_l0.npy")   # (4*H, H)
+b_ih = np.load("npweights/lstm_bias_ih_l0.npy")     # (4*H,)
+b_hh = np.load("npweights/lstm_bias_hh_l0.npy")     # (4*H,)
 
 # Fully connected layer 1
-fc1_W = np.load("npweights/fc1.weight.npy")         # (fc1_out, H)
-fc1_b = np.load("npweights/fc1.bias.npy")           # (fc1_out,)
+fc1_W = np.load("npweights/fc1_weight.npy")         # (fc1_out, H)
+fc1_b = np.load("npweights/fc1_bias.npy")           # (fc1_out,)
 
 # Output layer
-out_W = np.load("npweights/olayer.weight.npy")      # (out_dim, fc1_out)
-out_b = np.load("npweights/olayer.bias.npy")        # (out_dim,)
+out_W = np.load("npweights/olayer_weight.npy")      # (out_dim, fc1_out)
+out_b = np.load("npweights/olayer_bias.npy")        # (out_dim,)
 
 # ----------------------------------------------------------
 # Utility activation functions
@@ -70,6 +70,7 @@ def model_forward(sample,
     X = sample[0].T  # => (61, 3) sequence-first
 
     h = lstm_forward(X, W_ih, W_hh, b_ih, b_hh)
+    print(X.shape)
     z = fc1_forward(h, fc1_W, fc1_b)
     y = out_forward(z, out_W, out_b)
     return y
