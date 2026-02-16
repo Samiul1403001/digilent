@@ -20,11 +20,11 @@ sleep(1)
 
 # --- Frequency Setup ---
 f_freq = [1e3, 1e2, 1e1, 1e0, 1e-1, 1e-2]
-finit_idx = 1
+finit_idx = 2
 fperdecade = 10
 FREQ_TEMPLATE = [] 
 FREQ_TEMPLATE.append(f_freq[finit_idx])
-for i in range(finit_idx, finit_idx+4):
+for i in range(finit_idx, finit_idx+3):
     for k in range(1, fperdecade+1):
         FREQ_TEMPLATE.append(10**(np.log10(f_freq[i]).item()-k/fperdecade))
 
