@@ -175,6 +175,7 @@ try:
 
                                 i_idx += 1
                                 mainloop = False 
+                                sleep(int(3*(3-np.log10(sfreq))))
 
                         if not client_connected: break
 
