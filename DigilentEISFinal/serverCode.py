@@ -164,9 +164,7 @@ try:
                                 # --- Send Data to Host ---
                                 try:
                                     # Send CURRENT sample row
-                                    eis_data = sample[i_idx, :].flatten()
-                                    eis_data[-1] = np.round(output*100, decimals=2)
-                                    data_bytes = eis_data.tobytes()
+                                    data_bytes = np.append(sample[i_idx, :].flatten(), np.round(output*100, decimals=2)).tobytes()
                                     header = struct.pack('>I', len(data_bytes))
                                     conn.sendall(header + data_bytes)
                                     print(f"Sent measurement to Client.")
