@@ -66,6 +66,7 @@ def model_forward(sample,
                   fc1_W, fc1_b,
                   out_W, out_b):
 
+    print(sample.shape)
     # sample shape: (1, 3, 61)
     X = sample[0].T  # => (61, 3) sequence-first
 
