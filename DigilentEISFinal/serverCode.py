@@ -121,14 +121,14 @@ try:
                                 buffer_size = int(max_buf)
                                 sample_rate = int(fsample_max)
                                 ncycle = int(buffer_size/(sample_rate/f))
-                                if f < 1:
+                                if f < 0.1:
                                     ncycle = 2
                                     buffer_size = ncycle * sample_rate * np.exp(-2.303*np.log10(f))
                                     while buffer_size > max_buf:
                                         sample_rate = int(sample_rate * 0.75)
                                         buffer_size = int(sample_rate * ncycle * np.exp(-2.303*np.log10(f)))
-                                elif f <= 10 and f >= 1:
-                                    ncycle = 10
+                                elif f <= 10 and f >= 0.1:
+                                    ncycle = int(8.5*np.log10(f)+11.5)
                                     buffer_size = ncycle * sample_rate * np.exp(-2.303*np.log10(f))
                                     while buffer_size > max_buf:
                                         sample_rate = int(sample_rate * 0.75)
