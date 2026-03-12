@@ -19,15 +19,16 @@ Digi_1.scope_setup(channels=[1, 2])
 sleep(1)
 
 max_buf = Digi_1.dev.analog.input.max_buffer_size
-print("Max buffer size: ", max_buf)
+fsample_max = 1e6
+print(f"Max buffer size per channel: {max_buf}, Max sampling rate: {fsample_max}")
 
 # --- Frequency Setup ---
-f_freq = [1e3, 1e2, 1e1, 1e0, 1e-1, 1e-2]
-finit_idx = 2
+f_freq = [10e3, 1e3, 1e2, 1e1, 1e0, 1e-1, 1e-2]
+finit_idx = 1
 fperdecade = 10
 FREQ_TEMPLATE = [] 
 FREQ_TEMPLATE.append(f_freq[finit_idx])
-for i in range(finit_idx, finit_idx+3):
+for i in range(finit_idx, len(f_freq)-1):
     for k in range(1, fperdecade+1):
         FREQ_TEMPLATE.append(10**(np.log10(f_freq[i]).item()-k/fperdecade))
 
@@ -117,12 +118,23 @@ try:
 
                             if res_str == "Received":
                                 print(f"Measuring EIS at {CMD.strip()} Hz...")
-                                if f <= 10:
-                                    buffer_size = 400
-                                    sample_rate = int(200*float(CMD))
+                                buffer_size = int(max_buf)
+                                sample_rate = int(fsample_max)
+                                ncycle = int(buffer_size/(sample_rate/f))
+                                if f <= 1:
+                                    ncycle = 2
+                                    buffer_size = ncycle * sample_rate * np.exp(-2.303*np.log10(f))
+                                    while buffer_size > max_buf - 1:
+                                        sample_rate = int(sample_rate * 0.75)
+                                        buffer_size = int(sample_rate * ncycle * np.exp(-2.303*np.log10(f)))
                                 else:
-                                    buffer_size = 20000
-                                    sample_rate = int(200*float(CMD))
+                                    est_ncycle = int(0.6228 * np.exp(2.2101*np.log10(f)))
+                                    while (ncycle < est_ncycle):
+                                        sample_rate = int(sample_rate * 0.75)
+                                        ncycle = int(buffer_size/(sample_rate/f))
+                                    if ncycle < 2:
+                                        ncycle = 2
+                                        sample_rate = int(f*buffer_size/ncycle)
                                 data_sets = Digi_1.scope_record(sample_rate, buffer_size)
 
                             elif res_str == "DoneRecv":
