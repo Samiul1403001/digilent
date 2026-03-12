@@ -18,6 +18,9 @@ Digi_1 = MyDigilent(tx=PIN_TX, rx=PIN_RX, baud_rate=BAUDRATE, parity="none", dat
 Digi_1.scope_setup(channels=[1, 2])
 sleep(1)
 
+max_buf = Digi_1.dev.analog.input.max_buffer_size
+print("Max buffer size: ", max_buf)
+
 # --- Frequency Setup ---
 f_freq = [1e3, 1e2, 1e1, 1e0, 1e-1, 1e-2]
 finit_idx = 2
@@ -114,10 +117,12 @@ try:
 
                             if res_str == "Received":
                                 print(f"Measuring EIS at {CMD.strip()} Hz...")
-                                if f < 1: buffer_size = 400
-                                elif 1 <= f <= 10: buffer_size = 2600
-                                else: buffer_size = 11000
-                                sample_rate = int(200*float(CMD))
+                                if f <= 10:
+                                    buffer_size = 400
+                                    sample_rate = int(200*float(CMD))
+                                else:
+                                    buffer_size = 20000
+                                    sample_rate = int(200*float(CMD))
                                 data_sets = Digi_1.scope_record(sample_rate, buffer_size)
 
                             elif res_str == "DoneRecv":
