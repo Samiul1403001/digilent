@@ -136,6 +136,7 @@ try:
                                         ncycle = 2
                                         sample_rate = int(f*buffer_size/ncycle)
                                 data_sets = Digi_1.scope_record(sample_rate, buffer_size)
+                                print(f"buffer size: {buffer_size}, Perturbation freq: {f}, Sampling frequency: {sample_rate}, Number of cycles: {ncycle}")
 
                             elif res_str == "DoneRecv":
                                 # Calculation Logic
