@@ -122,7 +122,7 @@ try:
                                 sample_rate = int(fsample_max)
                                 ncycle = int(buffer_size/(sample_rate/f))
                                 if f <= 1:
-                                    ncycle = 2
+                                    ncycle = 1
                                     buffer_size = ncycle * sample_rate * np.exp(-2.303*np.log10(f))
                                     while buffer_size > max_buf - 1:
                                         sample_rate = int(sample_rate * 0.75)
@@ -132,8 +132,8 @@ try:
                                     while (ncycle < est_ncycle):
                                         sample_rate = int(sample_rate * 0.75)
                                         ncycle = int(buffer_size/(sample_rate/f))
-                                    if ncycle < 2:
-                                        ncycle = 2
+                                    if ncycle < 1:
+                                        ncycle = 1
                                         sample_rate = int(f*buffer_size/ncycle)
                                 data_sets = Digi_1.scope_record(sample_rate, buffer_size)
                                 print(f"buffer size: {buffer_size}, Perturbation freq: {f}, Sampling frequency: {sample_rate}, Number of cycles: {ncycle}")
