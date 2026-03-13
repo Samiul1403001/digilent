@@ -126,9 +126,9 @@ try:
                                     sample_rate = int(buffer_size / (ncycle / f))
                                     
                                 elif f <= 10 and f >= 0.1:
-                                    ncycle = int(8.5*np.log10(f)+11.5)
+                                    ncycle = int(7.5*np.log10(f)+12.5)
                                     sample_rate = int(buffer_size / (ncycle / f))
-                                    
+
                                 else:
                                     est_ncycle = int(0.6228 * np.exp(2.2101*np.log10(f)))
                                     while (ncycle < est_ncycle):
