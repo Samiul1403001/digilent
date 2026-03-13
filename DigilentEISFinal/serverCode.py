@@ -142,7 +142,7 @@ try:
 
                             elif res_str == "DoneRecv":
                                 # Calculation Logic
-                                Imeas = 100*(data_sets[0]-np.mean(data_sets[0]))
+                                Imeas = (data_sets[0]-np.mean(data_sets[0]))/33
                                 V1meas = data_sets[1]-np.mean(data_sets[1])
 
                                 I_freq = freq_selection_signal(Imeas, freq_sweep=[f*0.9, f*1.1], sample_rate=sample_rate)
