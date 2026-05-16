@@ -78,7 +78,7 @@ def freq_selection_signal(y_buffer, freq_sweep, sample_rate):
     mamp = 0
     freq = []
     c = 0
-    for f in np.arange(freq_sweep[0], freq_sweep[1], 0.02*freq_sweep[0]/0.9):
+    for f in np.arange(freq_sweep[0], freq_sweep[1], 0.005*freq_sweep[0]/0.9):
         _, params = clean_buffer(y_buffer, f, sample_rate)
         if params[0] > mamp:
             mamp = params[0]
