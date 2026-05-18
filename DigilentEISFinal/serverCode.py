@@ -151,7 +151,7 @@ try:
                                 Iamp, Iphase = dual_phase_demod(Imeas, sfreq, sample_rate)
                                 V1amp, V1phase = dual_phase_demod(V1meas, sfreq, sample_rate)
 
-                                print(f"Freq: {sfreq:.2f} Hz | V_amp: {V1amp:.2E} | I_amp: {Iamp:.2E}")
+                                print(f"Freq: {sfreq:.5f} Hz | V_amp: {V1amp:.2E} | I_amp: {Iamp:.2E}")
 
                                 I_real = Iamp * np.cos(Iphase+np.pi)
                                 I_imag = Iamp * np.sin(Iphase+np.pi)
