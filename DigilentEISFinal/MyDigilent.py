@@ -79,7 +79,7 @@ def freq_selection_signal(y_buffer, freq_sweep, sample_rate):
     freq = []
     c = 0
     if freq_sweep[0]/0.9 >= 0.5:
-        freq_int = 0.001 * freq_sweep[0]/0.9
+        freq_int = 0.1 * freq_sweep[0]/0.9
     else:
         freq_int = 0.001 * freq_sweep[0]/0.9
 
