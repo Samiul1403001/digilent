@@ -145,10 +145,8 @@ try:
                                 Imeas = (data_sets[0]-np.mean(data_sets[0]))/0.033
                                 V1meas = data_sets[1]-np.mean(data_sets[1])
 
-                                I_freq = freq_selection_signal(Imeas, freq_sweep=[f*0.9, f*1.1], sample_rate=sample_rate)
-                                _, _, _, _, I_freq_f = FFT(Imeas, freq_sweep=[f*0.9, f*1.1], sample_rate=sample_rate)
-
-                                print(f"FFT Freq: {I_freq_f:.5f} Hz")
+                                # I_freq = freq_selection_signal(Imeas, freq_sweep=[f*0.9, f*1.1], sample_rate=sample_rate)
+                                _, _, _, _, I_freq = FFT(Imeas, freq_sweep=[f*0.9, f*1.1], sample_rate=sample_rate)
 
                                 sfreq = I_freq if I_freq is not None else f
                                 
