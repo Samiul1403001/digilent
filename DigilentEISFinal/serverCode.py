@@ -145,18 +145,16 @@ try:
                                 Imeas = (data_sets[0]-np.mean(data_sets[0]))/0.033
                                 V1meas = data_sets[1]-np.mean(data_sets[1])
 
-                                I_filtered = fir_bandpass(Imeas, sample_rate, f*0.9, f*1.1)
+                                Imeas_filtered = fir_bandpass(Imeas, sample_rate, f*0.9, f*1.1)
+                                V1meas_filtered = fir_bandpass(V1meas, sample_rate, f*0.9, f*1.1)
 
                                 # I_freq = freq_selection_signal(Imeas, freq_sweep=[f*0.9, f*1.1], sample_rate=sample_rate)
-                                _, _, _, _, I_freq = FFT(Imeas, freq_sweep=[f*0.9, f*1.1], sample_rate=sample_rate)
-                                _, _, _, _, f_est = FFT(I_filtered, freq_sweep=[f*0.9, f*1.1], sample_rate=sample_rate)
-
-                                print(f"Estimated Freq: {f_est:.5f} Hz")
+                                _, _, _, _, I_freq = FFT(Imeas_filtered, freq_sweep=[f*0.9, f*1.1], sample_rate=sample_rate)
 
                                 sfreq = I_freq if I_freq is not None else f
                                 
-                                Iamp, Iphase = dual_phase_demod(Imeas, sfreq, sample_rate)
-                                V1amp, V1phase = dual_phase_demod(V1meas, sfreq, sample_rate)
+                                Iamp, Iphase = dual_phase_demod(Imeas_filtered, sfreq, sample_rate)
+                                V1amp, V1phase = dual_phase_demod(V1meas_filtered, sfreq, sample_rate)
 
                                 print(f"Freq: {sfreq:.5f} Hz | V_amp: {V1amp:.2E} | I_amp: {Iamp:.2E}")
 
