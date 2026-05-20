@@ -7,10 +7,9 @@ import dwfconstants as constants
 class FrequencyEstimator:
     def __init__(self, signal, fs, f_low, f_high):
         self.fs = fs
-        # ── filter in-place, keep only result ────────────────────────────
-        nyq = fs / 2.0
-        taps = max(7, min(len(signal) // 3 | 1, 31))  # cap at 31 taps
-        n = np.arange(taps) - (taps - 1) / 2
+        nyq  = fs / 2.0
+        taps = max(7, min(len(signal) // 3 | 1, 31))
+        n    = np.arange(taps) - (taps - 1) / 2
         with np.errstate(invalid='ignore'):
             h = (np.where(n==0, 2*f_high/nyq, np.sin(2*np.pi*(f_high/nyq)*n)/(np.pi*n))
                - np.where(n==0, 2*f_low/nyq,  np.sin(2*np.pi*(f_low/nyq) *n)/(np.pi*n)))
@@ -20,24 +19,27 @@ class FrequencyEstimator:
         p   = np.pad(signal, pad, mode='reflect')
         fwd = np.convolve(p, h, mode='same')
         sig = np.convolve(fwd[::-1], h, mode='same')[::-1][pad:-pad]
-        # ── covariance (forward-backward, smallest viable L) ──────────────
-        L  = max(4, len(sig) // 3)
-        Xf = np.lib.stride_tricks.sliding_window_view(sig,        L)
-        Xb = np.lib.stride_tricks.sliding_window_view(sig[::-1],  L)
+        L   = max(4, len(sig) // 3)
+        def _windows(s):
+            shape   = (len(s) - L + 1, L)
+            strides = (s.strides[0], s.strides[0])
+            return np.lib.stride_tricks.as_strided(s, shape=shape, strides=strides)
+        Xf      = _windows(sig)
+        Xb      = _windows(sig[::-1].copy())   # copy keeps strides contiguous
         self._R = (Xf.T @ Xf + Xb.T @ Xb) / (2.0 * len(Xf))
         self._L = L
 
     def estimate(self):
-        _, evecs = np.linalg.eigh(self._R)   # ascending — last = signal
-        Es = evecs[:, -1:]
-        Phi, *_ = np.linalg.lstsq(Es[:-1], Es[1:], rcond=None)
+        _, evecs = np.linalg.eigh(self._R)
+        Es       = evecs[:, -1:]
+        Phi, *_  = np.linalg.lstsq(Es[:-1], Es[1:], rcond=None)
         return float(np.abs(np.angle(np.linalg.eigvals(Phi)[0]))
                      * self.fs / (2 * np.pi))
 
     def confidence(self):
         evals = np.linalg.eigh(self._R)[0]
         return float(evals[-1] / (evals[-2] + 1e-15))
-
+    
 def dual_phase_demod(y_buffer, signal_freq, sample_rate):
     """
     Extracts magnitude and phase from a noisy signal using 
