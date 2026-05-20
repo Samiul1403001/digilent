@@ -1,4 +1,4 @@
-from MyDigilent import MyDigilent, freq_selection_signal, dual_phase_demod
+from MyDigilent import MyDigilent, freq_selection_signal, dual_phase_demod, FFT
 from time import sleep
 import numpy as np, socket, struct, mlrepo as ml
 
@@ -146,6 +146,10 @@ try:
                                 V1meas = data_sets[1]-np.mean(data_sets[1])
 
                                 I_freq = freq_selection_signal(Imeas, freq_sweep=[f*0.9, f*1.1], sample_rate=sample_rate)
+                                I_freq_f = FFT(Imeas, freq_sweep=[f*0.9, f*1.1], sample_rate=sample_rate)
+
+                                print(f"FFT Freq: {I_freq_f:.5f} Hz")
+
                                 sfreq = I_freq if I_freq is not None else f
                                 
                                 Iamp, Iphase = dual_phase_demod(Imeas, sfreq, sample_rate)

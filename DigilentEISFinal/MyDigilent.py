@@ -81,7 +81,7 @@ def freq_selection_signal(y_buffer, freq_sweep, sample_rate):
     if freq_sweep[0]/0.9 >= 0.5:
         freq_int = 0.1 * freq_sweep[0]/0.9
     else:
-        freq_int = 5e-5 * freq_sweep[0]/0.9
+        freq_int = 2e-5 * freq_sweep[0]/0.9
 
     for f in np.arange(freq_sweep[0], freq_sweep[1], freq_int):
         _, params = clean_buffer(y_buffer, f, sample_rate)
@@ -130,7 +130,7 @@ def FFT(buffer, freq_sweep=[0, 100e3], sample_rate=100):
     real_part = real_part[mask]
     imag_part = imag_part[mask]
 
-    return freqs, mag, real_part, imag_part
+    return freqs, mag, real_part, imag_part, freqs[np.argmax(mag)]
 
 class data:
     """ stores the device handle, the device name and the device data """
