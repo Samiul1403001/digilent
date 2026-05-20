@@ -19,13 +19,18 @@ class FrequencyEstimator:
         p   = np.pad(signal, pad, mode='reflect')
         fwd = np.convolve(p, h, mode='same')
         sig = np.convolve(fwd[::-1], h, mode='same')[::-1][pad:-pad]
-        L   = max(4, len(sig) // 3)
+
+        # Hard cap: L never exceeds 32 regardless of signal length
+        # L x L covariance = 32x32 = 8 KB max
+        L = max(4, min(len(sig) // 3, 32))
+
         def _windows(s):
             shape   = (len(s) - L + 1, L)
             strides = (s.strides[0], s.strides[0])
             return np.lib.stride_tricks.as_strided(s, shape=shape, strides=strides)
+
         Xf      = _windows(sig)
-        Xb      = _windows(sig[::-1].copy())   # copy keeps strides contiguous
+        Xb      = _windows(sig[::-1].copy())
         self._R = (Xf.T @ Xf + Xb.T @ Xb) / (2.0 * len(Xf))
         self._L = L
 
@@ -39,7 +44,7 @@ class FrequencyEstimator:
     def confidence(self):
         evals = np.linalg.eigh(self._R)[0]
         return float(evals[-1] / (evals[-2] + 1e-15))
-    
+
 def dual_phase_demod(y_buffer, signal_freq, sample_rate):
     """
     Extracts magnitude and phase from a noisy signal using 
