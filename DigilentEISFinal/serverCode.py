@@ -146,7 +146,7 @@ try:
                                 V1meas = data_sets[1]-np.mean(data_sets[1])
 
                                 I_freq = freq_selection_signal(Imeas, freq_sweep=[f*0.9, f*1.1], sample_rate=sample_rate)
-                                I_freq_f = FFT(Imeas, freq_sweep=[f*0.9, f*1.1], sample_rate=sample_rate)
+                                _, _, _, _, I_freq_f = FFT(Imeas, freq_sweep=[f*0.9, f*1.1], sample_rate=sample_rate)
 
                                 print(f"FFT Freq: {I_freq_f:.5f} Hz")
 
