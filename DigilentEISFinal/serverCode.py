@@ -176,7 +176,7 @@ try:
                                 
                                 sample[i_idx, 0] = np.mean(data_sets[1])
                                 sample[i_idx, 1] = sfreq
-                                sample[i_idx, 2] = Z.real
+                                sample[i_idx, 2] = Z.real - 0.029
                                 sample[i_idx, 3] = -Z.imag
 
                                 # --- ML based SoH estimation ---
