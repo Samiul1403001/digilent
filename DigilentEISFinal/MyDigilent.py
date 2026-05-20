@@ -4,46 +4,62 @@ from os import sep                # OS specific file path separators
 import inspect, numpy as np       # caller function data
 import dwfconstants as constants
 
-class FrequencyEstimator:
-    def __init__(self, signal, fs, f_low, f_high):
-        self.fs = fs
-        nyq  = fs / 2.0
-        taps = max(7, min(len(signal) // 3 | 1, 31))
-        n    = np.arange(taps) - (taps - 1) / 2
-        with np.errstate(invalid='ignore'):
-            h = (np.where(n==0, 2*f_high/nyq, np.sin(2*np.pi*(f_high/nyq)*n)/(np.pi*n))
-               - np.where(n==0, 2*f_low/nyq,  np.sin(2*np.pi*(f_low/nyq) *n)/(np.pi*n)))
-        h *= 0.5 - 0.5 * np.cos(2*np.pi*np.arange(taps)/(taps-1))
-        h /= h.sum()
-        pad = taps * 3
-        p   = np.pad(signal, pad, mode='reflect')
-        fwd = np.convolve(p, h, mode='same')
-        sig = np.convolve(fwd[::-1], h, mode='same')[::-1][pad:-pad]
+def fir_bandpass(signal, fs, f_low, f_high, num_taps=None):
+    """
+    Zero-phase FIR bandpass filter using windowed sinc method.
+    No scipy — built from first principles with numpy.
 
-        # Hard cap: L never exceeds 32 regardless of signal length
-        # L x L covariance = 32x32 = 8 KB max
-        L = max(4, min(len(sig) // 3, 32))
+    Parameters
+    ----------
+    signal   : 1D array
+    fs       : sampling rate (Hz)
+    f_low    : lower cutoff (Hz)
+    f_high   : upper cutoff (Hz)
+    num_taps : filter length (odd integer). If None, auto-selected.
 
-        def _windows(s):
-            shape   = (len(s) - L + 1, L)
-            strides = (s.strides[0], s.strides[0])
-            return np.lib.stride_tricks.as_strided(s, shape=shape, strides=strides)
+    Returns
+    -------
+    filtered : filtered signal (same length as input, zero-phase)
+    """
+    if num_taps is None:
+        # Rule of thumb: longer taps = sharper cutoff, but need signal > 3×taps
+        num_taps = min(len(signal) // 3, 63)
+        num_taps = num_taps if num_taps % 2 == 1 else num_taps - 1
+        num_taps = max(num_taps, 7)   # absolute minimum
 
-        Xf      = _windows(sig)
-        Xb      = _windows(sig[::-1].copy())
-        self._R = (Xf.T @ Xf + Xb.T @ Xb) / (2.0 * len(Xf))
-        self._L = L
+    nyq  = fs / 2.0
+    fl_n = f_low  / nyq   # normalised [0, 1]
+    fh_n = f_high / nyq
 
-    def estimate(self):
-        _, evecs = np.linalg.eigh(self._R)
-        Es       = evecs[:, -1:]
-        Phi, *_  = np.linalg.lstsq(Es[:-1], Es[1:], rcond=None)
-        return float(np.abs(np.angle(np.linalg.eigvals(Phi)[0]))
-                     * self.fs / (2 * np.pi))
+    # Sinc kernel for bandpass = highpass(fl) - lowpass(fh) combined
+    M    = (num_taps - 1) / 2
+    n    = np.arange(num_taps) - M
 
-    def confidence(self):
-        evals = np.linalg.eigh(self._R)[0]
-        return float(evals[-1] / (evals[-2] + 1e-15))
+    # Avoid division by zero at n=0
+    with np.errstate(invalid='ignore'):
+        h_low  = np.where(n == 0, 2 * fl_n,
+                          np.sin(2 * np.pi * fl_n * n) / (np.pi * n))
+        h_high = np.where(n == 0, 2 * fh_n,
+                          np.sin(2 * np.pi * fh_n * n) / (np.pi * n))
+
+    # Bandpass = high_cutoff_lowpass - low_cutoff_lowpass
+    h = h_high - h_low
+
+    # Apply Hann window to reduce spectral leakage
+    window = 0.5 - 0.5 * np.cos(2 * np.pi * np.arange(num_taps) / (num_taps - 1))
+    h     *= window
+    h     /= np.sum(h)   # normalise gain to unity in passband
+
+    # Zero-phase filtering: convolve forward then reverse
+    # Equivalent to scipy filtfilt — eliminates phase distortion
+    pad    = num_taps * 3
+    padded = np.pad(signal, pad, mode='reflect')
+    fwd    = np.convolve(padded, h, mode='same')
+    rev    = np.convolve(fwd[::-1], h, mode='same')[::-1]
+
+    # Trim padding
+    filtered = rev[pad:-pad]
+    return filtered
 
 def dual_phase_demod(y_buffer, signal_freq, sample_rate):
     """

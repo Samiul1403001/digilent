@@ -1,4 +1,4 @@
-from MyDigilent import MyDigilent, freq_selection_signal, dual_phase_demod, FFT, FrequencyEstimator
+from MyDigilent import MyDigilent, freq_selection_signal, dual_phase_demod, FFT, fir_bandpass
 from time import sleep
 import numpy as np, socket, struct, mlrepo as ml
 
@@ -145,9 +145,11 @@ try:
                                 Imeas = (data_sets[0]-np.mean(data_sets[0]))/0.033
                                 V1meas = data_sets[1]-np.mean(data_sets[1])
 
+                                I_filtered = fir_bandpass(Imeas, sample_rate, f*0.9, f*1.1)
+
                                 # I_freq = freq_selection_signal(Imeas, freq_sweep=[f*0.9, f*1.1], sample_rate=sample_rate)
                                 _, _, _, _, I_freq = FFT(Imeas, freq_sweep=[f*0.9, f*1.1], sample_rate=sample_rate)
-                                f_est = FrequencyEstimator(signal=Imeas, fs=sample_rate, f_low=f*0.9, f_high=f*1.1).estimate()
+                                _, _, _, _, f_est = FFT(I_filtered, freq_sweep=[f*0.9, f*1.1], sample_rate=sample_rate)
 
                                 print(f"Estimated Freq: {f_est:.5f} Hz")
 
