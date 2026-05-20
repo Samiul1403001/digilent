@@ -6,76 +6,37 @@ import dwfconstants as constants
 
 class FrequencyEstimator:
     def __init__(self, signal, fs, f_low, f_high):
-        self.signal = np.asarray(signal, dtype=float)
-        self.fs     = fs
-        self.f_low  = f_low
-        self.f_high = f_high
-        self.n      = len(self.signal)
-        self.L      = max(4, self.n // 3)
-        self._filtered  = None
-        self._R         = None
-
-    # ── internal helpers ──────────────────────────────────────────────────
-
-    def _filter(self):
-        if self._filtered is not None:
-            return self._filtered
-        taps = min(self.n // 3, 63)
-        taps = taps if taps % 2 == 1 else taps - 1
-        taps = max(taps, 7)
-        nyq  = self.fs / 2.0
-        fl   = self.f_low  / nyq
-        fh   = self.f_high / nyq
-        M    = (taps - 1) / 2
-        n    = np.arange(taps) - M
+        self.fs = fs
+        # ── filter in-place, keep only result ────────────────────────────
+        nyq = fs / 2.0
+        taps = max(7, min(len(signal) // 3 | 1, 31))  # cap at 31 taps
+        n = np.arange(taps) - (taps - 1) / 2
         with np.errstate(invalid='ignore'):
-            hl = np.where(n == 0, 2*fl, np.sin(2*np.pi*fl*n) / (np.pi*n))
-            hh = np.where(n == 0, 2*fh, np.sin(2*np.pi*fh*n) / (np.pi*n))
-        h  = hh - hl
-        h *= 0.5 - 0.5 * np.cos(2*np.pi*np.arange(taps) / (taps - 1))
+            h = (np.where(n==0, 2*f_high/nyq, np.sin(2*np.pi*(f_high/nyq)*n)/(np.pi*n))
+               - np.where(n==0, 2*f_low/nyq,  np.sin(2*np.pi*(f_low/nyq) *n)/(np.pi*n)))
+        h *= 0.5 - 0.5 * np.cos(2*np.pi*np.arange(taps)/(taps-1))
         h /= h.sum()
         pad = taps * 3
-        p   = np.pad(self.signal, pad, mode='reflect')
-        fwd = np.convolve(p,       h, mode='same')
-        rev = np.convolve(fwd[::-1], h, mode='same')[::-1]
-        self._filtered = rev[pad:-pad]
-        return self._filtered
-
-    def _covariance(self):
-        if self._R is not None:
-            return self._R
-        sig = self._filter()
-        Xf  = np.array([sig[i:i+self.L] for i in range(self.n - self.L + 1)])
-        Xb  = np.array([sig[::-1][i:i+self.L] for i in range(self.n - self.L + 1)])
+        p   = np.pad(signal, pad, mode='reflect')
+        fwd = np.convolve(p, h, mode='same')
+        sig = np.convolve(fwd[::-1], h, mode='same')[::-1][pad:-pad]
+        # ── covariance (forward-backward, smallest viable L) ──────────────
+        L  = max(4, len(sig) // 3)
+        Xf = np.lib.stride_tricks.sliding_window_view(sig,        L)
+        Xb = np.lib.stride_tricks.sliding_window_view(sig[::-1],  L)
         self._R = (Xf.T @ Xf + Xb.T @ Xb) / (2.0 * len(Xf))
-        return self._R
+        self._L = L
 
-    def _eigh(self):
-        return np.linalg.eigh(self._covariance())   # ascending order
-
-    # ── public methods ────────────────────────────────────────────────────
-
-    def music(self, n_grid=4000):
-        evals, evecs = self._eigh()
-        En    = evecs[:, :-1]
-        EnEnH = En @ En.T
-        freqs = np.linspace(self.f_low, self.f_high, n_grid)
-        pseudo = np.empty(n_grid)
-        for i, f in enumerate(freqs):
-            a = np.exp(1j * 2*np.pi * f / self.fs * np.arange(self.L))
-            pseudo[i] = 1.0 / (np.real(a.conj() @ EnEnH @ a) + 1e-15)
-        return freqs[np.argmax(pseudo)], pseudo, freqs
-
-    def esprit(self):
-        evals, evecs = self._eigh()
-        Es   = evecs[:, -1:]
-        Phi, _, _, _ = np.linalg.lstsq(Es[:-1], Es[1:], rcond=None)
-        eigs = np.linalg.eigvals(Phi)
-        return float(np.abs(np.angle(eigs[0])) * self.fs / (2*np.pi))
+    def estimate(self):
+        _, evecs = np.linalg.eigh(self._R)   # ascending — last = signal
+        Es = evecs[:, -1:]
+        Phi, *_ = np.linalg.lstsq(Es[:-1], Es[1:], rcond=None)
+        return float(np.abs(np.angle(np.linalg.eigvals(Phi)[0]))
+                     * self.fs / (2 * np.pi))
 
     def confidence(self):
-        evals = self._eigh()[0][::-1]           # descending
-        return float(evals[0] / (evals[1] + 1e-15))
+        evals = np.linalg.eigh(self._R)[0]
+        return float(evals[-1] / (evals[-2] + 1e-15))
 
 def dual_phase_demod(y_buffer, signal_freq, sample_rate):
     """

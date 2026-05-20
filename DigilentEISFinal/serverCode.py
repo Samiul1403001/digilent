@@ -147,10 +147,9 @@ try:
 
                                 # I_freq = freq_selection_signal(Imeas, freq_sweep=[f*0.9, f*1.1], sample_rate=sample_rate)
                                 _, _, _, _, I_freq = FFT(Imeas, freq_sweep=[f*0.9, f*1.1], sample_rate=sample_rate)
-                                fe = FrequencyEstimator(signal=Imeas, fs=sample_rate, f_low=f*0.9, f_high=f*1.1)
-                                f_esprit = fe.esprit()
+                                f_est = FrequencyEstimator(signal=Imeas, fs=sample_rate, f_low=f*0.9, f_high=f*1.1).estimate()
 
-                                print(f"ESPRIT Freq: {f_esprit:.5f} Hz")
+                                print(f"Estimated Freq: {f_est:.5f} Hz")
 
                                 sfreq = I_freq if I_freq is not None else f
                                 
