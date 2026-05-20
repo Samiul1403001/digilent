@@ -145,11 +145,11 @@ try:
                                 Imeas = (data_sets[0]-np.mean(data_sets[0]))/0.033
                                 V1meas = data_sets[1]-np.mean(data_sets[1])
 
-                                Imeas_filtered = fir_bandpass(Imeas, sample_rate, f*0.9, f*1.1)
-                                V1meas_filtered = fir_bandpass(V1meas, sample_rate, f*0.9, f*1.1)
+                                Imeas_filtered = fir_bandpass(Imeas, sample_rate, f*0.8, f*1.2)
+                                V1meas_filtered = fir_bandpass(V1meas, sample_rate, f*0.8, f*1.2)
 
                                 # I_freq = freq_selection_signal(Imeas, freq_sweep=[f*0.9, f*1.1], sample_rate=sample_rate)
-                                _, _, _, _, I_freq = FFT(Imeas_filtered, freq_sweep=[f*0.9, f*1.1], sample_rate=sample_rate)
+                                _, _, _, _, I_freq = FFT(Imeas_filtered, freq_sweep=[f*0.95, f*1.05], sample_rate=sample_rate)
 
                                 sfreq = I_freq if I_freq is not None else f
                                 
