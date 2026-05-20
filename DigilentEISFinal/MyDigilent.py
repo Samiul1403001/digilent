@@ -135,10 +135,10 @@ def freq_selection_signal(y_buffer, freq_sweep, sample_rate):
     mamp = 0
     freq = []
     c = 0
-    if freq_sweep[0]/0.96 >= 0.5:
-        freq_int = 0.1 * freq_sweep[0]/0.96
+    if freq_sweep[0]/0.98 >= 0.5:
+        freq_int = 0.1 * freq_sweep[0]/0.98
     else:
-        freq_int = 2e-5 * freq_sweep[0]/0.96
+        freq_int = 2e-5 * freq_sweep[0]/0.98
 
     for f in np.arange(freq_sweep[0], freq_sweep[1], freq_int):
         _, params = clean_buffer(y_buffer, f, sample_rate)

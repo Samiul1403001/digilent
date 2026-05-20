@@ -151,7 +151,7 @@ try:
                                 if f >= 0.5:
                                     _, _, _, _, I_freq = FFT(Imeas_filtered, freq_sweep=[f*0.8, f*1.2], sample_rate=sample_rate)
                                 else:
-                                    I_freq = freq_selection_signal(Imeas_filtered, freq_sweep=[f*0.96, f*1.04], sample_rate=sample_rate)
+                                    I_freq = freq_selection_signal(Imeas_filtered, freq_sweep=[f*0.98, f*1.02], sample_rate=sample_rate)
 
                                 sfreq = I_freq if I_freq is not None else f
                                 
