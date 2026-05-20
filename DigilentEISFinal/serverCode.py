@@ -167,7 +167,7 @@ try:
                                 I_comp = I_real + 1j * I_imag
                                 Z = (V_comp / I_comp)
 
-                                print("Impedance: " + str(Z.real) + "+(" + str(Z.imag) + "j)")
+                                print("Impedance: " + str(Z.real - 0.029) + "+(" + str(Z.imag) + "j)")
 
                                 # Data Quality Check
                                 if i_idx > 0 and Z.real < 0.98*sample[i_idx-1, 1] and Z.real < 0:
