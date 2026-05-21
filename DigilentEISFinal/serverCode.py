@@ -171,14 +171,13 @@ try:
                                 I_comp = I_real + 1j * I_imag
                                 Z = (V_comp / I_comp)
 
-                                print("Impedance: " + str(Z.real - 0.029) + "+(" + str(Z.imag) + "j)")
-
                                 # Data Quality Check
                                 if i_idx > 0 and Z.real < 0.98*sample[i_idx-1, 1] and Z.real < 0:
                                     print("\nFrequency skipped (Impedance Drop)...\n")
                                     break
 
                                 Zreal, Zimag = correct(sfreq, Z.real, -Z.imag)
+                                print("Impedance: " + str(Zreal) + "+(" + str(Zimag) + "j)")
                                 
                                 sample[i_idx, 0] = np.mean(data_sets[1])
                                 sample[i_idx, 1] = sfreq
