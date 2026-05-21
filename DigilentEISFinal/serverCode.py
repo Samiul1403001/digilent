@@ -177,7 +177,7 @@ try:
                                     break
 
                                 Zreal, Zimag = correct(sfreq, Z.real, -Z.imag)
-                                print("Impedance: " + str(Zreal) + "+(" + str(Zimag) + "j)")
+                                print("Impedance: " + str(Zreal) + "+(" + str(-Zimag) + "j)")
                                 
                                 sample[i_idx, 0] = np.mean(data_sets[1])
                                 sample[i_idx, 1] = sfreq
