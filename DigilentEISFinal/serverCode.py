@@ -148,7 +148,10 @@ try:
                                 Imeas_filtered = fir_bandpass(Imeas, sample_rate, f*0.5, f*1.5)
                                 V1meas_filtered = fir_bandpass(V1meas, sample_rate, f*0.5, f*1.5)
 
-                                rng_int = 5 / 10 ** int(-np.log10(f) + 3)
+                                rng_int = 2 / 10 ** int(-np.log10(f) + 3)
+
+                                if rng_int < 0.002:
+                                    rng_int = 0.002
 
                                 print(rng_int)
 
