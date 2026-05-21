@@ -148,14 +148,14 @@ try:
                                 Imeas_filtered = fir_bandpass(Imeas, sample_rate, f*0.5, f*1.5)
                                 V1meas_filtered = fir_bandpass(V1meas, sample_rate, f*0.5, f*1.5)
 
-                                rng_int = 5 / 10 ** int(-np.log10(f) + 3)
+                                rng_int = 1 / 10 ** int(-np.log10(f) + 3)
 
-                                if rng_int < 0.005:
-                                    rng_int = 0.005
+                                if rng_int < 0.001:
+                                    I_freq = freq_selection_signal(Imeas_filtered, freq_sweep=[f*(1-rng_int), f*(1+rng_int)], sample_rate=sample_rate)
+                                else:
+                                    _, _, _, _, I_freq = FFT(Imeas_filtered, freq_sweep=[f*(1-rng_int), f*(1+rng_int)], sample_rate=sample_rate)
 
                                 print(rng_int)
-
-                                _, _, _, _, I_freq = FFT(Imeas_filtered, freq_sweep=[f*(1-rng_int), f*(1+rng_int)], sample_rate=sample_rate)
 
                                 # if f >= 0.5:
                                 #     _, _, _, _, I_freq = FFT(Imeas_filtered, freq_sweep=[f*0.8, f*1.2], sample_rate=sample_rate)
