@@ -129,19 +129,36 @@ HOLDER_Z       = (_Z_meas[_mask]
 
 # ── Correction function ───────────────────────────────────────────────────
 def correct(freqs, Z_real, Z_imag):
-    freqs  = np.asarray(freqs,  dtype=float)
-    Z_raw  = np.asarray(Z_real, dtype=float) + 1j * np.asarray(Z_imag, dtype=float)
+    """
+    Remove holder impedance from any new measurement.
+
+    Parameters
+    ----------
+    freqs  : frequency array (Hz)
+    Z_real : real part (Ω)
+    Z_imag : imaginary part (Ω)
+
+    Returns
+    -------
+    Z_real_corrected, Z_imag_corrected (Ω)
+    """
+    # Force 1-d — prevents scalar / 0-d array item assignment error
+    freqs  = np.atleast_1d(np.asarray(freqs,  dtype=float))
+    Z_raw  = np.atleast_1d(np.asarray(Z_real, dtype=float)) \
+           + 1j * np.atleast_1d(np.asarray(Z_imag, dtype=float))
 
     in_range = (freqs >= HOLDER_FREQS.min()) & (freqs <= HOLDER_FREQS.max())
     Z_out    = Z_raw.copy()
 
     if in_range.any():
-        Z_out[in_range] -= _interp_complex(HOLDER_FREQS, HOLDER_Z, freqs[in_range])
+        Z_out[in_range] -= _interp_complex(HOLDER_FREQS, HOLDER_Z,
+                                           freqs[in_range])
 
     n_out = np.sum(~in_range)
     if n_out:
         print(f"[warning] {n_out} point(s) outside calibrated range "
-              f"[{HOLDER_FREQS.min():.3f}, {HOLDER_FREQS.max():.3f}] Hz — left uncorrected")
+              f"[{HOLDER_FREQS.min():.3f}, {HOLDER_FREQS.max():.3f}] Hz "
+              f"— left uncorrected")
 
     return Z_out.real, Z_out.imag
 
