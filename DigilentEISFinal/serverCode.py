@@ -1,4 +1,4 @@
-from MyDigilent import MyDigilent, freq_selection_signal, dual_phase_demod, FFT, fir_bandpass
+from MyDigilent import MyDigilent, freq_selection_signal, dual_phase_demod, FFT, fir_bandpass, correct
 from time import sleep
 import numpy as np, socket, struct, mlrepo as ml
 
@@ -155,14 +155,6 @@ try:
                                 else:
                                     _, _, _, _, I_freq = FFT(Imeas_filtered, freq_sweep=[f*(1-rng_int), f*(1+rng_int)], sample_rate=sample_rate)
 
-                                print(rng_int)
-
-                                # if f >= 0.5:
-                                #     _, _, _, _, I_freq = FFT(Imeas_filtered, freq_sweep=[f*0.8, f*1.2], sample_rate=sample_rate)
-                                # else:
-                                #     _, _, _, _, I_freq = FFT(Imeas_filtered, freq_sweep=[f*0.99, f*1.01], sample_rate=sample_rate)
-                                #     # I_freq = freq_selection_signal(Imeas_filtered, freq_sweep=[f*0.99, f*1.01], sample_rate=sample_rate)
-
                                 sfreq = I_freq if I_freq is not None else f
                                 
                                 Iamp, Iphase = dual_phase_demod(Imeas_filtered, sfreq, sample_rate)
@@ -184,12 +176,14 @@ try:
                                 # Data Quality Check
                                 if i_idx > 0 and Z.real < 0.98*sample[i_idx-1, 1] and Z.real < 0:
                                     print("\nFrequency skipped (Impedance Drop)...\n")
-                                    break 
+                                    break
+
+                                Zreal, Zimag = correct(sfreq, Z.real, -Z.imag)
                                 
                                 sample[i_idx, 0] = np.mean(data_sets[1])
                                 sample[i_idx, 1] = sfreq
-                                sample[i_idx, 2] = Z.real - 0.029
-                                sample[i_idx, 3] = -Z.imag
+                                sample[i_idx, 2] = Zreal
+                                sample[i_idx, 3] = Zimag
 
                                 # --- ML based SoH estimation ---
                                 output = ml.model_forward(sample.reshape(1, 4, 61).astype(np.float32),
