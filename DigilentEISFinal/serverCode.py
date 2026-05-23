@@ -189,8 +189,6 @@ try:
                                 sample[i_idx, 4] = np.abs(Zreal + 1j * Zimag)
                                 sample[i_idx, 5] = np.angle(Zreal + 1j * Zimag, deg=True)
 
-                                print(sample.reshape(1, 6, 31).astype(np.float32).shape)
-
                                 # --- ML based SoH estimation ---
                                 output = SoH_est.predict(sample.reshape(1, 6, 31).astype(np.float32))
                                 # output = ml.model_forward(sample.reshape(1, 4, 61).astype(np.float32),
@@ -202,7 +200,7 @@ try:
                                 # --- Send Data to Host ---
                                 try:
                                     # Send CURRENT sample row
-                                    data_bytes = np.append(sample[i_idx, :].flatten(), np.round(output*100, decimals=2)).tobytes()
+                                    data_bytes = np.append(sample[i_idx, :].flatten(), np.round(np.clip(output, 0, 1)*100, decimals=2)).tobytes()
                                     header = struct.pack('>I', len(data_bytes))
                                     conn.sendall(header + data_bytes)
                                     print(f"Sent measurement to Client.")

@@ -47,6 +47,7 @@ class NumpySimpleSoHLSTM:
         # 1. Remove the batch dimension -> shape becomes (6, 31)
         # 2. Transpose to iterate over time steps -> shape becomes (31, 6)
         sequence = sample[0].T
+        sequence[1] = np.log10(sequence[1])
         
         h = np.zeros(self.hidden_size)
         c = np.zeros(self.hidden_size)
