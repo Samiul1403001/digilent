@@ -2,6 +2,9 @@ from MyDigilent import MyDigilent, freq_selection_signal, dual_phase_demod, FFT,
 from time import sleep
 import numpy as np, socket, struct, mlrepo as ml
 
+# SoH estimator
+SoH_est = ml.NumpySimpleSoHLSTM('simple_soh_weights.npz')
+
 # --- TCP Configuration ---
 # 1. SERVER CONFIG: Listen on ALL interfaces
 TCP_IP = '0.0.0.0'
@@ -79,7 +82,7 @@ try:
                     print("START received. Beginning Measurement Sequence...")
                     
                     # Initialize run variables
-                    sample = np.zeros([61, 4])
+                    sample = np.zeros([31, 6])
                     i_idx = 0
                     stop_requested = False
 
@@ -183,12 +186,15 @@ try:
                                 sample[i_idx, 1] = sfreq
                                 sample[i_idx, 2] = Zreal
                                 sample[i_idx, 3] = Zimag
+                                sample[i_idx, 4] = np.abs(Zreal + 1j * Zimag)
+                                sample[i_idx, 5] = np.angle(Zreal + 1j * Zimag, deg=True)
 
                                 # --- ML based SoH estimation ---
-                                output = ml.model_forward(sample.reshape(1, 4, 61).astype(np.float32),
-                                                            ml.W_ih, ml.W_hh, ml.b_ih, ml.b_hh,
-                                                            ml.fc1_W, ml.fc1_b,
-                                                            ml.out_W, ml.out_b)
+                                output = SoH_est.predict(sample.reshape(1, 6, 31).astype(np.float32))
+                                # output = ml.model_forward(sample.reshape(1, 4, 61).astype(np.float32),
+                                #                             ml.W_ih, ml.W_hh, ml.b_ih, ml.b_hh,
+                                #                             ml.fc1_W, ml.fc1_b,
+                                #                             ml.out_W, ml.out_b)
                                 print(f"\n\nThe estimated SoH is: {str(np.round(output*100, decimals=2))}%\n")
                                 
                                 # --- Send Data to Host ---
