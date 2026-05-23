@@ -145,11 +145,11 @@ try:
 
                             elif res_str == "DoneRecv":
                                 # Calculation Logic
-                                Imeas = (data_sets[0]-np.mean(data_sets[0]))/0.033
-                                V1meas = data_sets[1]-np.mean(data_sets[1])
+                                Imeas_filtered = (data_sets[0]-np.mean(data_sets[0]))/0.033
+                                V1meas_filtered = data_sets[1]-np.mean(data_sets[1])
 
-                                Imeas_filtered = fir_bandpass(Imeas, sample_rate, f*0.2, f*1.5)
-                                V1meas_filtered = fir_bandpass(V1meas, sample_rate, f*0.2, f*1.5)
+                                # Imeas_filtered = fir_bandpass(Imeas, sample_rate, f*0.2, f*1.5)
+                                # V1meas_filtered = fir_bandpass(V1meas, sample_rate, f*0.2, f*1.5)
 
                                 rng_int = 1 / 10 ** int(-np.log10(f) + 3)
 
