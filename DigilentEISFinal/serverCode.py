@@ -189,7 +189,7 @@ try:
                                 sample[i_idx, 4] = np.abs(Zreal + 1j * Zimag)
                                 sample[i_idx, 5] = np.angle(Zreal + 1j * Zimag, deg=True)
 
-                                print(sample.shape)
+                                print(sample.reshape(1, 6, 31).astype(np.float32).shape)
 
                                 # --- ML based SoH estimation ---
                                 output = SoH_est.predict(sample.reshape(1, 6, 31).astype(np.float32))
