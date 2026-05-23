@@ -145,11 +145,11 @@ try:
 
                             elif res_str == "DoneRecv":
                                 # Calculation Logic
-                                Imeas = (data_sets[0]-np.mean(data_sets[0]))/0.033
-                                V1meas = data_sets[1]-np.mean(data_sets[1])
+                                Imeas_filtered = (data_sets[0]-np.mean(data_sets[0]))/0.033
+                                V1meas_filtered = data_sets[1]-np.mean(data_sets[1])
 
-                                Imeas_filtered = fir_bandpass(Imeas, sample_rate, f*0.5, f*1.5)
-                                V1meas_filtered = fir_bandpass(V1meas, sample_rate, f*0.5, f*1.5)
+                                # Imeas_filtered = fir_bandpass(Imeas, sample_rate, f*0.5, f*1.5)
+                                # V1meas_filtered = fir_bandpass(V1meas, sample_rate, f*0.5, f*1.5)
 
                                 rng_int = 1 / 10 ** int(-np.log10(f) + 3)
 
@@ -191,6 +191,10 @@ try:
 
                                 # --- ML based SoH estimation ---
                                 output = SoH_est.predict(sample.reshape(1, 6, 31).astype(np.float32))
+                                # output = ml.model_forward(sample.reshape(1, 4, 61).astype(np.float32),
+                                #                             ml.W_ih, ml.W_hh, ml.b_ih, ml.b_hh,
+                                #                             ml.fc1_W, ml.fc1_b,
+                                #                             ml.out_W, ml.out_b)
                                 print(f"\n\nThe estimated SoH is: {str(np.round(output*100, decimals=2))}%\n")
                                 
                                 # --- Send Data to Host ---
