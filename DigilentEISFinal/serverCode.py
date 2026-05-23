@@ -183,7 +183,7 @@ try:
                                 print("Impedance: " + str(Zreal) + "+(" + str(-Zimag) + "j)")
                                 
                                 sample[i_idx, 0] = np.mean(data_sets[1])
-                                sample[i_idx, 1] = sfreq
+                                sample[i_idx, 1] = np.log10(sfreq)
                                 sample[i_idx, 2] = Zreal
                                 sample[i_idx, 3] = Zimag
                                 sample[i_idx, 4] = np.abs(Zreal + 1j * Zimag)
