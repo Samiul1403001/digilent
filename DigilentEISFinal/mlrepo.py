@@ -48,6 +48,7 @@ class NumpySimpleSoHLSTM:
         # 2. Transpose to iterate over time steps -> shape becomes (31, 6)
         sequence = sample[0].T
         sequence[1] = np.log10(sequence[1])
+        print(sequence)
         
         h = np.zeros(self.hidden_size)
         c = np.zeros(self.hidden_size)
