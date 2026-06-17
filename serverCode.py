@@ -18,7 +18,7 @@ BAUDRATE = 115200
 # Initialize Hardware ONCE (before entering the network loop)
 print("Initializing Digilent-ADP3450...")
 Digi_1 = MyDigilent(tx=PIN_TX, rx=PIN_RX, baud_rate=BAUDRATE, parity="none", data_bits=8, stop_bits=1)
-Digi_1.scope_setup(channels=[1, 2])
+Digi_1.scope_setup(channels=[1, 2, 3, 4])
 sleep(1)
 
 max_buf = Digi_1.dev.analog.input.max_buffer_size
@@ -147,14 +147,18 @@ try:
                                 # Calculation Logic
                                 Imeas = (data_sets[0]-np.mean(data_sets[0]))/0.033
                                 V1meas = data_sets[1]-np.mean(data_sets[1])
+                                V2meas = data_sets[2]-np.mean(data_sets[2])
+                                V3meas = data_sets[3]-np.mean(data_sets[3])
 
-                                Imeas_filtered = fir_bandpass(Imeas, sample_rate, f*0.5, f*1.5)
-                                V1meas_filtered = fir_bandpass(V1meas, sample_rate, f*0.5, f*1.5)
+                                Imeas_filtered = fir_bandpass(Imeas, sample_rate, f*0.8, f*1.2)
+                                V1meas_filtered = fir_bandpass(V1meas, sample_rate, f*0.8, f*1.2)
+                                V2meas_filtered = fir_bandpass(V2meas, sample_rate, f*0.8, f*1.2)
+                                V3meas_filtered = fir_bandpass(V3meas, sample_rate, f*0.8, f*1.2)
 
                                 rng_int = 1 / 10 ** int(-np.log10(f) + 3)
 
                                 if rng_int < 0.001:
-                                    I_freq = freq_selection_signal(Imeas_filtered, freq_sweep=[f*(1-rng_int), f*(1+rng_int)], sample_rate=sample_rate)
+                                    I_freq = freq_selection_signal(Imeas_filtered, freq_sweep=[f*0.998, f*1.002], sample_rate=sample_rate)
                                 else:
                                     _, _, _, _, I_freq = FFT(Imeas_filtered, freq_sweep=[f*(1-rng_int), f*(1+rng_int)], sample_rate=sample_rate)
 
@@ -162,15 +166,21 @@ try:
                                 
                                 Iamp, Iphase = dual_phase_demod(Imeas_filtered, sfreq, sample_rate)
                                 V1amp, V1phase = dual_phase_demod(V1meas_filtered, sfreq, sample_rate)
+                                V2amp, V2phase = dual_phase_demod(V2meas_filtered, sfreq, sample_rate)
+                                V3amp, V3phase = dual_phase_demod(V3meas_filtered, sfreq, sample_rate)
 
-                                print(f"Freq: {sfreq:.5f} Hz | V_amp: {V1amp:.2E} | I_amp: {Iamp:.2E}")
+                                print(f"Freq: {sfreq:.5f} Hz | V_amp: {V2amp:.2E} | I_amp: {Iamp:.2E}")
 
                                 I_real = Iamp * np.cos(Iphase+np.pi)
                                 I_imag = Iamp * np.sin(Iphase+np.pi)
                                 V1_real = V1amp * np.cos(V1phase)
                                 V1_imag = V1amp * np.sin(V1phase)
+                                V2_real = V2amp * np.cos(V2phase)
+                                V2_imag = V2amp * np.sin(V2phase)
+                                V3_real = V3amp * np.cos(V3phase)
+                                V3_imag = V3amp * np.sin(V3phase)
 
-                                V_comp = V1_real + 1j * V1_imag
+                                V_comp = V2_real + 1j * V2_imag
                                 I_comp = I_real + 1j * I_imag
                                 Z = (V_comp / I_comp)
 
@@ -182,7 +192,7 @@ try:
                                 Zreal, Zimag = correct(sfreq, Z.real, -Z.imag)
                                 print("Impedance: " + str(Zreal) + "+(" + str(-Zimag) + "j)")
                                 
-                                sample[i_idx, 0] = np.mean(data_sets[1])
+                                sample[i_idx, 0] = np.mean(data_sets[2])
                                 sample[i_idx, 1] = np.log10(sfreq)
                                 sample[i_idx, 2] = Zreal
                                 sample[i_idx, 3] = Zimag
