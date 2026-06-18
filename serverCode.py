@@ -82,7 +82,9 @@ try:
                     print("START received. Beginning Measurement Sequence...")
                     
                     # Initialize run variables
-                    sample = np.zeros([31, 6])
+                    sample_c1 = np.zeros([31, 6])
+                    sample_c2 = np.zeros([31, 6])
+                    sample_c3 = np.zeros([31, 6])
                     i_idx = 0
                     stop_requested = False
 
@@ -180,40 +182,83 @@ try:
                                 V3_real = V3amp * np.cos(V3phase)
                                 V3_imag = V3amp * np.sin(V3phase)
 
-                                V_comp = V2_real + 1j * V2_imag
+                                V1_comp = V1_real + 1j * V1_imag
+                                V2_comp = V2_real + 1j * V2_imag
+                                V3_comp = V3_real + 1j * V3_imag
                                 I_comp = I_real + 1j * I_imag
-                                Z = (V_comp / I_comp)
+                                Z1 = (V1_comp / I_comp)
+                                Z2 = (V2_comp / I_comp)
+                                Z3 = (V3_comp / I_comp)
 
                                 # Data Quality Check
-                                if i_idx > 0 and Z.real < 0.98*sample[i_idx-1, 1] and Z.real < 0:
+                                if i_idx > 0 and ((Z1.real < 0.98*sample_c1[i_idx-1, 1] and Z1.real < 0) or (Z2.real < 0.98*sample_c2[i_idx-1, 1] and Z2.real < 0) or (Z3.real < 0.98*sample_c3[i_idx-1, 1] and Z3.real < 0)):
                                     print("\nFrequency skipped (Impedance Drop)...\n")
                                     break
 
-                                Zreal, Zimag = correct(sfreq, Z.real, -Z.imag)
-                                print("Impedance: " + str(Zreal) + "+(" + str(-Zimag) + "j)")
+                                Z1real, Z1imag = correct(sfreq, Z1.real, -Z1.imag)
+                                print("Cell-1 Impedance: " + str(Z1real) + "+(" + str(-Z1imag) + "j)")
+                                Z2real, Z2imag = correct(sfreq, Z2.real, -Z2.imag)
+                                print("Cell-2 Impedance: " + str(Z2real) + "+(" + str(-Z2imag) + "j)")
+                                Z3real, Z3imag = correct(sfreq, Z3.real, -Z3.imag)
+                                print("Cell-3 Impedance: " + str(Z3real) + "+(" + str(-Z3imag) + "j)")
                                 
-                                sample[i_idx, 0] = np.mean(data_sets[2])
-                                sample[i_idx, 1] = np.log10(sfreq)
-                                sample[i_idx, 2] = Zreal
-                                sample[i_idx, 3] = Zimag
-                                sample[i_idx, 4] = np.abs(Zreal - 1j * Zimag)
-                                sample[i_idx, 5] = np.angle(Zreal - 1j * Zimag, deg=True)
+                                sample_c1[i_idx, 0] = np.mean(data_sets[1])
+                                sample_c1[i_idx, 1] = np.log10(sfreq)
+                                sample_c1[i_idx, 2] = Z1real
+                                sample_c1[i_idx, 3] = Z1imag
+                                sample_c1[i_idx, 4] = np.abs(Z1real - 1j * Z1imag)
+                                sample_c1[i_idx, 5] = np.angle(Z1real - 1j * Z1imag, deg=True)
+
+                                sample_c2[i_idx, 0] = np.mean(data_sets[2])
+                                sample_c2[i_idx, 1] = np.log10(sfreq)
+                                sample_c2[i_idx, 2] = Z2real
+                                sample_c2[i_idx, 3] = Z2imag
+                                sample_c2[i_idx, 4] = np.abs(Z2real - 1j * Z2imag)
+                                sample_c2[i_idx, 5] = np.angle(Z2real - 1j * Z2imag, deg=True)
+
+                                sample_c3[i_idx, 0] = np.mean(data_sets[3])
+                                sample_c3[i_idx, 1] = np.log10(sfreq)
+                                sample_c3[i_idx, 2] = Z3real
+                                sample_c3[i_idx, 3] = Z3imag
+                                sample_c3[i_idx, 4] = np.abs(Z3real - 1j * Z3imag)
+                                sample_c3[i_idx, 5] = np.angle(Z3real - 1j * Z3imag, deg=True)
 
                                 # --- ML based SoH estimation ---
-                                output = SoH_est.predict(sample.reshape(1, 6, 31).astype(np.float32))
-                                # output = ml.model_forward(sample.reshape(1, 4, 61).astype(np.float32),
-                                #                             ml.W_ih, ml.W_hh, ml.b_ih, ml.b_hh,
-                                #                             ml.fc1_W, ml.fc1_b,
-                                #                             ml.out_W, ml.out_b)
-                                print(f"\n\nThe estimated SoH is: {str(np.round(output*100, decimals=2))}%\n")
+                                output_c1 = SoH_est.predict(sample_c1.reshape(1, 6, 31).astype(np.float32))
+                                print(f"\n\nThe estimated SoH of cell-1 is: {str(np.round(output_c1*100, decimals=2))}%\n")
+                                output_c2 = SoH_est.predict(sample_c2.reshape(1, 6, 31).astype(np.float32))
+                                print(f"\n\nThe estimated SoH of cell-2 is: {str(np.round(output_c2*100, decimals=2))}%\n")
+                                output_c3 = SoH_est.predict(sample_c3.reshape(1, 6, 31).astype(np.float32))
+                                print(f"\n\nThe estimated SoH of cell-3 is: {str(np.round(output_c3*100, decimals=2))}%\n")
                                 
                                 # --- Send Data to Host ---
                                 try:
-                                    # Send CURRENT sample row
-                                    data_bytes = np.append(sample[i_idx, :].flatten(), np.round(np.clip(output, 0, 1)*100, decimals=2)).tobytes()
+                                    # 1. Extract the current row for each cell (6 values each)
+                                    row_c1 = sample_c1[i_idx, :].flatten()
+                                    row_c2 = sample_c2[i_idx, :].flatten()
+                                    row_c3 = sample_c3[i_idx, :].flatten()
+                                    
+                                    # 2. Format the SoH estimates (clip, scale to %, round, and flatten)
+                                    soh_1 = np.round(np.clip(output_c1, 0, 1) * 100, decimals=2).flatten()
+                                    soh_2 = np.round(np.clip(output_c2, 0, 1) * 100, decimals=2).flatten()
+                                    soh_3 = np.round(np.clip(output_c3, 0, 1) * 100, decimals=2).flatten()
+                                    
+                                    # 3. Concatenate everything into one flat array
+                                    # Total length will be (6 + 1) * 3 = 21 elements
+                                    combined_data = np.concatenate([
+                                        row_c1, soh_1, 
+                                        row_c2, soh_2, 
+                                        row_c3, soh_3
+                                    ])
+                                    
+                                    # 4. Convert to bytes (ensure consistent float64 type for struct unpacking)
+                                    data_bytes = combined_data.astype(np.float64).tobytes()
                                     header = struct.pack('>I', len(data_bytes))
+                                    
+                                    # 5. Send over TCP
                                     conn.sendall(header + data_bytes)
-                                    print(f"Sent measurement to Client.")
+                                    print(f"Sent combined measurements (21 values) to Client.")
+                                    
                                 except Exception as e:
                                     print(f"Send failed (Client disconnected?): {e}")
                                     client_connected = False
