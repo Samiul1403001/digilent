@@ -397,18 +397,18 @@ try:
                                 Z2 = (V2_comp / I_comp)
                                 Z3 = (V3_comp / I_comp)
 
-                                Z1real, Z1imag = calibrator_c1.correct(sfreq, Z1.real, -Z1.imag)
-                                print(f"Cell-1 Impedance: {Z1real} + ({Z1imag}j)")
+                                # Z1real, Z1imag = calibrator_c1.correct(sfreq, Z1.real, -Z1.imag)
+                                # print(f"Cell-1 Impedance: {Z1real} + ({Z1imag}j)")
 
-                                Z2real, Z2imag = calibrator_c2.correct(sfreq, Z2.real, -Z2.imag)
-                                print(f"Cell-2 Impedance: {Z2real} + ({Z2imag}j)")
+                                # Z2real, Z2imag = calibrator_c2.correct(sfreq, Z2.real, -Z2.imag)
+                                # print(f"Cell-2 Impedance: {Z2real} + ({Z2imag}j)")
 
-                                Z3real, Z3imag = calibrator_c3.correct(sfreq, Z3.real, -Z3.imag)
-                                print(f"Cell-3 Impedance: {Z3real} + ({Z3imag}j)")
+                                # Z3real, Z3imag = calibrator_c3.correct(sfreq, Z3.real, -Z3.imag)
+                                # print(f"Cell-3 Impedance: {Z3real} + ({Z3imag}j)")
 
-                                # Z1real, Z1imag = Z1.real-0.068395, -Z1.imag
-                                # Z2real, Z2imag = Z2.real-0.066465, -Z2.imag
-                                # Z3real, Z3imag = Z3.real-0.080399, -Z3.imag
+                                Z1real, Z1imag = Z1.real, -Z1.imag
+                                Z2real, Z2imag = Z2.real, -Z2.imag
+                                Z3real, Z3imag = Z3.real, -Z3.imag
 
                                 # Data Quality Check
                                 if i_idx > 0 and ((Z1real < 0.98*sample_c1[i_idx-1, 1] and Z1real < 0) or (Z2real < 0.98*sample_c2[i_idx-1, 1] and Z2real < 0) or (Z3real < 0.98*sample_c3[i_idx-1, 1] and Z3real < 0)):
