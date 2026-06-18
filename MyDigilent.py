@@ -4,6 +4,51 @@ from os import sep                # OS specific file path separators
 import inspect, numpy as np       # caller function data
 import dwfconstants as constants
 
+def smooth_impedance_array(data_array, window_size=5):
+    """
+    Smooths the impedance columns of a [Freq, Zreal, Zimag] array using a pure NumPy 
+    moving average with edge padding to preserve array shape and boundaries.
+    
+    Parameters:
+    -----------
+    data_array : numpy.ndarray
+        A 2D array of shape (N, 3) where columns are [Frequency, Z_real, Z_imag].
+    window_size : int
+        The number of points to average. Must be an odd number (e.g., 3, 5, 7).
+        
+    Returns:
+    --------
+    smoothed_array : numpy.ndarray
+        A new (N, 3) array with unchanged frequencies and smoothed impedances.
+    """
+    # Ensure window_size is valid and odd
+    if window_size < 3:
+        return data_array.copy()
+    if window_size % 2 == 0:
+        window_size += 1  # Force it to be odd for symmetric edge padding
+        
+    # 1. Sort the array by frequency (ascending) to ensure valid smoothing
+    # (We make a copy to avoid mutating your original array)
+    sorted_data = data_array[np.argsort(data_array[:, 0])].copy()
+    
+    freqs = sorted_data[:, 0]
+    z_real = sorted_data[:, 1]
+    z_imag = sorted_data[:, 2]
+    
+    # 2. Define the pure NumPy smoothing helper
+    def apply_moving_average(y, w_size):
+        box = np.ones(w_size) / w_size
+        pad_size = w_size // 2
+        y_padded = np.pad(y, (pad_size, pad_size), mode='edge')
+        return np.convolve(y_padded, box, mode='valid')
+        
+    # 3. Apply the smoothing to the real and imaginary columns
+    z_real_smoothed = apply_moving_average(z_real, window_size)
+    z_imag_smoothed = apply_moving_average(z_imag, window_size)
+    
+    # 4. Reconstruct and return the array
+    return np.column_stack((freqs, z_real_smoothed, z_imag_smoothed))
+
 def _interp_complex(freqs_src, Z_src, freqs_target):
     """Helper function to interpolate complex impedance logarithmically."""
     log_src = np.log10(freqs_src)
