@@ -13,33 +13,33 @@ def _interp_complex(freqs_src, Z_src, freqs_target):
 
 class HolderCalibrator:
     def __init__(self, ref_data, meas_data, name="Holder"):
-        """
-        Initializes the calibrator by calculating the parasitic impedance 
-        for a specific holder.
-        """
         self.name = name
         
-        # Parse
+        # Parse data
         f_ref  = ref_data[:, 0];  Z_ref  = ref_data[:, 1]  + 1j * ref_data[:, 2]
         f_meas = meas_data[:, 0]; Z_meas = meas_data[:, 1] + 1j * meas_data[:, 2]
 
-        # Sort ascending (interp requires monotone input)
+        # Sort ascending
         idx_ref  = np.argsort(f_ref);  f_ref  = f_ref[idx_ref];  Z_ref  = Z_ref[idx_ref]
         idx_meas = np.argsort(f_meas); f_meas = f_meas[idx_meas]; Z_meas = Z_meas[idx_meas]
 
-        # Common grid = measured frequencies clipped to overlapping range
+        # Overlapping frequencies
         f_min = max(f_ref.min(), f_meas.min())
         f_max = min(f_ref.max(), f_meas.max())
 
         mask = (f_meas >= f_min) & (f_meas <= f_max)
-        self.freqs = f_meas[mask] # Store this holder's valid frequencies
+        self.freqs = f_meas[mask] 
         
-        # Calculate and store this specific holder's parasitic impedance
-        self.Z_parasitic = Z_meas[mask] - _interp_complex(f_ref, Z_ref, self.freqs)
+        # --- THE MINOR ADJUSTMENT: Calculate Complex Ratio instead of Difference ---
+        # This fixes Phase Delay and Gain errors multiplicatively
+        true_Z_interp = _interp_complex(f_ref, Z_ref, self.freqs)
+        
+        # Avoid divide-by-zero just in case
+        safe_Z_meas = np.where(Z_meas[mask] == 0, 1e-9, Z_meas[mask])
+        self.Z_correction_ratio = true_Z_interp / safe_Z_meas
 
     def correct(self, freqs, Z_real, Z_imag):
-        """Removes this holder's specific impedance from a new measurement."""
-        # Force 1-d
+        """Corrects phase and gain errors of a new measurement."""
         freqs = np.atleast_1d(np.asarray(freqs,  dtype=float))
         Z_raw = np.atleast_1d(np.asarray(Z_real, dtype=float)) \
               + 1j * np.atleast_1d(np.asarray(Z_imag, dtype=float))
@@ -48,14 +48,11 @@ class HolderCalibrator:
         Z_out    = Z_raw.copy()
 
         if in_range.any():
-            Z_out[in_range] -= _interp_complex(self.freqs, self.Z_parasitic, freqs[in_range])
+            # --- THE MINOR ADJUSTMENT: Multiply by the Ratio ---
+            ratio_at_freqs = _interp_complex(self.freqs, self.Z_correction_ratio, freqs[in_range])
+            Z_out[in_range] = Z_out[in_range] * ratio_at_freqs
 
-        n_out = np.sum(~in_range)
-        if n_out:
-            print(f"[warning] {self.name}: {n_out} point(s) outside calibrated range "
-                  f"[{self.freqs.min():.3f}, {self.freqs.max():.3f}] Hz — left uncorrected")
-
-        # If a single float was passed in, return single floats instead of arrays
+        # Return floats if single point passed
         if len(freqs) == 1:
             return float(Z_out.real[0]), float(Z_out.imag[0])
             
