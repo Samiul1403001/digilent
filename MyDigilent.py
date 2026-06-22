@@ -74,17 +74,27 @@ class HolderCalibrator:
 
         mask = (f_meas >= f_min) & (f_meas <= f_max)
         self.freqs = f_meas[mask] 
-        
-        # --- THE MINOR ADJUSTMENT: Calculate Complex Ratio instead of Difference ---
-        # This fixes Phase Delay and Gain errors multiplicatively
         true_Z_interp = _interp_complex(f_ref, Z_ref, self.freqs)
         
-        # Avoid divide-by-zero just in case
-        safe_Z_meas = np.where(Z_meas[mask] == 0, 1e-9, Z_meas[mask])
+        # --- THE FIX: Calculate Additive Shift First ---
+        # Find the high-frequency (left-most) real intercept difference
+        ref_hf_real = true_Z_interp[-1].real  # Highest frequency is at the end after sorting
+        meas_hf_real = Z_meas[mask][-1].real
+        
+        # This represents the physical resistance of the holder/cables (~29 mOhm)
+        self.additive_shift = meas_hf_real - ref_hf_real 
+        
+        # Shift the measured data back to the true starting point
+        shifted_Z_meas = Z_meas[mask] - self.additive_shift
+        
+        # --- NOW Calculate Multiplicative Ratio ---
+        # Because the additive error is gone, this ratio will stay near 1.0 
+        # and only fix subtle phase/gain errors, preventing the "shrink".
+        safe_Z_meas = np.where(shifted_Z_meas == 0, 1e-9, shifted_Z_meas)
         self.Z_correction_ratio = true_Z_interp / safe_Z_meas
 
     def correct(self, freqs, Z_real, Z_imag):
-        """Corrects phase and gain errors of a new measurement."""
+        """Corrects a new measurement using both Shift and Ratio."""
         freqs = np.atleast_1d(np.asarray(freqs,  dtype=float))
         Z_raw = np.atleast_1d(np.asarray(Z_real, dtype=float)) \
               + 1j * np.atleast_1d(np.asarray(Z_imag, dtype=float))
@@ -93,11 +103,13 @@ class HolderCalibrator:
         Z_out    = Z_raw.copy()
 
         if in_range.any():
-            # --- THE MINOR ADJUSTMENT: Multiply by the Ratio ---
+            # 1. Subtract the additive series resistance of the cables
+            Z_out[in_range] = Z_out[in_range] - self.additive_shift
+            
+            # 2. Multiply by the phase/gain correction ratio
             ratio_at_freqs = _interp_complex(self.freqs, self.Z_correction_ratio, freqs[in_range])
             Z_out[in_range] = Z_out[in_range] * ratio_at_freqs
 
-        # Return floats if single point passed
         if len(freqs) == 1:
             return float(Z_out.real[0]), float(Z_out.imag[0])
             
