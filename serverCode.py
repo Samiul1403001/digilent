@@ -354,20 +354,20 @@ try:
 
                             elif res_str == "DoneRecv":
                                 # Calculation Logic
-                                Imeas = (data_sets[0]-np.mean(data_sets[0]))/0.033
+                                Imeas, _ = remove_baseline_drift(data_sets[0]/0.033, buffer_size)
                                 V1meas, _ = remove_baseline_drift(data_sets[1], buffer_size)
                                 V2meas, _ = remove_baseline_drift(data_sets[2], buffer_size)
                                 V3meas, _ = remove_baseline_drift(data_sets[3], buffer_size)
 
-                                # Imeas_filtered = fir_bandpass(Imeas, sample_rate, f*0.8, f*1.2)
-                                # V1meas_filtered = fir_bandpass(V1meas, sample_rate, f*0.8, f*1.2)
-                                # V2meas_filtered = fir_bandpass(V2meas, sample_rate, f*0.8, f*1.2)
-                                # V3meas_filtered = fir_bandpass(V3meas, sample_rate, f*0.8, f*1.2)
+                                Imeas_filtered = fir_bandpass(Imeas, sample_rate, f*0.8, f*1.2)
+                                V1meas_filtered = fir_bandpass(V1meas, sample_rate, f*0.8, f*1.2)
+                                V2meas_filtered = fir_bandpass(V2meas, sample_rate, f*0.8, f*1.2)
+                                V3meas_filtered = fir_bandpass(V3meas, sample_rate, f*0.8, f*1.2)
 
-                                Imeas_filtered = Imeas
-                                V1meas_filtered = V1meas
-                                V2meas_filtered = V2meas
-                                V3meas_filtered = V3meas
+                                # Imeas_filtered = Imeas
+                                # V1meas_filtered = V1meas
+                                # V2meas_filtered = V2meas
+                                # V3meas_filtered = V3meas
 
                                 rng_int = 1 / 10 ** int(-np.log10(f) + 3)
 
