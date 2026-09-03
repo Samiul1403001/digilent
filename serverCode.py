@@ -442,11 +442,11 @@ try:
                                 sample_c3[i_idx, 5] = np.angle(Z3real - 1j * Z3imag, deg=True)
 
                                 # --- ML based SoH estimation ---
-                                output_c1 = SoH_est.predict(sample_c1.reshape(1, 6, 31).astype(np.float32))
+                                output_c1 = SoH_est.predict(sample_c1.reshape(1, 6, 61).astype(np.float32))
                                 print(f"\n\nThe estimated SoH of cell-1 is: {str(np.round(output_c1*100, decimals=2))}%\n")
-                                output_c2 = SoH_est.predict(sample_c2.reshape(1, 6, 31).astype(np.float32))
+                                output_c2 = SoH_est.predict(sample_c2.reshape(1, 6, 61).astype(np.float32))
                                 print(f"\n\nThe estimated SoH of cell-2 is: {str(np.round(output_c2*100, decimals=2))}%\n")
-                                output_c3 = SoH_est.predict(sample_c3.reshape(1, 6, 31).astype(np.float32))
+                                output_c3 = SoH_est.predict(sample_c3.reshape(1, 6, 61).astype(np.float32))
                                 print(f"\n\nThe estimated SoH of cell-3 is: {str(np.round(output_c3*100, decimals=2))}%\n")
                                 
                                 # --- Send Data to Host ---
