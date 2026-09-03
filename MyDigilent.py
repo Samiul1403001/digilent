@@ -4,6 +4,49 @@ from os import sep                # OS specific file path separators
 import inspect, numpy as np       # caller function data
 import dwfconstants as constants
 
+def remove_baseline_drift(raw_signal, buffer_size):
+    """
+    Isolates the AC perturbation from a drifting baseline using an ultra-fast 
+    cumulative sum moving average.
+    
+    Parameters:
+    -----------
+    raw_signal : numpy.ndarray
+        The 1D array containing the noisy/drifting voltage or current data.
+    sample_rate : float or int
+        The sampling rate of your Digilent measurement in Hz.
+    target_freq : float
+        The frequency of the AC perturbation you want to extract (e.g., 0.1 Hz).
+        
+    Returns:
+    --------
+    clean_ac_signal : numpy.ndarray
+        The extracted AC perturbation centered at zero.
+    drift_baseline : numpy.ndarray
+        The extracted low-frequency DC drift (useful for plotting/debugging).
+    """
+    # Calculate exactly one AC cycle in data points
+    window_size = buffer_size
+    
+    if window_size < 2:
+        return raw_signal, np.zeros_like(raw_signal)
+        
+    # Calculate padding to keep array length identical (mode='same')
+    pad_left = window_size // 2
+    pad_right = window_size - 1 - pad_left
+    
+    # Pad the edges to prevent boundary distortion
+    padded_signal = np.pad(raw_signal, (pad_left, pad_right), mode='edge')
+    
+    # Compute the ultra-fast cumulative sum moving average
+    cs = np.cumsum(np.insert(padded_signal, 0, 0))
+    drift_baseline = (cs[window_size:] - cs[:-window_size]) / float(window_size)
+    
+    # Isolate the pure AC signal
+    clean_ac_signal = raw_signal - drift_baseline
+    
+    return clean_ac_signal, drift_baseline
+
 def smooth_impedance_array(data_array, window_size=5):
     """
     Smooths the impedance columns of a [Freq, Zreal, Zimag] array using a pure NumPy 

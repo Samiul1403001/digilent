@@ -1,4 +1,4 @@
-from MyDigilent import MyDigilent, freq_selection_signal, dual_phase_demod, FFT, fir_bandpass, HolderCalibrator, smooth_impedance_array
+from MyDigilent import MyDigilent, remove_baseline_drift, freq_selection_signal, dual_phase_demod, FFT, fir_bandpass, HolderCalibrator, smooth_impedance_array
 from time import sleep
 import numpy as np, socket, struct, mlrepo as ml
 
@@ -355,21 +355,9 @@ try:
                             elif res_str == "DoneRecv":
                                 # Calculation Logic
                                 Imeas = (data_sets[0]-np.mean(data_sets[0]))/0.033
-
-                                # Create the moving average baseline
-                                box = np.ones(buffer_size) / buffer_size
-
-                                # Cell 1
-                                V1_baseline = np.convolve(data_sets[1], box, mode='same')
-                                V1meas = data_sets[1] - V1_baseline
-
-                                # Cell 2
-                                V2_baseline = np.convolve(data_sets[2], box, mode='same')
-                                V2meas = data_sets[2] - V2_baseline
-
-                                # Cell 3
-                                V3_baseline = np.convolve(data_sets[3], box, mode='same')
-                                V3meas = data_sets[3] - V3_baseline
+                                V1meas, _ = remove_baseline_drift(data_sets[1], buffer_size)
+                                V2meas, _ = remove_baseline_drift(data_sets[2], buffer_size)
+                                V3meas, _ = remove_baseline_drift(data_sets[3], buffer_size)
 
                                 # Imeas_filtered = fir_bandpass(Imeas, sample_rate, f*0.8, f*1.2)
                                 # V1meas_filtered = fir_bandpass(V1meas, sample_rate, f*0.8, f*1.2)
