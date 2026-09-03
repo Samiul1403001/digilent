@@ -234,7 +234,7 @@ print(f"Max buffer size per channel: {max_buf}, Max sampling rate: {fsample_max}
 
 # --- Frequency Setup ---
 f_freq = [10e3, 1e3, 1e2, 1e1, 1e0, 1e-1, 1e-2]
-finit_idx = 3
+finit_idx = 2
 fperdecade = 10
 FREQ_TEMPLATE = [] 
 FREQ_TEMPLATE.append(f_freq[finit_idx])
@@ -289,9 +289,9 @@ try:
                     print("START received. Beginning Measurement Sequence...")
                     
                     # Initialize run variables
-                    sample_c1 = np.zeros([31, 6])
-                    sample_c2 = np.zeros([31, 6])
-                    sample_c3 = np.zeros([31, 6])
+                    sample_c1 = np.zeros([41, 6])
+                    sample_c2 = np.zeros([41, 6])
+                    sample_c3 = np.zeros([41, 6])
                     i_idx = 0
                     stop_requested = False
 
