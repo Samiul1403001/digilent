@@ -355,7 +355,7 @@ try:
                             elif res_str == "DoneRecv":
                                 # Calculation Logic
                                 Imeas = (data_sets[0]-np.mean(data_sets[0]))/0.033
-                                V1meas = (data_sets[1]-np.mean(data_sets[1]))/12
+                                V1meas = (data_sets[1]-np.mean(data_sets[1]))
                                 V2meas = data_sets[2]-np.mean(data_sets[2])
                                 V3meas = data_sets[3]-np.mean(data_sets[3])
 
