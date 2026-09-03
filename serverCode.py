@@ -355,14 +355,31 @@ try:
                             elif res_str == "DoneRecv":
                                 # Calculation Logic
                                 Imeas = (data_sets[0]-np.mean(data_sets[0]))/0.033
-                                V1meas = (data_sets[1]-np.mean(data_sets[1]))
-                                V2meas = data_sets[2]-np.mean(data_sets[2])
-                                V3meas = data_sets[3]-np.mean(data_sets[3])
 
-                                Imeas_filtered = fir_bandpass(Imeas, sample_rate, f*0.8, f*1.2)
-                                V1meas_filtered = fir_bandpass(V1meas, sample_rate, f*0.8, f*1.2)
-                                V2meas_filtered = fir_bandpass(V2meas, sample_rate, f*0.8, f*1.2)
-                                V3meas_filtered = fir_bandpass(V3meas, sample_rate, f*0.8, f*1.2)
+                                # Create the moving average baseline
+                                box = np.ones(buffer_size) / buffer_size
+
+                                # Cell 1
+                                V1_baseline = np.convolve(data_sets[1], box, mode='same')
+                                V1meas = data_sets[1] - V1_baseline
+
+                                # Cell 2
+                                V2_baseline = np.convolve(data_sets[2], box, mode='same')
+                                V2meas = data_sets[2] - V2_baseline
+
+                                # Cell 3
+                                V3_baseline = np.convolve(data_sets[3], box, mode='same')
+                                V3meas = data_sets[3] - V3_baseline
+
+                                # Imeas_filtered = fir_bandpass(Imeas, sample_rate, f*0.8, f*1.2)
+                                # V1meas_filtered = fir_bandpass(V1meas, sample_rate, f*0.8, f*1.2)
+                                # V2meas_filtered = fir_bandpass(V2meas, sample_rate, f*0.8, f*1.2)
+                                # V3meas_filtered = fir_bandpass(V3meas, sample_rate, f*0.8, f*1.2)
+
+                                Imeas_filtered = Imeas
+                                V1meas_filtered = V1meas
+                                V2meas_filtered = V2meas
+                                V3meas_filtered = V3meas
 
                                 rng_int = 1 / 10 ** int(-np.log10(f) + 3)
 
