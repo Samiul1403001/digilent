@@ -364,6 +364,8 @@ try:
                                 V2meas = V2meas[V2_i:V2_f]
                                 V3meas = V3meas[V3_i:V3_f]
 
+                                print(Imeas.shape[0], V1meas.shape[0], V2meas.shape[0], V3meas.shape[0])
+
                                 # Imeas_filtered = fir_bandpass(Imeas, sample_rate, f*0.8, f*1.2)
                                 # V1meas_filtered = fir_bandpass(V1meas, sample_rate, f*0.8, f*1.2)
                                 # V2meas_filtered = fir_bandpass(V2meas, sample_rate, f*0.8, f*1.2)
