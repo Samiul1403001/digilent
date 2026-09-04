@@ -1,4 +1,4 @@
-from MyDigilent import MyDigilent, remove_baseline_drift, freq_selection_signal, dual_phase_demod, FFT, fir_bandpass, HolderCalibrator, smooth_impedance_array
+from MyDigilent import MyDigilent, remove_baseline_valid_fast, freq_selection_signal, dual_phase_demod, FFT, fir_bandpass, HolderCalibrator, smooth_impedance_array
 from time import sleep
 import numpy as np, socket, struct, mlrepo as ml
 
@@ -354,20 +354,25 @@ try:
 
                             elif res_str == "DoneRecv":
                                 # Calculation Logic
-                                Imeas, _ = remove_baseline_drift(data_sets[0]/0.033, buffer_size)
-                                V1meas, _ = remove_baseline_drift(data_sets[1], buffer_size)
-                                V2meas, _ = remove_baseline_drift(data_sets[2], buffer_size)
-                                V3meas, _ = remove_baseline_drift(data_sets[3], buffer_size)
+                                Imeas, _, I_i, I_f = remove_baseline_valid_fast(data_sets[0]/0.033, sample_rate, f)
+                                V1meas, _, V1_i, V1_f = remove_baseline_valid_fast(data_sets[1], sample_rate, f)
+                                V2meas, _, V2_i, V2_f = remove_baseline_valid_fast(data_sets[2], sample_rate, f)
+                                V3meas, _, V3_i, V3_f = remove_baseline_valid_fast(data_sets[3], sample_rate, f)
 
-                                Imeas_filtered = fir_bandpass(Imeas, sample_rate, f*0.8, f*1.2)
-                                V1meas_filtered = fir_bandpass(V1meas, sample_rate, f*0.8, f*1.2)
-                                V2meas_filtered = fir_bandpass(V2meas, sample_rate, f*0.8, f*1.2)
-                                V3meas_filtered = fir_bandpass(V3meas, sample_rate, f*0.8, f*1.2)
+                                Imeas = Imeas[I_i:I_f]
+                                V1meas = V1meas[V1_i:V1_f]
+                                V2meas = V2meas[V2_i:V2_f]
+                                V3meas = V3meas[V3_i:V3_f]
 
-                                # Imeas_filtered = Imeas
-                                # V1meas_filtered = V1meas
-                                # V2meas_filtered = V2meas
-                                # V3meas_filtered = V3meas
+                                # Imeas_filtered = fir_bandpass(Imeas, sample_rate, f*0.8, f*1.2)
+                                # V1meas_filtered = fir_bandpass(V1meas, sample_rate, f*0.8, f*1.2)
+                                # V2meas_filtered = fir_bandpass(V2meas, sample_rate, f*0.8, f*1.2)
+                                # V3meas_filtered = fir_bandpass(V3meas, sample_rate, f*0.8, f*1.2)
+
+                                Imeas_filtered = Imeas
+                                V1meas_filtered = V1meas
+                                V2meas_filtered = V2meas
+                                V3meas_filtered = V3meas
 
                                 rng_int = 1 / 10 ** int(-np.log10(f) + 3)
 

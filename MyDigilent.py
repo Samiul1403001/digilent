@@ -4,48 +4,34 @@ from os import sep                # OS specific file path separators
 import inspect, numpy as np       # caller function data
 import dwfconstants as constants
 
-def remove_baseline_drift(raw_signal, buffer_size):
+def remove_baseline_valid_fast(raw_signal, sample_rate, target_freq):
     """
-    Isolates the AC perturbation from a drifting baseline using an ultra-fast 
-    cumulative sum moving average.
-    
-    Parameters:
-    -----------
-    raw_signal : numpy.ndarray
-        The 1D array containing the noisy/drifting voltage or current data.
-    sample_rate : float or int
-        The sampling rate of your Digilent measurement in Hz.
-    target_freq : float
-        The frequency of the AC perturbation you want to extract (e.g., 0.1 Hz).
-        
-    Returns:
-    --------
-    clean_ac_signal : numpy.ndarray
-        The extracted AC perturbation centered at zero.
-    drift_baseline : numpy.ndarray
-        The extracted low-frequency DC drift (useful for plotting/debugging).
+    Isolates the AC perturbation using a fast 'valid' cumulative sum moving average.
+    Returns the sliced arrays and the indices needed to slice reference waves.
     """
-    # Calculate exactly one AC cycle in data points
-    window_size = buffer_size
+    window_size = int(sample_rate / target_freq)
     
-    if window_size < 2:
-        return raw_signal, np.zeros_like(raw_signal)
+    if window_size < 2 or len(raw_signal) < window_size:
+        # Not enough data for a valid convolution
+        return raw_signal, np.zeros_like(raw_signal), 0, len(raw_signal)
         
-    # Calculate padding to keep array length identical (mode='same')
-    pad_left = window_size // 2
-    pad_right = window_size - 1 - pad_left
+    # 1. Compute the 'valid' moving average using fast cumulative sum
+    # np.insert adds a leading 0 so the shifted subtraction works perfectly
+    cs = np.cumsum(np.insert(raw_signal, 0, 0))
     
-    # Pad the edges to prevent boundary distortion
-    padded_signal = np.pad(raw_signal, (pad_left, pad_right), mode='edge')
-    
-    # Compute the ultra-fast cumulative sum moving average
-    cs = np.cumsum(np.insert(padded_signal, 0, 0))
+    # cs[window_size:] grabs the end of the windows
+    # cs[:-window_size] grabs the start of the windows
     drift_baseline = (cs[window_size:] - cs[:-window_size]) / float(window_size)
     
-    # Isolate the pure AC signal
-    clean_ac_signal = raw_signal - drift_baseline
+    # 2. Calculate indices to center the raw signal over the valid window
+    start_idx = window_size // 2
+    end_idx = start_idx + len(drift_baseline)
     
-    return clean_ac_signal, drift_baseline
+    # 3. Slice the raw data to match the shorter baseline and subtract
+    sliced_raw_signal = raw_signal[start_idx:end_idx]
+    clean_ac_signal = sliced_raw_signal - drift_baseline
+    
+    return clean_ac_signal, drift_baseline, start_idx, end_idx
 
 def smooth_impedance_array(data_array, window_size=5):
     """
