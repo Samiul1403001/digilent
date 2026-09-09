@@ -352,7 +352,7 @@ try:
                                     if ncycle < 2:
                                         ncycle = 2
                                         sample_rate = int(f*buffer_size/ncycle)
-                                    sleep(ncycle*0.8/f)
+                                    sleep(ncycle*0.7/f)
 
                                 data_sets = Digi_1.scope_record(sample_rate, buffer_size)
                                 print(f"buffer size: {buffer_size}, Perturbation freq: {f}, Sampling frequency: {sample_rate}, Number of cycles: {ncycle}")
