@@ -347,7 +347,7 @@ try:
 
                                 else:
                                     est_ncycle = int(0.6228 * np.exp(2.2101*np.log10(f)))
-                                    buffer_size = int(max_buf*0.75)
+                                    buffer_size = int(max_buf*0.5)
                                     sample_rate = int(fsample_max)
                                     ncycle = int(buffer_size/(sample_rate/f))
                                     while (ncycle < est_ncycle):
