@@ -331,7 +331,7 @@ try:
 
                             if res_str == "Received":
                                 print(f"Measuring EIS at {CMD.strip()} Hz...")
-                                buffer_size = int(max_buf)
+                                buffer_size = int(max_buf*0.9)
                                 sample_rate = int(fsample_max)
                                 ncycle = int(buffer_size/(sample_rate/f))
                                 if f < 0.1:
