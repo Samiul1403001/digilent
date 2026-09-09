@@ -337,10 +337,12 @@ try:
                                 if f < 0.1:
                                     ncycle = 2
                                     sample_rate = int(buffer_size / (ncycle / f))
+                                    sleep(0.1/f)
                                     
                                 elif f <= 10 and f >= 0.1:
                                     ncycle = int(7.5*np.log10(f)+12.5)
                                     sample_rate = int(buffer_size / (ncycle / f))
+                                    sleep(1/f)
 
                                 else:
                                     est_ncycle = int(0.6228 * np.exp(2.2101*np.log10(f)))
@@ -350,6 +352,8 @@ try:
                                     if ncycle < 2:
                                         ncycle = 2
                                         sample_rate = int(f*buffer_size/ncycle)
+                                    sleep(3/f)
+
                                 data_sets = Digi_1.scope_record(sample_rate, buffer_size)
                                 print(f"buffer size: {buffer_size}, Perturbation freq: {f}, Sampling frequency: {sample_rate}, Number of cycles: {ncycle}")
 
@@ -360,7 +364,7 @@ try:
                                 np.savetxt("results/raw_data.csv", 
                                             csv_data, 
                                             delimiter=",", 
-                                            header="Current (A),Voltage_B1(V),Voltage_B2(V), ,Voltage_B3(V)", 
+                                            header="Current (A),Voltage_B1(V),Voltage_B2(V),Voltage_B3(V)", 
                                             comments="", 
                                             fmt="%.6f")
 
