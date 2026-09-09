@@ -331,23 +331,21 @@ try:
 
                             if res_str == "Received":
                                 print(f"Measuring EIS at {CMD.strip()} Hz...")
+                                buffer_size = int(max_buf)
                                 if f < 0.1:
-                                    buffer_size = int(max_buf*0.9)
                                     # ncycle = int(buffer_size/(sample_rate/f))
                                     ncycle = 2
                                     sample_rate = int(buffer_size / (ncycle / f))
                                     sleep(0.1/f)
                                     
                                 elif f <= 10 and f >= 0.1:
-                                    buffer_size = int(max_buf*0.8)
                                     # ncycle = int(buffer_size/(sample_rate/f))
                                     ncycle = int(7.5*np.log10(f)+12.5)
                                     sample_rate = int(buffer_size / (ncycle / f))
                                     sleep(1/f)
 
                                 else:
-                                    est_ncycle = int(0.6228 * np.exp(2.2101*np.log10(f)))
-                                    buffer_size = int(max_buf*0.5)
+                                    est_ncycle = int(0.6228 * np.exp(2.2101*np.log10(f)) * 0.8)
                                     sample_rate = int(fsample_max)
                                     ncycle = int(buffer_size/(sample_rate/f))
                                     while (ncycle < est_ncycle):
