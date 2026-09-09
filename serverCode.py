@@ -345,7 +345,7 @@ try:
                                     sleep(1/f)
 
                                 else:
-                                    est_ncycle = int(0.6228 * np.exp(2.2101*np.log10(f)) * 0.8)
+                                    est_ncycle = int(0.6228 * np.exp(2.2101*np.log10(f)) * 0.9)
                                     sample_rate = int(fsample_max)
                                     ncycle = int(buffer_size/(sample_rate/f))
                                     while (ncycle < est_ncycle):
