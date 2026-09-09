@@ -234,7 +234,7 @@ print(f"Max buffer size per channel: {max_buf}, Max sampling rate: {fsample_max}
 
 # --- Frequency Setup ---
 # f_freq = [10e3, 1e3, 1e2, 1e1, 1e0, 1e-1, 1e-2]
-f_freq = [1e2]
+f_freq = [15]
 finit_idx = 0
 fperdecade = 10
 FREQ_TEMPLATE = []
