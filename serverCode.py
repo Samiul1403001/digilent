@@ -342,7 +342,7 @@ try:
                                     # ncycle = int(buffer_size/(sample_rate/f))
                                     ncycle = int(7.5*np.log10(f)+12.5)
                                     sample_rate = int(buffer_size / (ncycle / f))
-                                    sleep(1/f)
+                                    sleep(ncycle*0.7/f)
 
                                 else:
                                     est_ncycle = int(0.6228 * np.exp(2.2101*np.log10(f)) * 0.95)
