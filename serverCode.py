@@ -233,7 +233,8 @@ fsample_max = 1e6
 print(f"Max buffer size per channel: {max_buf}, Max sampling rate: {fsample_max}")
 
 # --- Frequency Setup ---
-f_freq = [10e3, 1e3, 1e2, 1e1, 1e0, 1e-1, 1e-2]
+# f_freq = [10e3, 1e3, 1e2, 1e1, 1e0, 1e-1, 1e-2]
+f_freq = [1e4, 1e3, 1e2]
 finit_idx = 2
 fperdecade = 10
 FREQ_TEMPLATE = []
@@ -297,7 +298,6 @@ try:
 
                     # Loop through frequencies
                     for f in FREQ_TEMPLATE:
-                        
                         # --- CHECK FOR STOP COMMAND (Non-Blocking) ---
                         try:
                             conn.setblocking(False) # Peek using the CLIENT connection
@@ -332,17 +332,13 @@ try:
                                 print(f"Measuring EIS at {CMD.strip()} Hz...")
                                 buffer_size = int(max_buf)
                                 if f < 0.1:
-                                    # ncycle = int(buffer_size/(sample_rate/f))
-                                    ncycle = 2
+                                    ncycle = 1.25
                                     sample_rate = int(buffer_size / (ncycle / f))
                                     sleep(0.1/f)
-                                    
                                 elif f <= 10 and f >= 0.1:
-                                    # ncycle = int(buffer_size/(sample_rate/f))
                                     ncycle = int(7.5*np.log10(f)+12.5)
                                     sample_rate = int(buffer_size / (ncycle / f))
-                                    sleep(ncycle*0.7/f)
-
+                                    sleep(0.1/f)
                                 else:
                                     est_ncycle = int(0.6228 * np.exp(2.2101*np.log10(f)) * 0.95)
                                     sample_rate = int(fsample_max)
@@ -353,12 +349,12 @@ try:
                                     if ncycle < 2:
                                         ncycle = 2
                                         sample_rate = int(f*buffer_size/ncycle)
-                                    sleep(ncycle*0.93/f)
+                                    sleep(0.1/f)
 
                                 data_sets = Digi_1.scope_record(sample_rate, buffer_size)
                                 print(f"buffer size: {buffer_size}, Perturbation freq: {f}, Sampling frequency: {sample_rate}, Number of cycles: {ncycle}")
                                 Digi_1.sendStringUART("STOP")
-
+                            
                             elif res_str == "DoneRecv":
                                 # extract csv
                                 # csv_data = np.column_stack(data_sets)
