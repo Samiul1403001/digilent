@@ -334,11 +334,11 @@ try:
                                 if f < 0.1:
                                     ncycle = 1.25
                                     sample_rate = int(buffer_size / (ncycle / f))
-                                    sleep(0.1/f)
+                                    sleep(0.6)
                                 elif f <= 10 and f >= 0.1:
                                     ncycle = int(7.5*np.log10(f)+12.5)
                                     sample_rate = int(buffer_size / (ncycle / f))
-                                    sleep(0.1/f)
+                                    sleep(0.6)
                                 else:
                                     est_ncycle = int(0.6228 * np.exp(2.2101*np.log10(f)) * 0.95)
                                     sample_rate = int(fsample_max)
@@ -349,7 +349,7 @@ try:
                                     if ncycle < 2:
                                         ncycle = 2
                                         sample_rate = int(f*buffer_size/ncycle)
-                                    sleep(0.1/f)
+                                    sleep(0.6)
 
                                 data_sets = Digi_1.scope_record(sample_rate, buffer_size)
                                 print(f"buffer size: {buffer_size}, Perturbation freq: {f}, Sampling frequency: {sample_rate}, Number of cycles: {ncycle}")
