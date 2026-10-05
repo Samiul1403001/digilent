@@ -357,14 +357,14 @@ try:
                             
                             elif res_str == "DoneRecv":
                                 # extract csv
-                                csv_data = np.column_stack(data_sets)
+                                # csv_data = np.column_stack(data_sets)
 
-                                np.savetxt("results/raw_data.csv", 
-                                            csv_data, 
-                                            delimiter=",", 
-                                            header="Current (A),Voltage_B1(V),Voltage_B2(V),Voltage_B3(V)", 
-                                            comments="", 
-                                            fmt="%.6f")
+                                # np.savetxt("results/raw_data.csv", 
+                                #             csv_data, 
+                                #             delimiter=",", 
+                                #             header="Current (A),Voltage_B1(V),Voltage_B2(V),Voltage_B3(V)", 
+                                #             comments="", 
+                                #             fmt="%.6f")
 
                                 # Calculation Logic
                                 # Imeas, _, I_i, I_f = remove_baseline_valid_fast(data_sets[0]/0.033, sample_rate, f)
