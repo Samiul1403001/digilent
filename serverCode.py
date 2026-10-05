@@ -357,6 +357,7 @@ try:
 
                                 data_sets = Digi_1.scope_record(sample_rate, buffer_size)
                                 print(f"buffer size: {buffer_size}, Perturbation freq: {f}, Sampling frequency: {sample_rate}, Number of cycles: {ncycle}")
+                                Digi_1.sendStringUART("STOP")
 
                             elif res_str == "DoneRecv":
                                 # extract csv
