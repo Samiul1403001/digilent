@@ -233,8 +233,8 @@ fsample_max = 1e6
 print(f"Max buffer size per channel: {max_buf}, Max sampling rate: {fsample_max}")
 
 # --- Frequency Setup ---
-# f_freq = [10e3, 1e3, 1e2, 1e1, 1e0, 1e-1, 1e-2]
-f_freq = [1e4, 1e3, 1e-2]
+f_freq = [1e4, 1e3, 1e2, 1e1, 1e0, 1e-1, 1e-2]
+# f_freq = [1e4, 1e3, 1e-2]
 finit_idx = 2
 fperdecade = 10
 FREQ_TEMPLATE = []
@@ -357,14 +357,14 @@ try:
                             
                             elif res_str == "DoneRecv":
                                 # extract csv
-                                csv_data = np.column_stack(data_sets)
+                                # csv_data = np.column_stack(data_sets)
 
-                                np.savetxt("results/raw_data.csv", 
-                                            csv_data, 
-                                            delimiter=",", 
-                                            header="Current (A),Voltage_B1(V),Voltage_B2(V),Voltage_B3(V)", 
-                                            comments="", 
-                                            fmt="%.6f")
+                                # np.savetxt("results/raw_data.csv", 
+                                #             csv_data, 
+                                #             delimiter=",", 
+                                #             header="Current (A),Voltage_B1(V),Voltage_B2(V),Voltage_B3(V)", 
+                                #             comments="", 
+                                #             fmt="%.6f")
 
                                 # Calculation Logic
                                 Imeas, _ = remove_baseline_full(data_sets[0] / 0.033, sample_rate, f)
@@ -393,14 +393,14 @@ try:
                                 V3meas_filtered = V3meas
 
                                 # extract csv
-                                csv_data = np.column_stack([Imeas_filtered, V1meas_filtered, V2meas_filtered, V3meas_filtered])
+                                # csv_data = np.column_stack([Imeas_filtered, V1meas_filtered, V2meas_filtered, V3meas_filtered])
 
-                                np.savetxt("results/filtered_data.csv", 
-                                            csv_data,
-                                            delimiter=",", 
-                                            header="Current (A),Voltage_B1(V),Voltage_B2(V),Voltage_B3(V)", 
-                                            comments="", 
-                                            fmt="%.6f")
+                                # np.savetxt("results/filtered_data.csv", 
+                                #             csv_data,
+                                #             delimiter=",", 
+                                #             header="Current (A),Voltage_B1(V),Voltage_B2(V),Voltage_B3(V)", 
+                                #             comments="", 
+                                #             fmt="%.6f")
 
                                 buffer_size = Imeas.shape[0]
 
