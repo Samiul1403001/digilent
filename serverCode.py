@@ -367,40 +367,41 @@ try:
                                             fmt="%.6f")
 
                                 # Calculation Logic
-                                # Imeas, _, I_i, I_f = remove_baseline_valid_fast(data_sets[0]/0.033, sample_rate, f)
-                                # V1meas, _, V1_i, V1_f = remove_baseline_valid_fast(data_sets[1], sample_rate, f)
-                                # V2meas, _, V2_i, V2_f = remove_baseline_valid_fast(data_sets[2], sample_rate, f)
-                                # V3meas, _, V3_i, V3_f = remove_baseline_valid_fast(data_sets[3], sample_rate, f)
+                                Imeas, _, I_i, I_f = remove_baseline_valid_fast(data_sets[0]/0.033, sample_rate, f)
+                                V1meas, _, V1_i, V1_f = remove_baseline_valid_fast(data_sets[1], sample_rate, f)
+                                V2meas, _, V2_i, V2_f = remove_baseline_valid_fast(data_sets[2], sample_rate, f)
+                                V3meas, _, V3_i, V3_f = remove_baseline_valid_fast(data_sets[3], sample_rate, f)
 
                                 # Imeas = Imeas[I_i:I_f]
                                 # V1meas = V1meas[V1_i:V1_f]
                                 # V2meas = V2meas[V2_i:V2_f]
                                 # V3meas = V3meas[V3_i:V3_f]
 
-                                Imeas = (data_sets[0] - np.mean(data_sets[0])) / 0.033
-                                V1meas = data_sets[1] - np.mean(data_sets[1])
-                                V2meas = data_sets[2] - np.mean(data_sets[2])
-                                V3meas = data_sets[3] - np.mean(data_sets[3])
+                                # Imeas = (data_sets[0] - np.mean(data_sets[0])) / 0.033
+                                # V1meas = data_sets[1] - np.mean(data_sets[1])
+                                # V2meas = data_sets[2] - np.mean(data_sets[2])
+                                # V3meas = data_sets[3] - np.mean(data_sets[3])
 
-                                Imeas_filtered = fir_bandpass(Imeas, sample_rate, f*0.8, f*1.2)
-                                V1meas_filtered = fir_bandpass(V1meas, sample_rate, f*0.8, f*1.2)
-                                V2meas_filtered = fir_bandpass(V2meas, sample_rate, f*0.8, f*1.2)
-                                V3meas_filtered = fir_bandpass(V3meas, sample_rate, f*0.8, f*1.2)
+                                # Imeas_filtered = fir_bandpass(Imeas, sample_rate, f*0.8, f*1.2)
+                                # V1meas_filtered = fir_bandpass(V1meas, sample_rate, f*0.8, f*1.2)
+                                # V2meas_filtered = fir_bandpass(V2meas, sample_rate, f*0.8, f*1.2)
+                                # V3meas_filtered = fir_bandpass(V3meas, sample_rate, f*0.8, f*1.2)
+
+                                Imeas_filtered = Imeas
+                                V1meas_filtered = V1meas
+                                V2meas_filtered = V2meas
+                                V3meas_filtered = V3meas
 
                                 # extract csv
-                                # csv_data = np.column_stack([Imeas_filtered, V1meas_filtered, V2meas_filtered, V3meas_filtered])
+                                csv_data = np.column_stack([Imeas_filtered, V1meas_filtered, V2meas_filtered, V3meas_filtered])
 
-                                # np.savetxt("results/filtered_data.csv", 
-                                #             csv_data,
-                                #             delimiter=",", 
-                                #             header="Current (A),Voltage_B1(V),Voltage_B2(V),Voltage_B3(V)", 
-                                #             comments="", 
-                                #             fmt="%.6f")
+                                np.savetxt("results/filtered_data.csv", 
+                                            csv_data,
+                                            delimiter=",", 
+                                            header="Current (A),Voltage_B1(V),Voltage_B2(V),Voltage_B3(V)", 
+                                            comments="", 
+                                            fmt="%.6f")
 
-                                # Imeas_filtered = Imeas
-                                # V1meas_filtered = V1meas
-                                # V2meas_filtered = V2meas
-                                # V3meas_filtered = V3meas
                                 buffer_size = Imeas.shape[0]
 
                                 rng_int = 1 / 10 ** int(-np.log10(f) + 3)
