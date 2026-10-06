@@ -617,7 +617,7 @@ class MyDigilent:
                 self.uart_write("\0")
             i += 1
 
-    def scope_setup(self, channels=[1, 2]):
+    def scope_setup(self, channels=[1, 2], range_volts=5.0, offset_volts=0.0):
         self.channels = channels
         print(f"Configuring {len(self.channels)} channel(s)...")
 
@@ -626,9 +626,9 @@ class MyDigilent:
             # Enable channel
             self.dwf.FDwfAnalogInChannelEnableSet(self.dev.handle, ctypes.c_int(i-1), ctypes.c_bool(True))
             # Set Range (e.g., 5V peak-to-peak)
-            self.dwf.FDwfAnalogInChannelRangeSet(self.dev.handle, ctypes.c_int(i-1), ctypes.c_double(5.0))
+            self.dwf.FDwfAnalogInChannelRangeSet(self.dev.handle, ctypes.c_int(i-1), ctypes.c_double(range_volts))
             # Set Offset (0V)
-            self.dwf.FDwfAnalogInChannelOffsetSet(self.dev.handle, ctypes.c_int(i-1), ctypes.c_double(0.0))
+            self.dwf.FDwfAnalogInChannelOffsetSet(self.dev.handle, ctypes.c_int(i-1), ctypes.c_double(offset_volts))
 
     def scope_record(self, sample_rate=1e3, buffer_size=300):
         # Set Master Acquisition Parameters
