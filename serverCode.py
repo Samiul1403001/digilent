@@ -1,4 +1,4 @@
-from MyDigilent import MyDigilent, remove_baseline_valid_fast, freq_selection_signal, dual_phase_demod, FFT, fir_bandpass, HolderCalibrator, smooth_impedance_array
+from MyDigilent import MyDigilent, remove_baseline_universal, freq_selection_signal, dual_phase_demod, FFT, fir_bandpass, HolderCalibrator, smooth_impedance_array
 from time import sleep
 import numpy as np, socket, struct, mlrepo as ml
 
@@ -367,10 +367,10 @@ try:
                                             fmt="%.6f")
 
                                 # Calculation Logic
-                                Imeas, _, I_i, I_f = remove_baseline_valid_fast(data_sets[0]/0.033, sample_rate, f)
-                                V1meas, _, V1_i, V1_f = remove_baseline_valid_fast(data_sets[1], sample_rate, f)
-                                V2meas, _, V2_i, V2_f = remove_baseline_valid_fast(data_sets[2], sample_rate, f)
-                                V3meas, _, V3_i, V3_f = remove_baseline_valid_fast(data_sets[3], sample_rate, f)
+                                Imeas, _ = remove_baseline_universal(data_sets[0]/0.033, sample_rate, f, deg=2)
+                                V1meas, _ = remove_baseline_universal(data_sets[1], sample_rate, f, deg=2)
+                                V2meas, _ = remove_baseline_universal(data_sets[2], sample_rate, f, deg=2)
+                                V3meas, _ = remove_baseline_universal(data_sets[3], sample_rate, f, deg=2)
 
                                 # Imeas = Imeas[I_i:I_f]
                                 # V1meas = V1meas[V1_i:V1_f]

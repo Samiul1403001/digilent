@@ -4,34 +4,42 @@ from os import sep                # OS specific file path separators
 import inspect, numpy as np       # caller function data
 import dwfconstants as constants
 
-def remove_baseline_valid_fast(raw_signal, sample_rate, target_freq):
+def remove_baseline_universal(raw_signal, sample_rate, target_freq, deg=2):
     """
-    Isolates the AC perturbation using a fast 'valid' cumulative sum moving average.
-    Returns the sliced arrays and the indices needed to slice reference waves.
-    """
-    window_size = int(sample_rate / target_freq)
+    Isolates the AC perturbation from severe low-frequency drift using 
+    global polynomial detrending. Keeps array lengths 100% intact.
     
-    if window_size < 2 or len(raw_signal) < window_size:
-        # Not enough data for a valid convolution
-        return raw_signal, np.zeros_like(raw_signal), 0, len(raw_signal)
+    Parameters:
+    -----------
+    raw_signal : numpy.ndarray
+        The 1D array containing the noisy/drifting voltage or current data.
+    sample_rate : float or int
+        The sampling rate of your Digilent measurement in Hz.
+    target_freq : float
+        The frequency of the AC perturbation (used for logging/checks).
+    deg : int
+        Polynomial degree. 1 = linear drift, 2 = quadratic/curved drift (recommended).
         
-    # 1. Compute the 'valid' moving average using fast cumulative sum
-    # np.insert adds a leading 0 so the shifted subtraction works perfectly
-    cs = np.cumsum(np.insert(raw_signal, 0, 0))
+    Returns:
+    --------
+    clean_ac_signal : numpy.ndarray
+        The extracted AC perturbation centered at zero (same length as raw_signal).
+    drift_baseline : numpy.ndarray
+        The fitted smooth drift curve.
+    """
+    # Create a time vector matching the exact length of the raw signal
+    n = len(raw_signal)
+    t = np.arange(n, dtype=float) / sample_rate
     
-    # cs[window_size:] grabs the end of the windows
-    # cs[:-window_size] grabs the start of the windows
-    drift_baseline = (cs[window_size:] - cs[:-window_size]) / float(window_size)
+    # 1. Fit a polynomial to capture the global drifting baseline
+    # deg=2 captures curved/accelerating battery drift beautifully
+    coeffs = np.polyfit(t, raw_signal, deg=deg)
+    drift_baseline = np.polyval(coeffs, t)
     
-    # 2. Calculate indices to center the raw signal over the valid window
-    start_idx = window_size // 2
-    end_idx = start_idx + len(drift_baseline)
+    # 2. Subtract the baseline to isolate the pure AC perturbation
+    clean_ac_signal = raw_signal - drift_baseline
     
-    # 3. Slice the raw data to match the shorter baseline and subtract
-    sliced_raw_signal = raw_signal[start_idx:end_idx]
-    clean_ac_signal = sliced_raw_signal - drift_baseline
-    
-    return clean_ac_signal, drift_baseline, start_idx, end_idx
+    return clean_ac_signal, drift_baseline
 
 def smooth_impedance_array(data_array, window_size=5):
     """
