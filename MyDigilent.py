@@ -4,39 +4,30 @@ from os import sep                # OS specific file path separators
 import inspect, numpy as np       # caller function data
 import dwfconstants as constants
 
-def remove_baseline_universal(raw_signal, sample_rate, target_freq, deg=2):
+def remove_baseline_full(raw_signal, sample_rate, target_freq):
     """
-    Isolates the AC perturbation from severe low-frequency drift using 
-    global polynomial detrending. Keeps array lengths 100% intact.
+    Removes low-frequency baseline drift across the ENTIRE signal 
+    without shortening the array (equivalent to mode='same').
+    Keeps all 32,500 points intact.
+    """
+    # 1. Calculate window size in points for exactly 1 cycle
+    window_size = int(sample_rate / target_freq)
     
-    Parameters:
-    -----------
-    raw_signal : numpy.ndarray
-        The 1D array containing the noisy/drifting voltage or current data.
-    sample_rate : float or int
-        The sampling rate of your Digilent measurement in Hz.
-    target_freq : float
-        The frequency of the AC perturbation (used for logging/checks).
-    deg : int
-        Polynomial degree. 1 = linear drift, 2 = quadratic/curved drift (recommended).
+    if window_size < 2 or len(raw_signal) < window_size:
+        return raw_signal, np.zeros_like(raw_signal)
         
-    Returns:
-    --------
-    clean_ac_signal : numpy.ndarray
-        The extracted AC perturbation centered at zero (same length as raw_signal).
-    drift_baseline : numpy.ndarray
-        The fitted smooth drift curve.
-    """
-    # Create a time vector matching the exact length of the raw signal
-    n = len(raw_signal)
-    t = np.arange(n, dtype=float) / sample_rate
+    # 2. Calculate padding to keep the output array length 100% identical to input
+    pad_left = window_size // 2
+    pad_right = window_size - 1 - pad_left
     
-    # 1. Fit a polynomial to capture the global drifting baseline
-    # deg=2 captures curved/accelerating battery drift beautifully
-    coeffs = np.polyfit(t, raw_signal, deg=deg)
-    drift_baseline = np.polyval(coeffs, t)
+    # Pad the edges using edge-replication to prevent boundary artifacts
+    padded_signal = np.pad(raw_signal, (pad_left, pad_right), mode='edge')
     
-    # 2. Subtract the baseline to isolate the pure AC perturbation
+    # 3. Compute the ultra-fast cumulative sum moving average
+    cs = np.cumsum(np.insert(padded_signal, 0, 0))
+    drift_baseline = (cs[window_size:] - cs[:-window_size]) / float(window_size)
+    
+    # 4. Subtract the baseline from the full-length raw signal
     clean_ac_signal = raw_signal - drift_baseline
     
     return clean_ac_signal, drift_baseline
