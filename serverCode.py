@@ -484,6 +484,8 @@ try:
                                 input_c2 = sample_c2[:, f_idx].T.reshape(1, 4, 51).astype(np.float32)
                                 input_c3 = sample_c3[:, f_idx].T.reshape(1, 4, 51).astype(np.float32)
                                 
+                                print("fault")
+                                
                                 # The NumpySimpleSoHLSTM class automatically applies the scaler internally
                                 output_c1 = SoH_est.predict(input_c1)
                                 print(f"\n\nThe estimated SoH of cell-1 is: {str(np.round(output_c1*100, decimals=2))}%")
