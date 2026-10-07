@@ -480,13 +480,16 @@ try:
                                 f_idx = [0, 1, 4, 5]
                                 
                                 # --- ML based SoH estimation ---
-                                output_c1 = SoH_est.predict(sample_c1[:, f_idx].reshape(1, 4, 51).astype(np.float32))
+                                input_c1 = sample_c1[:, f_idx].T.reshape(1, 4, 51).astype(np.float32)
+                                output_c1 = SoH_est.predict(input_c1)
                                 print(f"\n\nThe estimated SoH of cell-1 is: {str(np.round(output_c1*100, decimals=2))}%\n")
 
-                                output_c2 = SoH_est.predict(sample_c2[:, f_idx].reshape(1, 4, 51).astype(np.float32))
+                                input_c2 = sample_c2[:, f_idx].T.reshape(1, 4, 51).astype(np.float32)
+                                output_c2 = SoH_est.predict(input_c2)
                                 print(f"\n\nThe estimated SoH of cell-2 is: {str(np.round(output_c2*100, decimals=2))}%\n")
 
-                                output_c3 = SoH_est.predict(sample_c3[:, f_idx].reshape(1, 4, 51).astype(np.float32))
+                                input_c3 = sample_c3[:, f_idx].T.reshape(1, 4, 51).astype(np.float32)
+                                output_c3 = SoH_est.predict(input_c3)
                                 print(f"\n\nThe estimated SoH of cell-3 is: {str(np.round(output_c3*100, decimals=2))}%\n")
                                 
                                 # --- Send Data to Host ---
