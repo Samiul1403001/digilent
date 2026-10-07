@@ -480,11 +480,9 @@ try:
                                 f_idx = [0, 1, 4, 5]
 
                                 # Slice out the 4 columns, transpose them, and add the batch dimension
-                                input_c1 = sample_c1[:, f_idx].T.reshape(1, 4, 51).astype(np.float32)
-                                input_c2 = sample_c2[:, f_idx].T.reshape(1, 4, 51).astype(np.float32)
-                                input_c3 = sample_c3[:, f_idx].T.reshape(1, 4, 51).astype(np.float32)
-                                
-                                print("fault")
+                                input_c1 = sample_c1[:, f_idx].reshape(1, 4, 51).astype(np.float32)
+                                input_c2 = sample_c2[:, f_idx].reshape(1, 4, 51).astype(np.float32)
+                                input_c3 = sample_c3[:, f_idx].reshape(1, 4, 51).astype(np.float32)
                                 
                                 # The NumpySimpleSoHLSTM class automatically applies the scaler internally
                                 output_c1 = SoH_est.predict(input_c1)
