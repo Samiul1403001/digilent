@@ -478,18 +478,15 @@ try:
 
                                 # --- ML based SoH estimation ---
                                 f_idx = [0, 1, 4, 5]
-
-                                # Slice out the 4 columns, transpose them, and add the batch dimension
-                                input_c1 = sample_c1[:, f_idx].reshape(1, 4, 51).astype(np.float32)
-                                input_c2 = sample_c2[:, f_idx].reshape(1, 4, 51).astype(np.float32)
-                                input_c3 = sample_c3[:, f_idx].reshape(1, 4, 51).astype(np.float32)
                                 
-                                # The NumpySimpleSoHLSTM class automatically applies the scaler internally
-                                output_c1 = SoH_est.predict(input_c1)
-                                print(f"\n\nThe estimated SoH of cell-1 is: {str(np.round(output_c1*100, decimals=2))}%")
-                                output_c2 = SoH_est.predict(input_c2)
-                                print(f"\n\nThe estimated SoH of cell-2 is: {str(np.round(output_c2*100, decimals=2))}%")
-                                output_c3 = SoH_est.predict(input_c3)
+                                # --- ML based SoH estimation ---
+                                output_c1 = SoH_est.predict(sample_c1[:, f_idx].reshape(1, 4, 51).astype(np.float32))
+                                print(f"\n\nThe estimated SoH of cell-1 is: {str(np.round(output_c1*100, decimals=2))}%\n")
+
+                                output_c2 = SoH_est.predict(sample_c2[:, f_idx].reshape(1, 4, 51).astype(np.float32))
+                                print(f"\n\nThe estimated SoH of cell-2 is: {str(np.round(output_c2*100, decimals=2))}%\n")
+
+                                output_c3 = SoH_est.predict(sample_c3[:, f_idx].reshape(1, 4, 51).astype(np.float32))
                                 print(f"\n\nThe estimated SoH of cell-3 is: {str(np.round(output_c3*100, decimals=2))}%\n")
                                 
                                 # --- Send Data to Host ---
