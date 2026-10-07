@@ -67,6 +67,16 @@ class NumpySimpleSoHLSTM:
             scaled_x_t = (raw_x_t - self.scaler_mean) / self.scaler_scale
                 
             h, c = self.lstm_step(scaled_x_t, h, c)
+            
+        # 5. Pass the LAST valid hidden state through linear layers
+        out = np.dot(self.fc1_w, h) + self.fc1_b
+        out = self.leaky_relu(out)
+        out = np.dot(self.fc2_w, out) + self.fc2_b
+        
+        # 6. Apply final Sigmoid activation matching PyTorch model
+        out = self.sigmoid(out)
+        
+        return float(out[0])
 
 # # LSTM parameters (PyTorch-style)
 # W_ih = np.load("npweights/lstm_weight_ih_l0.npy")   # (4*H, input_size)
