@@ -233,9 +233,9 @@ fsample_max = 1e6
 print(f"Max buffer size per channel: {max_buf}, Max sampling rate: {fsample_max}")
 
 # --- Frequency Setup ---
-f_freq = [1e4, 1e3, 1e2, 1e1, 1e0, 1e-1, 1e-2]
+f_freq = [1e3, 1e2, 1e1, 1e0, 1e-1, 1e-2]
 # f_freq = [1e4, 1e3, 1e-2]
-finit_idx = 2
+finit_idx = 0
 fperdecade = 10
 FREQ_TEMPLATE = []
 FREQ_TEMPLATE.append(f_freq[finit_idx])
@@ -290,9 +290,9 @@ try:
                     print("START received. Beginning Measurement Sequence...")
                     
                     # Initialize run variables
-                    sample_c1 = np.zeros([41, 6])
-                    sample_c2 = np.zeros([41, 6])
-                    sample_c3 = np.zeros([41, 6])
+                    sample_c1 = np.zeros([51, 6])
+                    sample_c2 = np.zeros([51, 6])
+                    sample_c3 = np.zeros([51, 6])
                     i_idx = 0
                     stop_requested = False
 
@@ -477,11 +477,19 @@ try:
                                 sample_c3[i_idx, 5] = np.angle(Z3real - 1j * Z3imag, deg=True)
 
                                 # --- ML based SoH estimation ---
-                                output_c1 = SoH_est.predict(sample_c1.reshape(1, 6, 41).astype(np.float32))
-                                print(f"\n\nThe estimated SoH of cell-1 is: {str(np.round(output_c1*100, decimals=2))}%\n")
-                                output_c2 = SoH_est.predict(sample_c2.reshape(1, 6, 41).astype(np.float32))
-                                print(f"\n\nThe estimated SoH of cell-2 is: {str(np.round(output_c2*100, decimals=2))}%\n")
-                                output_c3 = SoH_est.predict(sample_c3.reshape(1, 6, 41).astype(np.float32))
+                                f_idx = [0, 1, 4, 5]
+
+                                # Slice out the 4 columns, transpose them, and add the batch dimension
+                                input_c1 = sample_c1[:, f_idx].T.reshape(1, 4, 51).astype(np.float32)
+                                input_c2 = sample_c2[:, f_idx].T.reshape(1, 4, 51).astype(np.float32)
+                                input_c3 = sample_c3[:, f_idx].T.reshape(1, 4, 51).astype(np.float32)
+                                
+                                # The NumpySimpleSoHLSTM class automatically applies the scaler internally
+                                output_c1 = SoH_est.predict(input_c1)
+                                print(f"\n\nThe estimated SoH of cell-1 is: {str(np.round(output_c1*100, decimals=2))}%")
+                                output_c2 = SoH_est.predict(input_c2)
+                                print(f"\n\nThe estimated SoH of cell-2 is: {str(np.round(output_c2*100, decimals=2))}%")
+                                output_c3 = SoH_est.predict(input_c3)
                                 print(f"\n\nThe estimated SoH of cell-3 is: {str(np.round(output_c3*100, decimals=2))}%\n")
                                 
                                 # --- Send Data to Host ---
