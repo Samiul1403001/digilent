@@ -451,25 +451,18 @@ try:
                             if res_str == "Received":
                                 print(f"Measuring EIS at {CMD.strip()} Hz...")
                                 buffer_size = int(max_buf)
-                                if f < 0.1:
-                                    ncycle = 1
-                                    sample_rate = int(buffer_size / (ncycle / f))
-                                    sleep(0.5)
-                                elif f <= 100 and f >= 0.1:
-                                    ncycle = int(16.2833 * np.log10(f) + 17.4334)
-                                    sample_rate = int(buffer_size / (ncycle / f))
-                                    sleep(0.5)
+                                if f > 6500:
+                                    # Handles the sudden drop at the top of the table (e.g., 10000Hz -> 3023)
+                                    ncycle = int(0.3023 * f)
+                                    sample_rate = int(f*buffer_size/ncycle)
+                                elif f >= 2.0:
+                                    # The main linear regime (e.g., 100Hz -> 50, 1000Hz -> 503)
+                                    ncycle = int(np.round(0.504 * f))
                                 else:
-                                    est_ncycle = int(0.6228 * np.exp(2.2101*np.log10(f)) * 0.95)
-                                    sample_rate = int(fsample_max)
-                                    ncycle = int(buffer_size/(sample_rate/f))
-                                    while (ncycle < est_ncycle):
-                                        sample_rate = int(sample_rate * 0.95)
-                                        ncycle = int(buffer_size/(sample_rate/f))
-                                    if ncycle < 10:
-                                        ncycle = 10
-                                        sample_rate = int(f*buffer_size/ncycle)
-                                    sleep(0.5)
+                                    # Hard cap for very low frequencies
+                                    ncycle = 1
+                                sample_rate = int(f*buffer_size/ncycle)
+                                sleep(0.5)
 
                                 data_sets = Digi_1.scope_record(sample_rate, buffer_size)
                                 print(f"buffer size: {buffer_size}, Perturbation freq: {f}, Sampling frequency: {sample_rate}, Number of cycles: {ncycle}")
