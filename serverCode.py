@@ -353,8 +353,8 @@ fsample_max = 1e6
 print(f"Max buffer size per channel: {max_buf}, Max sampling rate: {fsample_max}")
 
 # --- Frequency Setup ---
-# f_freq = [1e3, 1e2, 1e1, 1e0, 1e-1, 1e-2]
-f_freq = [1e3]
+f_freq = [1e3, 1e2, 1e1, 1e0, 1e-1, 1e-2]
+# f_freq = [1e3]
 finit_idx = 0
 fperdecade = 10
 FREQ_TEMPLATE = []
@@ -460,18 +460,15 @@ try:
                                     sample_rate = int(buffer_size / (ncycle / f))
                                     sleep(0.5)
                                 else:
-                                    # est_ncycle = int(0.6228 * np.exp(2.2101*np.log10(f)) * 0.95)
-                                    # sample_rate = int(fsample_max)
-                                    # ncycle = int(buffer_size/(sample_rate/f))
-                                    # while (ncycle < est_ncycle):
-                                    #     sample_rate = int(sample_rate * 0.95)
-                                    #     ncycle = int(buffer_size/(sample_rate/f))
-                                    # if ncycle < 10:
-                                    #     ncycle = 10
-                                    #     sample_rate = int(f*buffer_size/ncycle)
-                                    # sleep(0.5)
-                                    ncycle = 50
-                                    sample_rate = int(f*buffer_size/ncycle)
+                                    est_ncycle = int(0.6228 * np.exp(2.2101*np.log10(f)) * 0.95)
+                                    sample_rate = int(fsample_max)
+                                    ncycle = int(buffer_size/(sample_rate/f))
+                                    while (ncycle < est_ncycle):
+                                        sample_rate = int(sample_rate * 0.95)
+                                        ncycle = int(buffer_size/(sample_rate/f))
+                                    if ncycle < 10:
+                                        ncycle = 10
+                                        sample_rate = int(f*buffer_size/ncycle)
                                     sleep(0.5)
 
                                 data_sets = Digi_1.scope_record(sample_rate, buffer_size)
@@ -480,14 +477,14 @@ try:
                             
                             elif res_str == "DoneRecv":
                                 # extract csv
-                                csv_data = np.column_stack(data_sets)
+                                # csv_data = np.column_stack(data_sets)
 
-                                np.savetxt("results/raw_data.csv", 
-                                            csv_data, 
-                                            delimiter=",", 
-                                            header="Current (A),Voltage_B1(V),Voltage_B2(V),Voltage_B3(V)", 
-                                            comments="", 
-                                            fmt="%.6f")
+                                # np.savetxt("results/raw_data.csv", 
+                                #             csv_data, 
+                                #             delimiter=",", 
+                                #             header="Current (A),Voltage_B1(V),Voltage_B2(V),Voltage_B3(V)", 
+                                #             comments="", 
+                                #             fmt="%.6f")
 
                                 # Calculation Logic
                                 Imeas = (data_sets[0] - np.mean(data_sets[0])) / 0.033
@@ -495,10 +492,10 @@ try:
                                 V2meas = data_sets[2] - np.mean(data_sets[2])
                                 V3meas = data_sets[3] - np.mean(data_sets[3])
                                 
-                                Imeas_filtered = fir_bandpass(Imeas, sample_rate, f*0.8, f*1.2)
-                                V1meas_filtered = fir_bandpass(V1meas, sample_rate, f*0.8, f*1.2)
-                                V2meas_filtered = fir_bandpass(V2meas, sample_rate, f*0.8, f*1.2)
-                                V3meas_filtered = fir_bandpass(V3meas, sample_rate, f*0.8, f*1.2)
+                                Imeas_filtered = fir_bandpass(Imeas, sample_rate, f*0.9, f*1.1)
+                                V1meas_filtered = fir_bandpass(V1meas, sample_rate, f*0.9, f*1.1)
+                                V2meas_filtered = fir_bandpass(V2meas, sample_rate, f*0.9, f*1.1)
+                                V3meas_filtered = fir_bandpass(V3meas, sample_rate, f*0.9, f*1.1)
                                 
                                 # Imeas, _ = remove_baseline_full(data_sets[0] / 0.033, sample_rate, f)
                                 # V1meas, _ = remove_baseline_full(data_sets[1], sample_rate, f)
@@ -511,14 +508,14 @@ try:
                                 # V3meas_filtered = V3meas
 
                                 # extract csv
-                                csv_data = np.column_stack([Imeas_filtered, V1meas_filtered, V2meas_filtered, V3meas_filtered])
+                                # csv_data = np.column_stack([Imeas_filtered, V1meas_filtered, V2meas_filtered, V3meas_filtered])
 
-                                np.savetxt("results/filtered_data.csv", 
-                                            csv_data,
-                                            delimiter=",", 
-                                            header="Current (A),Voltage_B1(V),Voltage_B2(V),Voltage_B3(V)", 
-                                            comments="", 
-                                            fmt="%.6f")
+                                # np.savetxt("results/filtered_data.csv", 
+                                #             csv_data,
+                                #             delimiter=",", 
+                                #             header="Current (A),Voltage_B1(V),Voltage_B2(V),Voltage_B3(V)", 
+                                #             comments="", 
+                                #             fmt="%.6f")
 
                                 buffer_size = Imeas.shape[0]
 
