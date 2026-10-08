@@ -452,7 +452,7 @@ try:
                                 print(f"Measuring EIS at {CMD.strip()} Hz...")
                                 buffer_size = int(max_buf)
                                 if f < 0.1:
-                                    ncycle = 1.15
+                                    ncycle = 1
                                     sample_rate = int(buffer_size / (ncycle / f))
                                     sleep(0.5)
                                 elif f <= 100 and f >= 0.1:
@@ -487,10 +487,15 @@ try:
                                             fmt="%.6f")
 
                                 # Calculation Logic
-                                Imeas, _ = remove_baseline_full(data_sets[0] / 0.033, sample_rate, f)
-                                V1meas, _ = remove_baseline_full(data_sets[1], sample_rate, f)
-                                V2meas, _ = remove_baseline_full(data_sets[2], sample_rate, f)
-                                V3meas, _ = remove_baseline_full(data_sets[3], sample_rate, f)
+                                Imeas = (data_sets[0] - np.mean(data_sets[0])) / 0.033
+                                V1meas = data_sets[1] - np.mean(data_sets[1]
+                                V2meas = data_sets[2] - np.mean(data_sets[2]
+                                V3meas = data_sets[3] - np.mean(data_sets[3]
+                                
+                                # Imeas, _ = remove_baseline_full(data_sets[0] / 0.033, sample_rate, f)
+                                # V1meas, _ = remove_baseline_full(data_sets[1], sample_rate, f)
+                                # V2meas, _ = remove_baseline_full(data_sets[2], sample_rate, f)
+                                # V3meas, _ = remove_baseline_full(data_sets[3], sample_rate, f)
 
                                 Imeas_filtered = Imeas
                                 V1meas_filtered = V1meas
