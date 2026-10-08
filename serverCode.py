@@ -335,18 +335,18 @@ try:
                                     sample_rate = int(buffer_size / (ncycle / f))
                                     sleep(0.5)
                                 elif f <= 100 and f >= 0.1:
-                                    ncycle = 16.2833 * np.log10(f) + 17.4334
+                                    ncycle = int(16.2833 * np.log10(f) + 17.4334)
                                     sample_rate = int(buffer_size / (ncycle / f))
                                     sleep(0.5)
                                 else:
-                                    est_ncycle = 0.6228 * np.exp(2.2101*np.log10(f)) * 0.95
+                                    est_ncycle = int(0.6228 * np.exp(2.2101*np.log10(f)) * 0.95)
                                     sample_rate = int(fsample_max)
                                     ncycle = int(buffer_size/(sample_rate/f))
                                     while (ncycle < est_ncycle):
                                         sample_rate = int(sample_rate * 0.95)
                                         ncycle = int(buffer_size/(sample_rate/f))
-                                    if ncycle < 50:
-                                        ncycle = 50
+                                    if ncycle < 10:
+                                        ncycle = 10
                                         sample_rate = int(f*buffer_size/ncycle)
                                     sleep(0.5)
 
