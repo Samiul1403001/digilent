@@ -234,7 +234,6 @@ print(f"Max buffer size per channel: {max_buf}, Max sampling rate: {fsample_max}
 
 # --- Frequency Setup ---
 f_freq = [1e3, 1e2, 1e1, 1e0, 1e-1, 1e-2]
-# f_freq = [1e4, 1e3, 1e-2]
 finit_idx = 1
 fperdecade = 10
 FREQ_TEMPLATE = []
@@ -332,22 +331,22 @@ try:
                                 print(f"Measuring EIS at {CMD.strip()} Hz...")
                                 buffer_size = int(max_buf)
                                 if f < 0.1:
-                                    ncycle = 1.25
+                                    ncycle = 1.15
                                     sample_rate = int(buffer_size / (ncycle / f))
                                     sleep(0.5)
-                                elif f <= 10 and f >= 0.1:
-                                    ncycle = int(7.5*np.log10(f)+12.5)
+                                elif f <= 100 and f >= 0.1:
+                                    ncycle = 16.2833 * np.log10(f) + 17.4334
                                     sample_rate = int(buffer_size / (ncycle / f))
                                     sleep(0.5)
                                 else:
-                                    est_ncycle = int(0.6228 * np.exp(2.2101*np.log10(f)) * 0.95)
+                                    est_ncycle = 0.6228 * np.exp(2.2101*np.log10(f)) * 0.95
                                     sample_rate = int(fsample_max)
                                     ncycle = int(buffer_size/(sample_rate/f))
                                     while (ncycle < est_ncycle):
-                                        sample_rate = int(sample_rate * 0.9)
+                                        sample_rate = int(sample_rate * 0.95)
                                         ncycle = int(buffer_size/(sample_rate/f))
-                                    if ncycle < 2:
-                                        ncycle = 2
+                                    if ncycle < 50:
+                                        ncycle = 50
                                         sample_rate = int(f*buffer_size/ncycle)
                                     sleep(0.5)
 
