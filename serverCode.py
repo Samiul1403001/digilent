@@ -354,7 +354,7 @@ print(f"Max buffer size per channel: {max_buf}, Max sampling rate: {fsample_max}
 
 # --- Frequency Setup ---
 # f_freq = [1e3, 1e2, 1e1, 1e0, 1e-1, 1e-2]
-f_freq = [1e2]
+f_freq = [1e2+10]
 finit_idx = 0
 fperdecade = 10
 FREQ_TEMPLATE = []
@@ -470,7 +470,7 @@ try:
                                     #     ncycle = 10
                                     #     sample_rate = int(f*buffer_size/ncycle)
                                     # sleep(0.5)
-                                    ncycle = 500
+                                    ncycle = 50
                                     sample_rate = int(f*buffer_size/ncycle)
                                     sleep(0.5)
 
