@@ -460,15 +460,18 @@ try:
                                     sample_rate = int(buffer_size / (ncycle / f))
                                     sleep(0.5)
                                 else:
-                                    est_ncycle = int(0.6228 * np.exp(2.2101*np.log10(f)) * 0.95)
-                                    sample_rate = int(fsample_max)
-                                    ncycle = int(buffer_size/(sample_rate/f))
+                                    # est_ncycle = int(0.6228 * np.exp(2.2101*np.log10(f)) * 0.95)
+                                    # sample_rate = int(fsample_max)
+                                    # ncycle = int(buffer_size/(sample_rate/f))
                                     # while (ncycle < est_ncycle):
                                     #     sample_rate = int(sample_rate * 0.95)
                                     #     ncycle = int(buffer_size/(sample_rate/f))
-                                    if ncycle < 10:
-                                        ncycle = 10
-                                        sample_rate = int(f*buffer_size/ncycle)
+                                    # if ncycle < 10:
+                                    #     ncycle = 10
+                                    #     sample_rate = int(f*buffer_size/ncycle)
+                                    # sleep(0.5)
+                                    ncycle = 50
+                                    sample_rate = int(f*buffer_size/ncycle)
                                     sleep(0.5)
 
                                 data_sets = Digi_1.scope_record(sample_rate, buffer_size)
