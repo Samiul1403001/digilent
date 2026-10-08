@@ -527,6 +527,9 @@ try:
                                 V3amp, V3phase = dual_phase_demod(V3meas_filtered, sfreq, sample_rate)
 
                                 print(f"Freq: {sfreq:.5f} Hz | V_amp: {V2amp:.2E} | I_amp: {Iamp:.2E}")
+                                
+                                if V2amp > 1:
+                                    break
 
                                 I_real = Iamp * np.cos(Iphase+np.pi)
                                 I_imag = Iamp * np.sin(Iphase+np.pi)
