@@ -470,7 +470,7 @@ try:
                                     #     ncycle = 10
                                     #     sample_rate = int(f*buffer_size/ncycle)
                                     # sleep(0.5)
-                                    ncycle = 50
+                                    ncycle = 500
                                     sample_rate = int(f*buffer_size/ncycle)
                                     sleep(0.5)
 
