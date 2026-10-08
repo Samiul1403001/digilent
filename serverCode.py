@@ -477,14 +477,14 @@ try:
                             
                             elif res_str == "DoneRecv":
                                 # extract csv
-                                # csv_data = np.column_stack(data_sets)
+                                csv_data = np.column_stack(data_sets)
 
-                                # np.savetxt("results/raw_data.csv", 
-                                #             csv_data, 
-                                #             delimiter=",", 
-                                #             header="Current (A),Voltage_B1(V),Voltage_B2(V),Voltage_B3(V)", 
-                                #             comments="", 
-                                #             fmt="%.6f")
+                                np.savetxt("results/raw_data.csv", 
+                                            csv_data, 
+                                            delimiter=",", 
+                                            header="Current (A),Voltage_B1(V),Voltage_B2(V),Voltage_B3(V)", 
+                                            comments="", 
+                                            fmt="%.6f")
 
                                 # Calculation Logic
                                 Imeas = (data_sets[0] - np.mean(data_sets[0])) / 0.033
@@ -503,14 +503,14 @@ try:
                                 V3meas_filtered = V3meas
 
                                 # extract csv
-                                # csv_data = np.column_stack([Imeas_filtered, V1meas_filtered, V2meas_filtered, V3meas_filtered])
+                                csv_data = np.column_stack([Imeas_filtered, V1meas_filtered, V2meas_filtered, V3meas_filtered])
 
-                                # np.savetxt("results/filtered_data.csv", 
-                                #             csv_data,
-                                #             delimiter=",", 
-                                #             header="Current (A),Voltage_B1(V),Voltage_B2(V),Voltage_B3(V)", 
-                                #             comments="", 
-                                #             fmt="%.6f")
+                                np.savetxt("results/filtered_data.csv", 
+                                            csv_data,
+                                            delimiter=",", 
+                                            header="Current (A),Voltage_B1(V),Voltage_B2(V),Voltage_B3(V)", 
+                                            comments="", 
+                                            fmt="%.6f")
 
                                 buffer_size = Imeas.shape[0]
 
