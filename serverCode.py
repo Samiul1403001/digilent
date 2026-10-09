@@ -485,7 +485,7 @@ try:
                                 #             fmt="%.6f")
 
                                 # Calculation Logic
-                                Imeas = -(data_sets[0] - np.mean(data_sets[0])) / 0.033
+                                Imeas = (data_sets[0] - np.mean(data_sets[0])) / 0.033
                                 V1meas = data_sets[1] - np.mean(data_sets[1])
                                 V2meas = data_sets[2] - np.mean(data_sets[2])
                                 V3meas = data_sets[3] - np.mean(data_sets[3])
@@ -595,9 +595,9 @@ try:
                                 # Z3real, Z3imag = calibrator_c3.correct(sfreq, Z3.real, -Z3.imag)
                                 # print(f"Cell-3 Impedance: {Z3real} + ({Z3imag}j)")
 
-                                Z1real, Z1imag = z1_real, -z1_imag
-                                Z2real, Z2imag = z2_real, -z2_imag
-                                Z3real, Z3imag = z3_real, -z3_imag
+                                Z1real, Z1imag = z1_real, z1_imag
+                                Z2real, Z2imag = z2_real, z2_imag
+                                Z3real, Z3imag = z3_real, z3_imag
 
                                 # Data Quality Check
                                 # if i_idx > 0 and ((Z1real < 0.98*sample_c1[i_idx-1, 1] and Z1real < 0) or (Z2real < 0.98*sample_c2[i_idx-1, 1] and Z2real < 0) or (Z3real < 0.98*sample_c3[i_idx-1, 1] and Z3real < 0)):
