@@ -553,14 +553,14 @@ try:
                                 # # if np.max(V1meas) > 1:
                                 # #     break
 
-                                I_real = np.max(Imeas) * np.cos(Iphase+np.pi)
-                                I_imag = np.max(Imeas) * np.sin(Iphase+np.pi)
-                                V1_real = np.max(V1meas) * np.cos(V1phase)
-                                V1_imag = np.max(V1meas) * np.sin(V1phase)
-                                V2_real = np.max(V2meas) * np.cos(V2phase)
-                                V2_imag = np.max(V2meas) * np.sin(V2phase)
-                                V3_real = np.max(V3meas) * np.cos(V3phase)
-                                V3_imag = np.max(V3meas) * np.sin(V3phase)
+                                I_real = Iamp * np.cos(Iphase+np.pi)
+                                I_imag = Iamp * np.sin(Iphase+np.pi)
+                                V1_real = V1amp * np.cos(V1phase)
+                                V1_imag = V1amp * np.sin(V1phase)
+                                V2_real = V2amp * np.cos(V2phase)
+                                V2_imag = V2amp * np.sin(V2phase)
+                                V3_real = V3amp * np.cos(V3phase)
+                                V3_imag = V3amp * np.sin(V3phase)
 
                                 V1_comp = V1_real + 1j * V1_imag
                                 V2_comp = V2_real + 1j * V2_imag
