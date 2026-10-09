@@ -541,12 +541,12 @@ try:
 
                                 buffer_size = Imeas.shape[0]
 
-                                sfreq = f1+f2+f3 / 3.0  # Average frequency from the three channels
+                                sfreq = (f1+f2+f3) / 3.0  # Average frequency from the three channels
                                 
                                 Iamp, Iphase = dual_phase_demod(Imeas_filtered, sfreq, sample_rate)
-                                V1amp, V1phase = dual_phase_demod(V1meas_filtered, sfreq, sample_rate)
-                                V2amp, V2phase = dual_phase_demod(V2meas_filtered, sfreq, sample_rate)
-                                V3amp, V3phase = dual_phase_demod(V3meas_filtered, sfreq, sample_rate)
+                                V1amp, V1phase = dual_phase_demod(V1meas_filtered, f1, sample_rate)
+                                V2amp, V2phase = dual_phase_demod(V2meas_filtered, f2, sample_rate)
+                                V3amp, V3phase = dual_phase_demod(V3meas_filtered, f3, sample_rate)
 
                                 print(f"Freq: [{f1:.5f}, {f2:.5f}, {f3:.5f}] Hz | V_amp: [{np.max(V1meas):.2E}, {np.max(V2meas):.2E}, {np.max(V3meas):.2E}] | I_amp: {np.max(Imeas):.2E}")
                                 
