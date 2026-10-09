@@ -357,7 +357,7 @@ f_freq = [1e3, 1e2, 1e1, 1e0, 1e-1, 1e-2]
 # f_freq = [1e3]
 finit_idx = 0
 fperdecade = 10
-FREQ_TEMPLATE = [1e3]
+FREQ_TEMPLATE = []
 FREQ_TEMPLATE.append(f_freq[finit_idx])
 for i in range(finit_idx, len(f_freq)-1):
     for k in range(1, fperdecade+1):
@@ -508,15 +508,13 @@ try:
                                 buffer_size = Imeas.shape[0]
 
                                 rng_int = 1 / 10 ** int(-np.log10(f) + 3)
-
+                                
                                 if rng_int < 0.001:
-                                    sfreq, _ = extract_freq_fft(
-                                                    signal_buffer= Imeas, 
-                                                    target_freq= f, 
-                                                    sample_rate= sample_rate,
-                                                    band_factor=0.001
-                                                )
-                                else:
+                                    rng_int = 0.001
+                                    
+                                sfreq = f + 2*rng_int
+
+                                while abs(sfreq - f) >= rng_int:
                                     sfreq, _ = extract_freq_fft(
                                                     signal_buffer= Imeas, 
                                                     target_freq= f, 
