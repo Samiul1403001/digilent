@@ -513,14 +513,16 @@ try:
                                     rng_int = 0.001
                                     
                                 sfreq = f + 2*rng_int
+                                
+                                sfreq, _ = extract_freq_fft(
+                                                signal_buffer= Imeas, 
+                                                target_freq= f, 
+                                                sample_rate= sample_rate,
+                                                band_factor=rng_int
+                                            )
 
-                                while abs(sfreq - f) >= rng_int:
-                                    sfreq, _ = extract_freq_fft(
-                                                    signal_buffer= Imeas, 
-                                                    target_freq= f, 
-                                                    sample_rate= sample_rate,
-                                                    band_factor=rng_int
-                                                )
+                                if abs(sfreq - f) >= rng_int:
+                                    sfreq = f
                                 
                                 Iamp, Iphase = dual_phase_demod(Imeas_filtered, sfreq, sample_rate)
                                 V1amp, V1phase = dual_phase_demod(V1meas_filtered, sfreq, sample_rate)
