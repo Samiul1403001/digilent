@@ -328,6 +328,77 @@ def FFT(buffer, freq_sweep=[0, 100e3], sample_rate=100):
 
     return freqs, mag, real_part, imag_part, freqs[np.argmax(mag)]
 
+def calculate_impedance_fft_band(v_buffer, i_buffer, target_freq, sample_rate, band_factor=0.1):
+    """
+    Computes complex impedance (Z' and -Z'') by performing an FFT, 
+    zooming into a frequency band around the target frequency, and extracting 
+    the complex response without needing an FIR filter.
+    
+    Parameters:
+    - v_buffer: iterable of raw voltage samples
+    - i_buffer: iterable of raw current samples
+    - target_freq: target excitation frequency in Hz (e.g., f)
+    - sample_rate: sampling frequency in Hz
+    - band_factor: fraction around target_freq for the band (default 0.1 means ±10%, i.e., 0.9*f to 1.1*f)
+    
+    Returns:
+    - actual_freq: exact frequency of the peak bin found within the band
+    - z_real: Real part of impedance (Z')
+    - z_imag: Imaginary part of impedance (-Z'')
+    - Z_complex: Full complex impedance number
+    """
+    v_arr = np.asarray(v_buffer, dtype=float)
+    i_arr = np.asarray(i_buffer, dtype=float)
+    N = v_arr.size
+    
+    if N == 0:
+        return 0.0, 0.0, 0.0, 0.0
+
+    fs = float(sample_rate)
+
+    # 1. Apply Hanning window to reduce spectral leakage, then compute RFFT for both signals
+    window = np.hanning(N)
+    V_fft = np.fft.rfft(v_arr * window)
+    I_fft = np.fft.rfft(i_arr * window)
+    freqs = np.fft.rfftfreq(N, d=1.0 / fs)
+
+    # 2. Define the frequency band (e.g., f * 0.9 to f * 1.1)
+    f_min = target_freq * (1.0 - band_factor)
+    f_max = target_freq * (1.0 + band_factor)
+    
+    # Create a boolean mask to "zoom" into only this frequency band
+    band_mask = (freqs >= f_min) & (freqs <= f_max)
+    
+    if not np.any(band_mask):
+        # Fallback to the closest single bin if the window is too narrow for current resolution
+        idx = np.argmin(np.abs(freqs - target_freq))
+    else:
+        # Within the band, find the peak voltage magnitude bin to pinpoint the exact response
+        band_freqs = freqs[band_mask]
+        band_V_mag = np.abs(V_fft[band_mask])
+        
+        # Locate the index of the peak within the band
+        local_peak_idx = np.argmax(band_V_mag)
+        
+        # Map the local index back to the global index of the full FFT array
+        global_indices = np.where(band_mask)[0]
+        idx = global_indices[local_peak_idx]
+
+    actual_freq = freqs[idx]
+    
+    # 3. Extract the complex voltage and current components at this specific bin
+    V_f = V_fft[idx]
+    I_f = I_fft[idx]
+    
+    # 4. Compute Complex Impedance: Z = V / I
+    Z_complex = V_f / I_f
+    
+    # 5. Separate into Real (Z') and Imaginary (-Z'') parts
+    z_real = np.real(Z_complex)
+    z_imag = -np.imag(Z_complex)  # Standard EIS sign convention for capacitive reactance
+    
+    return actual_freq, z_real, z_imag, Z_complex
+
 class data:
     """ stores the device handle, the device name and the device data """
     handle = ctypes.c_int(0)
