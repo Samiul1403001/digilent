@@ -510,7 +510,7 @@ try:
                                 #             comments="", 
                                 #             fmt="%.6f")
                                 
-                                rng_int = 0.05
+                                rng_int = 0.02
                                 
                                 # Process Voltage 1
                                 f1, Z1_complex, (z1_real, z1_imag), conv1 = find_converged_impedance(
