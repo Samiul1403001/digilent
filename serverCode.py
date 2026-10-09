@@ -1,4 +1,4 @@
-from MyDigilent import MyDigilent, dual_phase_demod, HolderCalibrator, smooth_impedance_array, find_converged_impedance
+from MyDigilent import MyDigilent, dual_phase_demod, HolderCalibrator, smooth_impedance_array, calculate_impedance_fft_band
 from time import sleep
 import numpy as np, socket, struct, mlrepo as ml
 
@@ -485,7 +485,7 @@ try:
                                 #             fmt="%.6f")
 
                                 # Calculation Logic
-                                Imeas = (data_sets[0] - np.mean(data_sets[0])) / 0.033
+                                Imeas = -(data_sets[0] - np.mean(data_sets[0])) / 0.033
                                 V1meas = data_sets[1] - np.mean(data_sets[1])
                                 V2meas = data_sets[2] - np.mean(data_sets[2])
                                 V3meas = data_sets[3] - np.mean(data_sets[3])
@@ -510,37 +510,42 @@ try:
                                 #             comments="", 
                                 #             fmt="%.6f")
                                 
-                                rng_int = 1 / 10 ** int(-np.log10(f) + 3)
+                                rng_int = 1 / 100 ** int(-np.log10(f) + 3)
                                                                 
                                 if rng_int < 0.001:
                                     rng_int = 0.001
                                 
-                                # Process Voltage 1
-                                f1, Z1_complex, (z1_real, z1_imag), conv1 = find_converged_impedance(
-                                    v_buffer=V1meas, i_buffer=Imeas, commanded_freq=f, 
-                                    sample_rate=sample_rate, prev_impedance=prev_Z1, search_range=rng_int
+                                # 1. Calculate for Voltage Channel 1
+                                f1, z1_real, z1_imag, Z1_complex = calculate_impedance_fft_band(
+                                    v_buffer=V1meas, 
+                                    i_buffer=Imeas, 
+                                    target_freq=f, 
+                                    sample_rate=sample_rate,
+                                    band_factor=rng_int
                                 )
-                                
-                                # Process Voltage 2
-                                f2, Z2_complex, (z2_real, z2_imag), conv2 = find_converged_impedance(
-                                    v_buffer=V2meas, i_buffer=Imeas, commanded_freq=f, 
-                                    sample_rate=sample_rate, prev_impedance=prev_Z2, search_range=rng_int
+
+                                # 2. Calculate for Voltage Channel 2
+                                f2, z2_real, z2_imag, Z2_complex = calculate_impedance_fft_band(
+                                    v_buffer=V2meas, 
+                                    i_buffer=Imeas, 
+                                    target_freq=f, 
+                                    sample_rate=sample_rate,
+                                    band_factor=rng_int
                                 )
-                                
-                                # Process Voltage 3
-                                f3, Z3_complex, (z3_real, z3_imag), conv3 = find_converged_impedance(
-                                    v_buffer=V3meas, i_buffer=Imeas, commanded_freq=f, 
-                                    sample_rate=sample_rate, prev_impedance=prev_Z3, search_range=rng_int
+
+                                # 3. Calculate for Voltage Channel 3
+                                f3, z3_real, z3_imag, Z3_complex = calculate_impedance_fft_band(
+                                    v_buffer=V3meas, 
+                                    i_buffer=Imeas, 
+                                    target_freq=f, 
+                                    sample_rate=sample_rate,
+                                    band_factor=rng_int
                                 )
                                 
                                 # Update previous values for the next frequency step
                                 prev_Z1 = Z1_complex
                                 prev_Z2 = Z2_complex
                                 prev_Z3 = Z3_complex
-                                
-                                # Warn if any channel failed to converge
-                                if not (conv1 and conv2 and conv3):
-                                    print(f"Warning: Convergence failed at {f}Hz. Using best available fits.")
 
                                 # buffer_size = Imeas.shape[0]
 
@@ -598,9 +603,9 @@ try:
                                 # Z3real, Z3imag = calibrator_c3.correct(sfreq, Z3.real, -Z3.imag)
                                 # print(f"Cell-3 Impedance: {Z3real} + ({Z3imag}j)")
 
-                                Z1real, Z1imag = z1_real, -z1_imag
-                                Z2real, Z2imag = z2_real, -z2_imag
-                                Z3real, Z3imag = z3_real, -z3_imag
+                                Z1real, Z1imag = z1_real, z1_imag
+                                Z2real, Z2imag = z2_real, z2_imag
+                                Z3real, Z3imag = z3_real, z3_imag
 
                                 # Data Quality Check
                                 # if i_idx > 0 and ((Z1real < 0.98*sample_c1[i_idx-1, 1] and Z1real < 0) or (Z2real < 0.98*sample_c2[i_idx-1, 1] and Z2real < 0) or (Z3real < 0.98*sample_c3[i_idx-1, 1] and Z3real < 0)):
