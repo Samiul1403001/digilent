@@ -1,4 +1,4 @@
-from MyDigilent import MyDigilent, dual_phase_demod, HolderCalibrator, smooth_impedance_array, extract_freq_fft
+from MyDigilent import MyDigilent, dual_phase_demod, HolderCalibrator, smooth_impedance_array, find_converged_impedance
 from time import sleep
 import numpy as np, socket, struct, mlrepo as ml
 
@@ -363,6 +363,11 @@ for i in range(finit_idx, len(f_freq)-1):
     for k in range(1, fperdecade+1):
         FREQ_TEMPLATE.append(10**(np.log10(f_freq[i]).item()-k/fperdecade))
 
+# Track the previous impedance for each channel independently
+prev_Z1 = None
+prev_Z2 = None
+prev_Z3 = None
+
 # --- MAIN SERVER LOOP ---
 server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -504,53 +509,80 @@ try:
                                 #             header="Current (A),Voltage_B1(V),Voltage_B2(V),Voltage_B3(V)", 
                                 #             comments="", 
                                 #             fmt="%.6f")
-
-                                buffer_size = Imeas.shape[0]
-
-                                rng_int = 1 / 10 ** int(-np.log10(f) + 3)
                                 
-                                if rng_int < 0.001:
-                                    rng_int = 0.001
+                                # Process Voltage 1
+                                f1, Z1_complex, (z1_real, z1_imag), conv1 = find_converged_impedance(
+                                    v_buffer=V1meas, i_buffer=Imeas, commanded_freq=f, 
+                                    sample_rate=sample_rate, prev_impedance=prev_Z1
+                                )
+                                
+                                # Process Voltage 2
+                                f2, Z2_complex, (z2_real, z2_imag), conv2 = find_converged_impedance(
+                                    v_buffer=V2meas, i_buffer=Imeas, commanded_freq=f, 
+                                    sample_rate=sample_rate, prev_impedance=prev_Z2
+                                )
+                                
+                                # Process Voltage 3
+                                f3, Z3_complex, (z3_real, z3_imag), conv3 = find_converged_impedance(
+                                    v_buffer=V3meas, i_buffer=Imeas, commanded_freq=f, 
+                                    sample_rate=sample_rate, prev_impedance=prev_Z3
+                                )
+                                
+                                # Update previous values for the next frequency step
+                                prev_Z1 = Z1_complex
+                                prev_Z2 = Z2_complex
+                                prev_Z3 = Z3_complex
+                                
+                                # Warn if any channel failed to converge
+                                if not (conv1 and conv2 and conv3):
+                                    print(f"Warning: Convergence failed at {f}Hz. Using best available fits.")
+
+                                # buffer_size = Imeas.shape[0]
+
+                                # rng_int = 1 / 10 ** int(-np.log10(f) + 3)
+                                
+                                # if rng_int < 0.001:
+                                #     rng_int = 0.001
                                     
-                                sfreq = f + 2*rng_int
+                                # sfreq = f + 2*rng_int
                                 
-                                sfreq, _ = extract_freq_fft(
-                                                signal_buffer= V2meas_filtered, 
-                                                target_freq= f, 
-                                                sample_rate= sample_rate,
-                                                band_factor=rng_int
-                                            )
+                                # sfreq, _ = extract_freq_fft(
+                                #                 signal_buffer= V2meas_filtered, 
+                                #                 target_freq= f, 
+                                #                 sample_rate= sample_rate,
+                                #                 band_factor=rng_int
+                                #             )
 
-                                if abs(sfreq - f) >= rng_int:
-                                    print("Could not extract frequency from FFT. Using requested frequency instead.")
-                                    sfreq = f
+                                # if abs(sfreq - f) >= rng_int:
+                                #     print("Could not extract frequency from FFT. Using requested frequency instead.")
+                                #     sfreq = f
                                 
-                                Iamp, Iphase = dual_phase_demod(Imeas_filtered, sfreq, sample_rate)
-                                V1amp, V1phase = dual_phase_demod(V1meas_filtered, sfreq, sample_rate)
-                                V2amp, V2phase = dual_phase_demod(V2meas_filtered, sfreq, sample_rate)
-                                V3amp, V3phase = dual_phase_demod(V3meas_filtered, sfreq, sample_rate)
+                                # Iamp, Iphase = dual_phase_demod(Imeas_filtered, sfreq, sample_rate)
+                                # V1amp, V1phase = dual_phase_demod(V1meas_filtered, sfreq, sample_rate)
+                                # V2amp, V2phase = dual_phase_demod(V2meas_filtered, sfreq, sample_rate)
+                                # V3amp, V3phase = dual_phase_demod(V3meas_filtered, sfreq, sample_rate)
 
-                                print(f"Freq: {sfreq:.5f} Hz | V_amp: [{np.max(V1meas):.2E}, {np.max(V2meas):.2E}, {np.max(V3meas):.2E}] | I_amp: {np.max(Imeas):.2E}")
+                                # print(f"Freq: {sfreq:.5f} Hz | V_amp: [{np.max(V1meas):.2E}, {np.max(V2meas):.2E}, {np.max(V3meas):.2E}] | I_amp: {np.max(Imeas):.2E}")
                                 
-                                # if np.max(V1meas) > 1:
-                                #     break
+                                # # if np.max(V1meas) > 1:
+                                # #     break
 
-                                I_real = Iamp * np.cos(Iphase+np.pi)
-                                I_imag = Iamp * np.sin(Iphase+np.pi)
-                                V1_real = V1amp * np.cos(V1phase)
-                                V1_imag = V1amp * np.sin(V1phase)
-                                V2_real = V2amp * np.cos(V2phase)
-                                V2_imag = V2amp * np.sin(V2phase)
-                                V3_real = V3amp * np.cos(V3phase)
-                                V3_imag = V3amp * np.sin(V3phase)
+                                # I_real = Iamp * np.cos(Iphase+np.pi)
+                                # I_imag = Iamp * np.sin(Iphase+np.pi)
+                                # V1_real = V1amp * np.cos(V1phase)
+                                # V1_imag = V1amp * np.sin(V1phase)
+                                # V2_real = V2amp * np.cos(V2phase)
+                                # V2_imag = V2amp * np.sin(V2phase)
+                                # V3_real = V3amp * np.cos(V3phase)
+                                # V3_imag = V3amp * np.sin(V3phase)
 
-                                V1_comp = V1_real + 1j * V1_imag
-                                V2_comp = V2_real + 1j * V2_imag
-                                V3_comp = V3_real + 1j * V3_imag
-                                I_comp = I_real + 1j * I_imag
-                                Z1 = (V1_comp / I_comp)
-                                Z2 = (V2_comp / I_comp)
-                                Z3 = (V3_comp / I_comp)
+                                # V1_comp = V1_real + 1j * V1_imag
+                                # V2_comp = V2_real + 1j * V2_imag
+                                # V3_comp = V3_real + 1j * V3_imag
+                                # I_comp = I_real + 1j * I_imag
+                                # Z1 = (V1_comp / I_comp)
+                                # Z2 = (V2_comp / I_comp)
+                                # Z3 = (V3_comp / I_comp)
 
                                 # Z1real, Z1imag = calibrator_c1.correct(sfreq, Z1.real, -Z1.imag)
                                 # print(f"Cell-1 Impedance: {Z1real} + ({Z1imag}j)")
@@ -561,9 +593,9 @@ try:
                                 # Z3real, Z3imag = calibrator_c3.correct(sfreq, Z3.real, -Z3.imag)
                                 # print(f"Cell-3 Impedance: {Z3real} + ({Z3imag}j)")
 
-                                Z1real, Z1imag = Z1.real, -Z1.imag
-                                Z2real, Z2imag = Z2.real, -Z2.imag
-                                Z3real, Z3imag = Z3.real, -Z3.imag
+                                Z1real, Z1imag = z1_real, -z1_imag
+                                Z2real, Z2imag = z2_real, -z2_imag
+                                Z3real, Z3imag = z3_real, -z3_imag
 
                                 # Data Quality Check
                                 if i_idx > 0 and ((Z1real < 0.98*sample_c1[i_idx-1, 1] and Z1real < 0) or (Z2real < 0.98*sample_c2[i_idx-1, 1] and Z2real < 0) or (Z3real < 0.98*sample_c3[i_idx-1, 1] and Z3real < 0)):
@@ -571,21 +603,21 @@ try:
                                     break
                                 
                                 sample_c1[i_idx, 0] = np.mean(data_sets[1])
-                                sample_c1[i_idx, 1] = np.log10(sfreq)
+                                sample_c1[i_idx, 1] = np.log10(f1)
                                 sample_c1[i_idx, 2] = Z1real
                                 sample_c1[i_idx, 3] = Z1imag
                                 sample_c1[i_idx, 4] = np.abs(Z1real - 1j*Z1imag)
                                 sample_c1[i_idx, 5] = np.angle(Z1real - 1j*Z1imag, deg=True)
 
                                 sample_c2[i_idx, 0] = np.mean(data_sets[2])
-                                sample_c2[i_idx, 1] = np.log10(sfreq)
+                                sample_c2[i_idx, 1] = np.log10(f2)
                                 sample_c2[i_idx, 2] = Z2real
                                 sample_c2[i_idx, 3] = Z2imag
                                 sample_c2[i_idx, 4] = np.abs(Z2real - 1j*Z2imag)
                                 sample_c2[i_idx, 5] = np.angle(Z2real - 1j*Z2imag, deg=True)
 
                                 sample_c3[i_idx, 0] = np.mean(data_sets[3])
-                                sample_c3[i_idx, 1] = np.log10(sfreq)
+                                sample_c3[i_idx, 1] = np.log10(f3)
                                 sample_c3[i_idx, 2] = Z3real
                                 sample_c3[i_idx, 3] = Z3imag
                                 sample_c3[i_idx, 4] = np.abs(Z3real - 1j*Z3imag)
