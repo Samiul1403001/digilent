@@ -598,9 +598,9 @@ try:
                                 Z3real, Z3imag = z3_real, -z3_imag
 
                                 # Data Quality Check
-                                if i_idx > 0 and ((Z1real < 0.98*sample_c1[i_idx-1, 1] and Z1real < 0) or (Z2real < 0.98*sample_c2[i_idx-1, 1] and Z2real < 0) or (Z3real < 0.98*sample_c3[i_idx-1, 1] and Z3real < 0)):
-                                    print("\nFrequency skipped (Impedance Drop)...\n")
-                                    break
+                                # if i_idx > 0 and ((Z1real < 0.98*sample_c1[i_idx-1, 1] and Z1real < 0) or (Z2real < 0.98*sample_c2[i_idx-1, 1] and Z2real < 0) or (Z3real < 0.98*sample_c3[i_idx-1, 1] and Z3real < 0)):
+                                #     print("\nFrequency skipped (Impedance Drop)...\n")
+                                #     break
                                 
                                 sample_c1[i_idx, 0] = np.mean(data_sets[1])
                                 sample_c1[i_idx, 1] = np.log10(f1)
