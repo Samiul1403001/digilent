@@ -515,13 +515,14 @@ try:
                                 sfreq = f + 2*rng_int
                                 
                                 sfreq, _ = extract_freq_fft(
-                                                signal_buffer= Imeas, 
+                                                signal_buffer= V2meas_filtered, 
                                                 target_freq= f, 
                                                 sample_rate= sample_rate,
                                                 band_factor=rng_int
                                             )
 
                                 if abs(sfreq - f) >= rng_int:
+                                    print("Could not extract frequency from FFT. Using requested frequency instead.")
                                     sfreq = f
                                 
                                 Iamp, Iphase = dual_phase_demod(Imeas_filtered, sfreq, sample_rate)
