@@ -372,7 +372,7 @@ def find_converged_impedance(v_buffer, i_buffer, commanded_freq, sample_rate, pr
     # If no previous impedance exists (first point in the whole sweep), skip iteration
     if prev_impedance is None:
         actual_f, z_real, z_imag, Z_complex = calculate_impedance_fft_band(
-            v_buffer, i_buffer, commanded_freq, sample_rate
+            v_buffer, i_buffer, commanded_freq, sample_rate, band_factor=search_range
         )
         return actual_f, Z_complex, (z_real, z_imag), True
 
