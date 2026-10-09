@@ -364,7 +364,7 @@ def calculate_impedance_fft_band(v_buffer, i_buffer, target_freq, sample_rate, b
     
     return actual_freq, z_real, z_imag, Z_complex
 
-def find_converged_impedance(v_buffer, i_buffer, commanded_freq, sample_rate, prev_impedance, tolerance=0.03, search_range=0.05, max_steps=11):
+def find_converged_impedance(v_buffer, i_buffer, commanded_freq, sample_rate, prev_impedance, tolerance=0.3, search_range=0.01, max_steps=20):
     """
     Sweeps locally around the commanded frequency using calculate_impedance_fft_band 
     to find an impedance within the error boundary of the previous measurement.
@@ -389,7 +389,7 @@ def find_converged_impedance(v_buffer, i_buffer, commanded_freq, sample_rate, pr
 
     for f_test in candidate_freqs:
         actual_f, z_real, z_imag, Z_complex = calculate_impedance_fft_band(
-            v_buffer, i_buffer, f_test, sample_rate
+            v_buffer, i_buffer, f_test, sample_rate, band_factor=search_range
         )
         
         error = np.abs(Z_complex - prev_impedance) / np.abs(prev_impedance)
