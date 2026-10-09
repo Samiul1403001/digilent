@@ -1,4 +1,4 @@
-from MyDigilent import MyDigilent, remove_baseline_full, freq_selection_signal, dual_phase_demod, FFT, fir_bandpass, HolderCalibrator, smooth_impedance_array, calculate_impedance_fft_band
+from MyDigilent import MyDigilent, dual_phase_demod, HolderCalibrator, smooth_impedance_array, extract_freq_fft
 from time import sleep
 import numpy as np, socket, struct, mlrepo as ml
 
@@ -480,44 +480,20 @@ try:
                                 #             fmt="%.6f")
 
                                 # Calculation Logic
-                                Imeas = -(data_sets[0] - np.mean(data_sets[0])) / 0.033
+                                Imeas = (data_sets[0] - np.mean(data_sets[0])) / 0.033
                                 V1meas = data_sets[1] - np.mean(data_sets[1])
                                 V2meas = data_sets[2] - np.mean(data_sets[2])
                                 V3meas = data_sets[3] - np.mean(data_sets[3])
-                                
-                                # 1. Calculate for Voltage Channel 1
-                                actual_f1, z1_real, z1_imag, Z1_complex = calculate_impedance_fft_band(
-                                    v_buffer=V1meas, 
-                                    i_buffer=Imeas,
-                                    target_freq=f, 
-                                    sample_rate=sample_rate
-                                )
-
-                                # 2. Calculate for Voltage Channel 2
-                                actual_f2, z2_real, z2_imag, Z2_complex = calculate_impedance_fft_band(
-                                    v_buffer=V2meas, 
-                                    i_buffer=Imeas, 
-                                    target_freq=f, 
-                                    sample_rate=sample_rate
-                                )
-
-                                # 3. Calculate for Voltage Channel 3
-                                actual_f3, z3_real, z3_imag, Z3_complex = calculate_impedance_fft_band(
-                                    v_buffer=V3meas, 
-                                    i_buffer=Imeas, 
-                                    target_freq=f, 
-                                    sample_rate=sample_rate
-                                )
 
                                 # Imeas, _ = remove_baseline_full(data_sets[0] / 0.033, sample_rate, f)
                                 # V1meas, _ = remove_baseline_full(data_sets[1], sample_rate, f)
                                 # V2meas, _ = remove_baseline_full(data_sets[2], sample_rate, f)
                                 # V3meas, _ = remove_baseline_full(data_sets[3], sample_rate, f)
 
-                                # Imeas_filtered = Imeas
-                                # V1meas_filtered = V1meas
-                                # V2meas_filtered = V2meas
-                                # V3meas_filtered = V3meas
+                                Imeas_filtered = Imeas
+                                V1meas_filtered = V1meas
+                                V2meas_filtered = V2meas
+                                V3meas_filtered = V3meas
 
                                 # extract csv
                                 # csv_data = np.column_stack([Imeas_filtered, V1meas_filtered, V2meas_filtered, V3meas_filtered])
@@ -529,43 +505,51 @@ try:
                                 #             comments="", 
                                 #             fmt="%.6f")
 
-                                # buffer_size = Imeas.shape[0]
+                                buffer_size = Imeas.shape[0]
 
-                                # rng_int = 1 / 10 ** int(-np.log10(f) + 3)
+                                rng_int = 1 / 10 ** int(-np.log10(f) + 3)
 
-                                # if rng_int < 0.001:
-                                #     I_freq = freq_selection_signal(Imeas_filtered, freq_sweep=[f*0.998, f*1.002], sample_rate=sample_rate)
-                                # else:
-                                #     _, _, _, _, I_freq = FFT(Imeas_filtered, freq_sweep=[f*(1-rng_int), f*(1+rng_int)], sample_rate=sample_rate)
-
-                                # sfreq = I_freq if I_freq is not None else f
+                                if rng_int < 0.001:
+                                    sfreq, _ = extract_freq_fft(
+                                                    signal_buffer= Imeas, 
+                                                    target_freq= f, 
+                                                    sample_rate= sample_rate,
+                                                    band_factor=0.001
+                                                )
+                                else:
+                                    sfreq, _ = extract_freq_fft(
+                                                    signal_buffer= Imeas, 
+                                                    target_freq= f, 
+                                                    sample_rate= sample_rate,
+                                                    band_factor=rng_int
+                                                )
                                 
-                                # Iamp, Iphase = dual_phase_demod(Imeas_filtered, sfreq, sample_rate)
-                                # V1amp, V1phase = dual_phase_demod(V1meas_filtered, sfreq, sample_rate)
-                                # V2amp, V2phase = dual_phase_demod(V2meas_filtered, sfreq, sample_rate)
-                                # V3amp, V3phase = dual_phase_demod(V3meas_filtered, sfreq, sample_rate)
+                                Iamp, Iphase = dual_phase_demod(Imeas_filtered, sfreq, sample_rate)
+                                V1amp, V1phase = dual_phase_demod(V1meas_filtered, sfreq, sample_rate)
+                                V2amp, V2phase = dual_phase_demod(V2meas_filtered, sfreq, sample_rate)
+                                V3amp, V3phase = dual_phase_demod(V3meas_filtered, sfreq, sample_rate)
 
-                                print(f"Freq: [{actual_f1:.5f}, {actual_f2:.5f}, {actual_f3:.5f}] Hz | V_amp: [{np.max(V1meas):.2E}, {np.max(V2meas):.2E}, {np.max(V3meas):.2E}] | I_amp: {np.max(Imeas):.2E}")
+                                print(f"Freq: {sfreq:.5f} Hz | V_amp: [{np.max(V1meas):.2E}, {np.max(V2meas):.2E}, {np.max(V3meas):.2E}] | I_amp: {np.max(Imeas):.2E}")
                                 
-                                if np.max(V1meas) > 1:
-                                    break
+                                # if np.max(V1meas) > 1:
+                                #     break
 
-                                # I_real = Iamp * np.cos(Iphase+np.pi)
-                                # I_imag = Iamp * np.sin(Iphase+np.pi)
-                                # V1_real = V1amp * np.cos(V1phase)
-                                # V1_imag = V1amp * np.sin(V1phase)
-                                # V2_real = V2amp * np.cos(V2phase)
-                                # V2_imag = V2amp * np.sin(V2phase)
-                                # V3_real = V3amp * np.cos(V3phase)
-                                # V3_imag = V3amp * np.sin(V3phase)
+                                I_real = Iamp * np.cos(Iphase+np.pi)
+                                I_imag = Iamp * np.sin(Iphase+np.pi)
+                                V1_real = V1amp * np.cos(V1phase)
+                                V1_imag = V1amp * np.sin(V1phase)
+                                V2_real = V2amp * np.cos(V2phase)
+                                V2_imag = V2amp * np.sin(V2phase)
+                                V3_real = V3amp * np.cos(V3phase)
+                                V3_imag = V3amp * np.sin(V3phase)
 
-                                # V1_comp = V1_real + 1j * V1_imag
-                                # V2_comp = V2_real + 1j * V2_imag
-                                # V3_comp = V3_real + 1j * V3_imag
-                                # I_comp = I_real + 1j * I_imag
-                                # Z1 = (V1_comp / I_comp)
-                                # Z2 = (V2_comp / I_comp)
-                                # Z3 = (V3_comp / I_comp)
+                                V1_comp = V1_real + 1j * V1_imag
+                                V2_comp = V2_real + 1j * V2_imag
+                                V3_comp = V3_real + 1j * V3_imag
+                                I_comp = I_real + 1j * I_imag
+                                Z1 = (V1_comp / I_comp)
+                                Z2 = (V2_comp / I_comp)
+                                Z3 = (V3_comp / I_comp)
 
                                 # Z1real, Z1imag = calibrator_c1.correct(sfreq, Z1.real, -Z1.imag)
                                 # print(f"Cell-1 Impedance: {Z1real} + ({Z1imag}j)")
@@ -576,9 +560,9 @@ try:
                                 # Z3real, Z3imag = calibrator_c3.correct(sfreq, Z3.real, -Z3.imag)
                                 # print(f"Cell-3 Impedance: {Z3real} + ({Z3imag}j)")
 
-                                Z1real, Z1imag = z1_real, z1_imag
-                                Z2real, Z2imag = z2_real, z2_imag
-                                Z3real, Z3imag = z3_real, z3_imag
+                                Z1real, Z1imag = Z1.real, -Z1.imag
+                                Z2real, Z2imag = Z2.real, -Z2.imag
+                                Z3real, Z3imag = Z3.real, -Z3.imag
 
                                 # Data Quality Check
                                 if i_idx > 0 and ((Z1real < 0.98*sample_c1[i_idx-1, 1] and Z1real < 0) or (Z2real < 0.98*sample_c2[i_idx-1, 1] and Z2real < 0) or (Z3real < 0.98*sample_c3[i_idx-1, 1] and Z3real < 0)):
@@ -586,25 +570,25 @@ try:
                                     break
                                 
                                 sample_c1[i_idx, 0] = np.mean(data_sets[1])
-                                sample_c1[i_idx, 1] = np.log10(actual_f1)
+                                sample_c1[i_idx, 1] = np.log10(sfreq)
                                 sample_c1[i_idx, 2] = Z1real
                                 sample_c1[i_idx, 3] = Z1imag
-                                sample_c1[i_idx, 4] = np.abs(Z1_complex)
-                                sample_c1[i_idx, 5] = np.angle(Z1_complex, deg=True)
+                                sample_c1[i_idx, 4] = np.abs(Z1real - 1j*Z1imag)
+                                sample_c1[i_idx, 5] = np.angle(Z1real - 1j*Z1imag, deg=True)
 
                                 sample_c2[i_idx, 0] = np.mean(data_sets[2])
-                                sample_c2[i_idx, 1] = np.log10(actual_f2)
+                                sample_c2[i_idx, 1] = np.log10(sfreq)
                                 sample_c2[i_idx, 2] = Z2real
                                 sample_c2[i_idx, 3] = Z2imag
-                                sample_c2[i_idx, 4] = np.abs(Z2_complex)
-                                sample_c2[i_idx, 5] = np.angle(Z2_complex, deg=True)
+                                sample_c2[i_idx, 4] = np.abs(Z2real - 1j*Z2imag)
+                                sample_c2[i_idx, 5] = np.angle(Z2real - 1j*Z2imag, deg=True)
 
                                 sample_c3[i_idx, 0] = np.mean(data_sets[3])
-                                sample_c3[i_idx, 1] = np.log10(actual_f3)
+                                sample_c3[i_idx, 1] = np.log10(sfreq)
                                 sample_c3[i_idx, 2] = Z3real
                                 sample_c3[i_idx, 3] = Z3imag
-                                sample_c3[i_idx, 4] = np.abs(Z3_complex)
-                                sample_c3[i_idx, 5] = np.angle(Z3_complex, deg=True)
+                                sample_c3[i_idx, 4] = np.abs(Z3real - 1j*Z3imag)
+                                sample_c3[i_idx, 5] = np.angle(Z3real - 1j*Z3imag, deg=True)
 
                                 # --- ML based SoH estimation ---
                                 f_idx = [0, 1, 4, 5]
@@ -657,7 +641,7 @@ try:
 
                                 i_idx += 1
                                 mainloop = False 
-                                sleep(int(3*(3-np.log10(actual_f1))))
+                                sleep(int(3*(3-np.log10(sfreq))))
 
                         if not client_connected: break
 

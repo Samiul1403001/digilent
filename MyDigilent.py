@@ -270,63 +270,61 @@ def clean_buffer(y_buffer, signal_freq, sample_rate):
     
     return y_clean, (amplitude, phase, c)
 
-def freq_selection_signal(y_buffer, freq_sweep, sample_rate):
-    mamp = 0
-    freq = []
-    c = 0
-    if freq_sweep[0]/0.9999 >= 0.1:
-        freq_int = 0.1 * freq_sweep[0]/0.9999
-    else:
-        freq_int = 1e-5 * freq_sweep[0]/0.9999
-
-    for f in np.arange(freq_sweep[0], freq_sweep[1], freq_int):
-        _, params = clean_buffer(y_buffer, f, sample_rate)
-        if params[0] > mamp:
-            mamp = params[0]
-            freq.append(f)
-        else:
-            c += 1
-            if c >= 3:
-                break
-    return freq[-1]
-
-def FFT(buffer, freq_sweep=[0, 100e3], sample_rate=100):
+def extract_freq_fft(signal_buffer, target_freq, sample_rate, band_factor=0.1):
     """
-    Compute single-sided magnitude spectrum and frequency vector (in MHz)
-    buffer : iterable of voltage samples (float)
-    freq_sweep : [start_freq, stop_freq] in Hz (only for frequency cropping)
-    Returns: (spectrum_magnitude, frequency_mhz_array)
+    Uses FFT to find the exact frequency peak of a signal within a specified band 
+    and extracts its complex response.
+    
+    Parameters:
+    - signal_buffer: iterable of raw signal samples (e.g., Imeas)
+    - target_freq: target excitation frequency in Hz (e.g., f)
+    - sample_rate: sampling frequency in Hz
+    - band_factor: fraction around target_freq for the band (default 0.1 means ±10%)
+    
+    Returns:
+    - actual_freq: exact frequency of the peak bin found within the band
+    - complex_val: Full complex number of the signal at that peak
     """
-    # convert to numpy array
-    x = np.asarray(buffer, dtype=float)
-    N = x.size
+    arr = np.asarray(signal_buffer, dtype=float)
+    N = arr.size
+    
     if N == 0:
-        return np.array([]), np.array([])
+        return 0.0, 0.0j
 
-    # Sampling frequency is in scope.data.sampling_frequency (Hz)
-    fs = sample_rate
+    fs = float(sample_rate)
 
-    # compute FFT
-    X = np.fft.rfft(x * np.hanning(N))   # window to reduce leakage (Hann)
-    freqs = np.fft.rfftfreq(N, d=1.0 / fs)  # Hz
+    # 1. Apply Hanning window and compute RFFT
+    window = np.hanning(N)
+    X_fft = np.fft.rfft(arr * window)
+    freqs = np.fft.rfftfreq(N, d=1.0 / fs)
 
-    # magnitude (abs) and optionally normalize (divide by N)
-    # Extract components
-    real_part = X.real
-    imag_part = X.imag
-    mag = np.abs(X) / N
+    # 2. Define the frequency band (e.g., f * 0.9 to f * 1.1)
+    f_min = target_freq * (1.0 - band_factor)
+    f_max = target_freq * (1.0 + band_factor)
+    
+    # Create a boolean mask to "zoom" into only this frequency band
+    band_mask = (freqs >= f_min) & (freqs <= f_max)
+    
+    if not np.any(band_mask):
+        # Fallback to the closest single bin if the window is too narrow
+        idx = np.argmin(np.abs(freqs - target_freq))
+    else:
+        # Within the band, find the peak magnitude bin
+        band_mag = np.abs(X_fft[band_mask])
+        
+        # Locate the index of the peak within the band
+        local_peak_idx = np.argmax(band_mag)
+        
+        # Map the local index back to the global index of the full FFT array
+        global_indices = np.where(band_mask)[0]
+        idx = global_indices[local_peak_idx]
 
-    # Crop to requested freq_sweep range
-    start_freq = float(freq_sweep[0])
-    stop_freq = float(freq_sweep[1])
-    mask = (freqs >= start_freq) & (freqs <= stop_freq)
-
-    freqs = freqs[mask]
-    mag = mag[mask]
-    real_part = real_part[mask]
-    imag_part = imag_part[mask]
-
-    return freqs, mag, real_part, imag_part, freqs[np.argmax(mag)]
+    actual_freq = freqs[idx]
+    
+    # 3. Extract the complex component at this specific bin
+    complex_val = X_fft[idx]
+    
+    return actual_freq, complex_val
 
 def calculate_impedance_fft_band(v_buffer, i_buffer, target_freq, sample_rate, band_factor=0.1):
     """
