@@ -539,52 +539,36 @@ try:
                                 if not (conv1 and conv2 and conv3):
                                     print(f"Warning: Convergence failed at {f}Hz. Using best available fits.")
 
-                                # buffer_size = Imeas.shape[0]
+                                buffer_size = Imeas.shape[0]
 
-                                # rng_int = 1 / 10 ** int(-np.log10(f) + 3)
+                                sfreq = f1+f2+f3 / 3.0  # Average frequency from the three channels
                                 
-                                # if rng_int < 0.001:
-                                #     rng_int = 0.001
-                                    
-                                # sfreq = f + 2*rng_int
-                                
-                                # sfreq, _ = extract_freq_fft(
-                                #                 signal_buffer= V2meas_filtered, 
-                                #                 target_freq= f, 
-                                #                 sample_rate= sample_rate,
-                                #                 band_factor=rng_int
-                                #             )
-
-                                # if abs(sfreq - f) >= rng_int:
-                                #     print("Could not extract frequency from FFT. Using requested frequency instead.")
-                                #     sfreq = f
-                                
-                                # Iamp, Iphase = dual_phase_demod(Imeas_filtered, sfreq, sample_rate)
-                                # V1amp, V1phase = dual_phase_demod(V1meas_filtered, sfreq, sample_rate)
-                                # V2amp, V2phase = dual_phase_demod(V2meas_filtered, sfreq, sample_rate)
-                                # V3amp, V3phase = dual_phase_demod(V3meas_filtered, sfreq, sample_rate)
+                                Iamp, Iphase = dual_phase_demod(Imeas_filtered, sfreq, sample_rate)
+                                V1amp, V1phase = dual_phase_demod(V1meas_filtered, sfreq, sample_rate)
+                                V2amp, V2phase = dual_phase_demod(V2meas_filtered, sfreq, sample_rate)
+                                V3amp, V3phase = dual_phase_demod(V3meas_filtered, sfreq, sample_rate)
 
                                 print(f"Freq: [{f1:.5f}, {f2:.5f}, {f3:.5f}] Hz | V_amp: [{np.max(V1meas):.2E}, {np.max(V2meas):.2E}, {np.max(V3meas):.2E}] | I_amp: {np.max(Imeas):.2E}")
                                 
                                 # # if np.max(V1meas) > 1:
                                 # #     break
 
-                                # I_real = Iamp * np.cos(Iphase+np.pi)
-                                # I_imag = Iamp * np.sin(Iphase+np.pi)
-                                # V1_real = V1amp * np.cos(V1phase)
-                                # V1_imag = V1amp * np.sin(V1phase)
-                                # V2_real = V2amp * np.cos(V2phase)
-                                # V2_imag = V2amp * np.sin(V2phase)
-                                # V3_real = V3amp * np.cos(V3phase)
-                                # V3_imag = V3amp * np.sin(V3phase)
+                                I_real = Iamp * np.cos(Iphase+np.pi)
+                                I_imag = Iamp * np.sin(Iphase+np.pi)
+                                V1_real = V1amp * np.cos(V1phase)
+                                V1_imag = V1amp * np.sin(V1phase)
+                                V2_real = V2amp * np.cos(V2phase)
+                                V2_imag = V2amp * np.sin(V2phase)
+                                V3_real = V3amp * np.cos(V3phase)
+                                V3_imag = V3amp * np.sin(V3phase)
 
-                                # V1_comp = V1_real + 1j * V1_imag
-                                # V2_comp = V2_real + 1j * V2_imag
-                                # V3_comp = V3_real + 1j * V3_imag
-                                # I_comp = I_real + 1j * I_imag
-                                # Z1 = (V1_comp / I_comp)
-                                # Z2 = (V2_comp / I_comp)
-                                # Z3 = (V3_comp / I_comp)
+                                V1_comp = V1_real + 1j * V1_imag
+                                V2_comp = V2_real + 1j * V2_imag
+                                V3_comp = V3_real + 1j * V3_imag
+                                I_comp = I_real + 1j * I_imag
+                                Z1 = (V1_comp / I_comp)
+                                Z2 = (V2_comp / I_comp)
+                                Z3 = (V3_comp / I_comp)
 
                                 # Z1real, Z1imag = calibrator_c1.correct(sfreq, Z1.real, -Z1.imag)
                                 # print(f"Cell-1 Impedance: {Z1real} + ({Z1imag}j)")
@@ -594,10 +578,16 @@ try:
 
                                 # Z3real, Z3imag = calibrator_c3.correct(sfreq, Z3.real, -Z3.imag)
                                 # print(f"Cell-3 Impedance: {Z3real} + ({Z3imag}j)")
+                                
+                                Z1real, Z1imag = Z1.real, -Z1.imag
+                                Z2real, Z2imag = Z2.real, -Z2.imag
+                                Z3real, Z3imag = Z3.real, -Z3.imag
 
-                                Z1real, Z1imag = z1_real, z1_imag
-                                Z2real, Z2imag = z2_real, z2_imag
-                                Z3real, Z3imag = z3_real, z3_imag
+                                # Z1real, Z1imag = z1_real, z1_imag
+                                # Z2real, Z2imag = z2_real, z2_imag
+                                # Z3real, Z3imag = z3_real, z3_imag
+                                
+                                
 
                                 # Data Quality Check
                                 # if i_idx > 0 and ((Z1real < 0.98*sample_c1[i_idx-1, 1] and Z1real < 0) or (Z2real < 0.98*sample_c2[i_idx-1, 1] and Z2real < 0) or (Z3real < 0.98*sample_c3[i_idx-1, 1] and Z3real < 0)):
