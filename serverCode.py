@@ -1,4 +1,4 @@
-from MyDigilent import MyDigilent, dual_phase_demod, HolderCalibrator, smooth_impedance_array, find_converged_impedance
+from MyDigilent import MyDigilent, dual_phase_demod, HolderCalibrator, smooth_impedance_array, find_converged_impedance, fir_bandpass, remove_baseline_full
 from time import sleep
 import numpy as np, socket, struct, mlrepo as ml
 
@@ -494,11 +494,16 @@ try:
                                 # V1meas, _ = remove_baseline_full(data_sets[1], sample_rate, f)
                                 # V2meas, _ = remove_baseline_full(data_sets[2], sample_rate, f)
                                 # V3meas, _ = remove_baseline_full(data_sets[3], sample_rate, f)
+                                
+                                Imeas_filtered = fir_bandpass(Imeas, sample_rate, f*0.95, f*1.05)
+                                V1meas_filtered = fir_bandpass(V1meas, sample_rate, f*0.95, f*1.05)
+                                V2meas_filtered = fir_bandpass(V2meas, sample_rate, f*0.95, f*1.05)
+                                V3meas_filtered = fir_bandpass(V3meas, sample_rate, f*0.95, f*1.05)
 
-                                Imeas_filtered = Imeas
-                                V1meas_filtered = V1meas
-                                V2meas_filtered = V2meas
-                                V3meas_filtered = V3meas
+                                # Imeas_filtered = Imeas
+                                # V1meas_filtered = V1meas
+                                # V2meas_filtered = V2meas
+                                # V3meas_filtered = V3meas
 
                                 # extract csv
                                 csv_data = np.column_stack([Imeas_filtered, V1meas_filtered, V2meas_filtered, V3meas_filtered])
