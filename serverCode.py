@@ -353,8 +353,8 @@ fsample_max = 1e6
 print(f"Max buffer size per channel: {max_buf}, Max sampling rate: {fsample_max}")
 
 # --- Frequency Setup ---
-# f_freq = [1e3, 1e2, 1e1, 1e0, 1e-1, 1e-2]
-f_freq = [1e2]
+f_freq = [1e3, 1e2, 1e1, 1e0, 1e-1, 1e-2]
+# f_freq = [1e2]
 finit_idx = 0
 fperdecade = 10
 FREQ_TEMPLATE = []
@@ -475,14 +475,14 @@ try:
                             
                             elif res_str == "DoneRecv":
                                 # extract csv
-                                csv_data = np.column_stack(data_sets)
+                                # csv_data = np.column_stack(data_sets)
 
-                                np.savetxt("results/raw_data.csv", 
-                                            csv_data, 
-                                            delimiter=",", 
-                                            header="Current (A),Voltage_B1(V),Voltage_B2(V),Voltage_B3(V)", 
-                                            comments="", 
-                                            fmt="%.6f")
+                                # np.savetxt("results/raw_data.csv", 
+                                #             csv_data, 
+                                #             delimiter=",", 
+                                #             header="Current (A),Voltage_B1(V),Voltage_B2(V),Voltage_B3(V)", 
+                                #             comments="", 
+                                #             fmt="%.6f")
 
                                 # Calculation Logic
                                 Imeas = (data_sets[0] - np.mean(data_sets[0])) / 0.033
@@ -531,49 +531,49 @@ try:
                                 # V3meas_filtered = V3meas
 
                                 # extract csv
-                                csv_data = np.column_stack([Imeas_filtered, V1meas_filtered, V2meas_filtered, V3meas_filtered])
+                                # csv_data = np.column_stack([Imeas_filtered, V1meas_filtered, V2meas_filtered, V3meas_filtered])
 
-                                np.savetxt("results/filtered_data.csv", 
-                                            csv_data,
-                                            delimiter=",", 
-                                            header="Current (A),Voltage_B1(V),Voltage_B2(V),Voltage_B3(V)", 
-                                            comments="", 
-                                            fmt="%.6f")
+                                # np.savetxt("results/filtered_data.csv", 
+                                #             csv_data,
+                                #             delimiter=",", 
+                                #             header="Current (A),Voltage_B1(V),Voltage_B2(V),Voltage_B3(V)", 
+                                #             comments="", 
+                                #             fmt="%.6f")
                                 
-                                rng_int = 0.005
+                                # rng_int = 0.005
                                 
-                                # Process Voltage 1
-                                f1, Z1_complex, (z1_real, z1_imag), conv1 = find_converged_impedance(
-                                    v_buffer=V1meas, i_buffer=Imeas, commanded_freq=f, tolerance=0.01,
-                                    sample_rate=sample_rate, prev_impedance=prev_Z1, search_range=rng_int
-                                )
+                                # # Process Voltage 1
+                                # f1, Z1_complex, (z1_real, z1_imag), conv1 = find_converged_impedance(
+                                #     v_buffer=V1meas, i_buffer=Imeas, commanded_freq=f, tolerance=0.01,
+                                #     sample_rate=sample_rate, prev_impedance=prev_Z1, search_range=rng_int
+                                # )
                                 
-                                # Process Voltage 2
-                                f2, Z2_complex, (z2_real, z2_imag), conv2 = find_converged_impedance(
-                                    v_buffer=V2meas, i_buffer=Imeas, commanded_freq=f, tolerance=0.01,
-                                    sample_rate=sample_rate, prev_impedance=prev_Z2, search_range=rng_int
-                                )
+                                # # Process Voltage 2
+                                # f2, Z2_complex, (z2_real, z2_imag), conv2 = find_converged_impedance(
+                                #     v_buffer=V2meas, i_buffer=Imeas, commanded_freq=f, tolerance=0.01,
+                                #     sample_rate=sample_rate, prev_impedance=prev_Z2, search_range=rng_int
+                                # )
                                 
-                                # Process Voltage 3
-                                f3, Z3_complex, (z3_real, z3_imag), conv3 = find_converged_impedance(
-                                    v_buffer=V3meas, i_buffer=Imeas, commanded_freq=f, tolerance=0.01,
-                                    sample_rate=sample_rate, prev_impedance=prev_Z3, search_range=rng_int
-                                )
+                                # # Process Voltage 3
+                                # f3, Z3_complex, (z3_real, z3_imag), conv3 = find_converged_impedance(
+                                #     v_buffer=V3meas, i_buffer=Imeas, commanded_freq=f, tolerance=0.01,
+                                #     sample_rate=sample_rate, prev_impedance=prev_Z3, search_range=rng_int
+                                # )
                                 
-                                # Update previous values for the next frequency step
-                                prev_Z1 = Z1_complex
-                                prev_Z2 = Z2_complex
-                                prev_Z3 = Z3_complex
+                                # # Update previous values for the next frequency step
+                                # prev_Z1 = Z1_complex
+                                # prev_Z2 = Z2_complex
+                                # prev_Z3 = Z3_complex
                                 
                                 # Warn if any channel failed to converge
-                                if not (conv1 and conv2 and conv3):
-                                    print(f"Warning: Convergence failed at {f}Hz. Using best available fits.")
+                                # if not (conv1 and conv2 and conv3):
+                                #     print(f"Warning: Convergence failed at {f}Hz. Using best available fits.")
 
-                                buffer_size = Imeas.shape[0]
+                                # buffer_size = Imeas.shape[0]
 
                                 sfreq = (f1+f2+f3) / 3.0  # Average frequency from the three channels
                                 
-                                Iamp, Iphase = dual_phase_demod(Imeas_filtered, sfreq, sample_rate)
+                                Iamp, Iphase = dual_phase_demod(Imeas_filtered, fi, sample_rate)
                                 V1amp, V1phase = dual_phase_demod(V1meas_filtered, f1, sample_rate)
                                 V2amp, V2phase = dual_phase_demod(V2meas_filtered, f2, sample_rate)
                                 V3amp, V3phase = dual_phase_demod(V3meas_filtered, f3, sample_rate)
