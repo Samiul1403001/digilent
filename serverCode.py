@@ -475,14 +475,14 @@ try:
                             
                             elif res_str == "DoneRecv":
                                 # extract csv
-                                csv_data = np.column_stack(data_sets)
+                                # csv_data = np.column_stack(data_sets)
 
-                                np.savetxt("results/raw_data.csv", 
-                                            csv_data, 
-                                            delimiter=",", 
-                                            header="Current (A),Voltage_B1(V),Voltage_B2(V),Voltage_B3(V)", 
-                                            comments="", 
-                                            fmt="%.6f")
+                                # np.savetxt("results/raw_data.csv", 
+                                #             csv_data, 
+                                #             delimiter=",", 
+                                #             header="Current (A),Voltage_B1(V),Voltage_B2(V),Voltage_B3(V)", 
+                                #             comments="", 
+                                #             fmt="%.6f")
 
                                 # Calculation Logic
                                 Imeas = (data_sets[0] - np.mean(data_sets[0])) / 0.033
@@ -506,32 +506,32 @@ try:
                                 # V3meas_filtered = V3meas
 
                                 # extract csv
-                                csv_data = np.column_stack([Imeas_filtered, V1meas_filtered, V2meas_filtered, V3meas_filtered])
+                                # csv_data = np.column_stack([Imeas_filtered, V1meas_filtered, V2meas_filtered, V3meas_filtered])
 
-                                np.savetxt("results/filtered_data.csv", 
-                                            csv_data,
-                                            delimiter=",", 
-                                            header="Current (A),Voltage_B1(V),Voltage_B2(V),Voltage_B3(V)", 
-                                            comments="", 
-                                            fmt="%.6f")
+                                # np.savetxt("results/filtered_data.csv", 
+                                #             csv_data,
+                                #             delimiter=",", 
+                                #             header="Current (A),Voltage_B1(V),Voltage_B2(V),Voltage_B3(V)", 
+                                #             comments="", 
+                                #             fmt="%.6f")
                                 
                                 rng_int = 0.02
                                 
                                 # Process Voltage 1
                                 f1, Z1_complex, (z1_real, z1_imag), conv1 = find_converged_impedance(
-                                    v_buffer=V1meas, i_buffer=Imeas, commanded_freq=f, tolerance=0.01,
+                                    v_buffer=V1meas, i_buffer=Imeas, commanded_freq=f, tolerance=0.001,
                                     sample_rate=sample_rate, prev_impedance=prev_Z1, search_range=rng_int
                                 )
                                 
                                 # Process Voltage 2
                                 f2, Z2_complex, (z2_real, z2_imag), conv2 = find_converged_impedance(
-                                    v_buffer=V2meas, i_buffer=Imeas, commanded_freq=f, tolerance=0.01,
+                                    v_buffer=V2meas, i_buffer=Imeas, commanded_freq=f, tolerance=0.001,
                                     sample_rate=sample_rate, prev_impedance=prev_Z2, search_range=rng_int
                                 )
                                 
                                 # Process Voltage 3
                                 f3, Z3_complex, (z3_real, z3_imag), conv3 = find_converged_impedance(
-                                    v_buffer=V3meas, i_buffer=Imeas, commanded_freq=f, tolerance=0.01,
+                                    v_buffer=V3meas, i_buffer=Imeas, commanded_freq=f, tolerance=0.001,
                                     sample_rate=sample_rate, prev_impedance=prev_Z3, search_range=rng_int
                                 )
                                 
