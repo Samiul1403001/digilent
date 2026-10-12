@@ -583,22 +583,22 @@ try:
                                 # # if np.max(V1meas) > 1:
                                 # #     break
 
-                                I_real = I_amp * np.cos(np.radians(I_phase)+np.pi)
-                                I_imag = I_amp * np.sin(np.radians(I_phase)+np.pi)
-                                V1_real = V1_amp * np.cos(np.radians(V1_phase))
-                                V1_imag = V1_amp * np.sin(np.radians(V1_phase))
-                                V2_real = V2_amp * np.cos(np.radians(V2_phase))
-                                V2_imag = V2_amp * np.sin(np.radians(V2_phase))
-                                V3_real = V3_amp * np.cos(np.radians(V3_phase))
-                                V3_imag = V3_amp * np.sin(np.radians(V3_phase))
+                                # I_real = I_amp * np.cos(np.radians(I_phase)+np.pi)
+                                # I_imag = I_amp * np.sin(np.radians(I_phase)+np.pi)
+                                # V1_real = V1_amp * np.cos(np.radians(V1_phase))
+                                # V1_imag = V1_amp * np.sin(np.radians(V1_phase))
+                                # V2_real = V2_amp * np.cos(np.radians(V2_phase))
+                                # V2_imag = V2_amp * np.sin(np.radians(V2_phase))
+                                # V3_real = V3_amp * np.cos(np.radians(V3_phase))
+                                # V3_imag = V3_amp * np.sin(np.radians(V3_phase))
 
-                                V1_comp = V1_real + 1j * V1_imag
-                                V2_comp = V2_real + 1j * V2_imag
-                                V3_comp = V3_real + 1j * V3_imag
-                                I_comp = I_real + 1j * I_imag
-                                Z1 = (V1_comp / I_comp)
-                                Z2 = (V2_comp / I_comp)
-                                Z3 = (V3_comp / I_comp)
+                                # V1_comp = V1_real + 1j * V1_imag
+                                # V2_comp = V2_real + 1j * V2_imag
+                                # V3_comp = V3_real + 1j * V3_imag
+                                # I_comp = I_real + 1j * I_imag
+                                Z1 = (V1_comp / np.conjugate(I_comp))
+                                Z2 = (V2_comp / np.conjugate(I_comp))
+                                Z3 = (V3_comp / np.conjugate(I_comp))
 
                                 # Z1real, Z1imag = calibrator_c1.correct(sfreq, Z1.real, -Z1.imag)
                                 # print(f"Cell-1 Impedance: {Z1real} + ({Z1imag}j)")
