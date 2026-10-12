@@ -495,10 +495,10 @@ try:
                                 # V2meas, _ = remove_baseline_full(data_sets[2], sample_rate, f)
                                 # V3meas, _ = remove_baseline_full(data_sets[3], sample_rate, f)
                                 
-                                Imeas_filtered = fir_bandpass(Imeas, sample_rate, f*0.95, f*1.05)
-                                V1meas_filtered = fir_bandpass(V1meas, sample_rate, f*0.95, f*1.05)
-                                V2meas_filtered = fir_bandpass(V2meas, sample_rate, f*0.95, f*1.05)
-                                V3meas_filtered = fir_bandpass(V3meas, sample_rate, f*0.95, f*1.05)
+                                Imeas_filtered = fir_bandpass(Imeas, sample_rate, f*0.99, f*1.01)
+                                V1meas_filtered = fir_bandpass(V1meas, sample_rate, f*0.99, f*1.01)
+                                V2meas_filtered = fir_bandpass(V2meas, sample_rate, f*0.99, f*1.01)
+                                V3meas_filtered = fir_bandpass(V3meas, sample_rate, f*0.99, f*1.01)
 
                                 # Imeas_filtered = Imeas
                                 # V1meas_filtered = V1meas
