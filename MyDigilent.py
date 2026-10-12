@@ -143,6 +143,81 @@ class HolderCalibrator:
             
         return Z_out.real, Z_out.imag
 
+def calculate_tolerated_impedance(v_buffer, i_buffer, target_freq, sample_rate, prev_Z_complex=None, tolerance=0.05, band_factor=0.1):
+    """
+    Computes complex impedance by searching a local frequency sweep band for the value 
+    that best matches the previously measured impedance.
+    
+    Parameters:
+    - prev_Z_complex: The complex impedance from the previous frequency step (None for step 1).
+    - tolerance: The acceptable error boundary (e.g., 0.05 for 5%).
+    - band_factor: The width of the local sweep around target_freq (0.1 = ±10%).
+    
+    Returns:
+    - best_Z_complex: The single complex impedance value that best fits the tolerance.
+    """
+    v_arr = np.asarray(v_buffer, dtype=float)
+    i_arr = np.asarray(i_buffer, dtype=float) * -1.0  # Correct 180-degree hardware shift
+    
+    N = v_arr.size
+    if N == 0:
+        return 0.0j
+
+    fs = float(sample_rate)
+    window = np.hanning(N)
+    
+    # 1. Perform a single FFT to capture all frequencies at once
+    V_fft = np.fft.rfft(v_arr * window)
+    I_fft = np.fft.rfft(i_arr * window)
+    freqs = np.fft.rfftfreq(N, d=1.0 / fs)
+
+    # 2. Define the local frequency sweep band
+    f_min = target_freq * (1.0 - band_factor)
+    f_max = target_freq * (1.0 + band_factor)
+    mask = (freqs >= f_min) & (freqs <= f_max)
+    
+    if not np.any(mask):
+        # Fallback if band is too narrow for resolution
+        mask = np.zeros_like(freqs, dtype=bool)
+        mask[np.argmin(np.abs(freqs - target_freq))] = True
+
+    # 3. Calculate complex impedance for every single frequency bin in the sweep band
+    Z_band = V_fft[mask] / I_fft[mask]
+    band_frequencies = freqs[mask]
+
+    # 4. Selection Logic
+    if prev_Z_complex is None:
+        # First point: No previous impedance. Pick the bin with the strongest voltage response.
+        _, _, _, I_comp = FFT_peakAmp(
+                                        buffer=i_buffer,
+                                        commanded_freq=target_freq,
+                                        sample_rate=fs,
+                                        band_factor=0.02  # Searches between 900 Hz and 1100 Hz
+                                    )
+        _, _, _, V_comp = FFT_peakAmp(
+                                        buffer=v_buffer,
+                                        commanded_freq=target_freq,
+                                        sample_rate=fs,
+                                        band_factor=0.02  # Searches between 900 Hz and 1100 Hz
+                                    )
+        best_Z_complex = V_comp/np.conjugate(I_comp)
+    else:
+        # Subsequent points: Find the impedance closest to prev_Z_complex
+        # Calculate relative error for every candidate in the sweep band
+        errors = np.abs(Z_band - prev_Z_complex) / np.abs(prev_Z_complex)
+        
+        # Find the minimum error
+        best_idx = np.argmin(errors)
+        min_error = errors[best_idx]
+        best_Z_complex = Z_band[best_idx]
+        
+        # Optional: Warn if the best option is still outside the target tolerance
+        if min_error > tolerance:
+            actual_f = band_frequencies[best_idx]
+            print(f"Warning: Best impedance at {actual_f:.1f}Hz has {min_error*100:.1f}% error, exceeding {tolerance*100}% tolerance.")
+
+    return best_Z_complex
+
 def FFT_sfreq(raw_signal, sample_rate, target_freq=1000.0):
     """
     Extracts the primary frequency, physical amplitude, and phase of a signal 
