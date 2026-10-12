@@ -1,4 +1,4 @@
-from MyDigilent import MyDigilent, dual_phase_demod, HolderCalibrator, smooth_impedance_array, find_converged_impedance, fir_bandpass, remove_baseline_full
+from MyDigilent import FFT_peakAmp, MyDigilent, dual_phase_demod, HolderCalibrator, smooth_impedance_array, find_converged_impedance, remove_baseline_full
 from time import sleep
 import numpy as np, socket, struct, mlrepo as ml
 
@@ -353,8 +353,8 @@ fsample_max = 1e6
 print(f"Max buffer size per channel: {max_buf}, Max sampling rate: {fsample_max}")
 
 # --- Frequency Setup ---
-f_freq = [1e3, 1e2, 1e1, 1e0, 1e-1, 1e-2]
-# f_freq = [1e2]
+# f_freq = [1e3, 1e2, 1e1, 1e0, 1e-1, 1e-2]
+f_freq = [1e2]
 finit_idx = 0
 fperdecade = 10
 FREQ_TEMPLATE = []
@@ -475,14 +475,14 @@ try:
                             
                             elif res_str == "DoneRecv":
                                 # extract csv
-                                # csv_data = np.column_stack(data_sets)
+                                csv_data = np.column_stack(data_sets)
 
-                                # np.savetxt("results/raw_data.csv", 
-                                #             csv_data, 
-                                #             delimiter=",", 
-                                #             header="Current (A),Voltage_B1(V),Voltage_B2(V),Voltage_B3(V)", 
-                                #             comments="", 
-                                #             fmt="%.6f")
+                                np.savetxt("results/raw_data.csv", 
+                                            csv_data, 
+                                            delimiter=",", 
+                                            header="Current (A),Voltage_B1(V),Voltage_B2(V),Voltage_B3(V)", 
+                                            comments="", 
+                                            fmt="%.6f")
 
                                 # Calculation Logic
                                 Imeas = (data_sets[0] - np.mean(data_sets[0])) / 0.033
@@ -495,10 +495,35 @@ try:
                                 # V2meas, _ = remove_baseline_full(data_sets[2], sample_rate, f)
                                 # V3meas, _ = remove_baseline_full(data_sets[3], sample_rate, f)
                                 
-                                Imeas_filtered = fir_bandpass(Imeas, sample_rate, f*0.99, f*1.01)
-                                V1meas_filtered = fir_bandpass(V1meas, sample_rate, f*0.99, f*1.01)
-                                V2meas_filtered = fir_bandpass(V2meas, sample_rate, f*0.99, f*1.01)
-                                V3meas_filtered = fir_bandpass(V3meas, sample_rate, f*0.99, f*1.01)
+                                fi, I_amp, I_phase, I_comp = FFT_peakAmp(
+                                                                buffer=Imeas,
+                                                                commanded_freq=f,
+                                                                sample_rate=sample_rate,
+                                                                band_factor=0.02  # Searches between 900 Hz and 1100 Hz
+                                                            )
+                                f1, V1_amp, V1_phase, V1_comp = FFT_peakAmp(
+                                                                buffer=V1meas,
+                                                                commanded_freq=f,
+                                                                sample_rate=sample_rate,
+                                                                band_factor=0.02  # Searches between 900 Hz and 1100 Hz
+                                                            )
+                                f2, V2_amp, V2_phase, V2_comp = FFT_peakAmp(
+                                                                buffer=V2meas,
+                                                                commanded_freq=f,
+                                                                sample_rate=sample_rate,
+                                                                band_factor=0.02  # Searches between 900 Hz and 1100 Hz
+                                                            )
+                                f3, V3_amp, V3_phase, V3_comp = FFT_peakAmp(
+                                                                buffer=V3meas,
+                                                                commanded_freq=f,
+                                                                sample_rate=sample_rate,
+                                                                band_factor=0.02  # Searches between 900 Hz and 1100 Hz
+                                                            )
+                                
+                                Imeas_filtered = I_amp * np.cos(2.0 * np.pi * f1 * np.arange(buffer_size)/sample_rate + np.radians(I_phase))
+                                V1meas_filtered = V1_amp * np.cos(2.0 * np.pi * f1 * np.arange(buffer_size)/sample_rate + np.radians(V1_phase))
+                                V2meas_filtered = V2_amp * np.cos(2.0 * np.pi * f2 * np.arange(buffer_size)/sample_rate + np.radians(V2_phase))
+                                V3meas_filtered = V3_amp * np.cos(2.0 * np.pi * f3 * np.arange(buffer_size)/sample_rate + np.radians(V3_phase))
 
                                 # Imeas_filtered = Imeas
                                 # V1meas_filtered = V1meas
@@ -506,14 +531,14 @@ try:
                                 # V3meas_filtered = V3meas
 
                                 # extract csv
-                                # csv_data = np.column_stack([Imeas_filtered, V1meas_filtered, V2meas_filtered, V3meas_filtered])
+                                csv_data = np.column_stack([Imeas_filtered, V1meas_filtered, V2meas_filtered, V3meas_filtered])
 
-                                # np.savetxt("results/filtered_data.csv", 
-                                #             csv_data,
-                                #             delimiter=",", 
-                                #             header="Current (A),Voltage_B1(V),Voltage_B2(V),Voltage_B3(V)", 
-                                #             comments="", 
-                                #             fmt="%.6f")
+                                np.savetxt("results/filtered_data.csv", 
+                                            csv_data,
+                                            delimiter=",", 
+                                            header="Current (A),Voltage_B1(V),Voltage_B2(V),Voltage_B3(V)", 
+                                            comments="", 
+                                            fmt="%.6f")
                                 
                                 rng_int = 0.005
                                 
