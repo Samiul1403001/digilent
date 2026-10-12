@@ -653,21 +653,21 @@ try:
                                 #     break
                                 
                                 sample_c1[i_idx, 0] = np.mean(data_sets[1])
-                                sample_c1[i_idx, 1] = np.log10(f1)
+                                sample_c1[i_idx, 1] = np.log10(f)
                                 sample_c1[i_idx, 2] = Z1real
                                 sample_c1[i_idx, 3] = Z1imag
                                 sample_c1[i_idx, 4] = np.abs(Z1real - 1j*Z1imag)
                                 sample_c1[i_idx, 5] = np.angle(Z1real - 1j*Z1imag, deg=True)
 
                                 sample_c2[i_idx, 0] = np.mean(data_sets[2])
-                                sample_c2[i_idx, 1] = np.log10(f2)
+                                sample_c2[i_idx, 1] = np.log10(f)
                                 sample_c2[i_idx, 2] = Z2real
                                 sample_c2[i_idx, 3] = Z2imag
                                 sample_c2[i_idx, 4] = np.abs(Z2real - 1j*Z2imag)
                                 sample_c2[i_idx, 5] = np.angle(Z2real - 1j*Z2imag, deg=True)
 
                                 sample_c3[i_idx, 0] = np.mean(data_sets[3])
-                                sample_c3[i_idx, 1] = np.log10(f3)
+                                sample_c3[i_idx, 1] = np.log10(f)
                                 sample_c3[i_idx, 2] = Z3real
                                 sample_c3[i_idx, 3] = Z3imag
                                 sample_c3[i_idx, 4] = np.abs(Z3real - 1j*Z3imag)
@@ -724,7 +724,7 @@ try:
 
                                 i_idx += 1
                                 mainloop = False 
-                                sleep(int(3*(3-np.log10(f1))))
+                                sleep(int(3*(3-np.log10(f))))
 
                         if not client_connected: break
 
