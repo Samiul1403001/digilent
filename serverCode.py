@@ -490,11 +490,11 @@ try:
                                 V2meas = data_sets[2] - np.mean(data_sets[2])
                                 V3meas = data_sets[3] - np.mean(data_sets[3])
 
-                                # Imeas, _ = remove_baseline_full(data_sets[0] / 0.033, sample_rate, f)
-                                # V1meas, _ = remove_baseline_full(data_sets[1], sample_rate, f)
-                                # V2meas, _ = remove_baseline_full(data_sets[2], sample_rate, f)
-                                # V3meas, _ = remove_baseline_full(data_sets[3], sample_rate, f)
-                                
+                                Imeas, _ = remove_baseline_full(Imeas, sample_rate, f)
+                                V1meas, _ = remove_baseline_full(V1meas, sample_rate, f)
+                                V2meas, _ = remove_baseline_full(V2meas, sample_rate, f)
+                                V3meas, _ = remove_baseline_full(V3meas, sample_rate, f)
+
                                 fi, I_amp, I_phase, I_comp = FFT_peakAmp(
                                                                 buffer=Imeas*-1.0,
                                                                 commanded_freq=f,
