@@ -579,7 +579,7 @@ try:
                                 # V2amp, V2phase = dual_phase_demod(V2meas_filtered, f2, sample_rate)
                                 # V3amp, V3phase = dual_phase_demod(V3meas_filtered, f3, sample_rate)
 
-                                # print(f"Freq: [{f1:.5f}, {f2:.5f}, {f3:.5f}] Hz | V_amp: [{V1_amp:.2E}, {V2_amp:.2E}, {V3_amp:.2E}] | I_amp: {I_amp:.2E}")
+                                print(f"Freq: [{f1:.5f}, {f2:.5f}, {f3:.5f}] Hz | V_amp: [{V1_amp:.2E}, {V2_amp:.2E}, {V3_amp:.2E}] | I_amp: {I_amp:.2E}")
 
                                 # # if np.max(V1meas) > 1:
                                 # #     break
