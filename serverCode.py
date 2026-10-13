@@ -353,8 +353,8 @@ fsample_max = 1e6
 print(f"Max buffer size per channel: {max_buf}, Max sampling rate: {fsample_max}")
 
 # --- Frequency Setup ---
-f_freq = [1e3, 1e2, 1e1, 1e0, 1e-1, 1e-2]
-# f_freq = [1e2]
+# f_freq = [1e3, 1e2, 1e1, 1e0, 1e-1, 1e-2]
+f_freq = [1e3]
 finit_idx = 1
 fperdecade = 10
 FREQ_TEMPLATE = []
@@ -495,12 +495,28 @@ try:
                                 # V2meas, _ = remove_baseline_full(data_sets[2], sample_rate, f)
                                 # V3meas, _ = remove_baseline_full(data_sets[3], sample_rate, f)
                                 
-                                # fi, I_amp, I_phase, I_comp = FFT_peakAmp(
-                                #                                 buffer=Imeas,
-                                #                                 commanded_freq=f,
-                                #                                 sample_rate=sample_rate,
-                                #                                 band_factor=0.02  # Searches between 900 Hz and 1100 Hz
-                                #                             )
+                                fi, I_amp, I_phase, I_comp = FFT_peakAmp(
+                                                                buffer=Imeas,
+                                                                commanded_freq=f,
+                                                                sample_rate=sample_rate,
+                                                                band_factor=0.02  # Searches between 900 Hz and 1100 Hz
+                                                            )
+                                
+                                fi1, I_amp1, I_phase1, I_comp1 = FFT_peakAmp(
+                                                                buffer=Imeas,
+                                                                commanded_freq=2*f,
+                                                                sample_rate=sample_rate,
+                                                                band_factor=0.02  # Searches between 900 Hz and 1100 Hz
+                                                            )
+                                
+                                fi2, I_amp2, I_phase2, I_comp2 = FFT_peakAmp(
+                                                                buffer=Imeas,
+                                                                commanded_freq=3*f,
+                                                                sample_rate=sample_rate,
+                                                                band_factor=0.02  # Searches between 900 Hz and 1100 Hz
+                                                            )
+                                
+                                print(f"Freq: {fi:.5f} Hz | I_amp: {I_amp:.2E} | I_phase: {I_phase:.2f} | 2nd Harmonic: {I_amp1:.2E} | 3rd Harmonic: {I_amp2:.2E}")
                                 # f1, V1_amp, V1_phase, V1_comp = FFT_peakAmp(
                                 #                                 buffer=V1meas,
                                 #                                 commanded_freq=f,
