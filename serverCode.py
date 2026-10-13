@@ -597,9 +597,9 @@ try:
                                 # V2_comp = V2_real + 1j * V2_imag
                                 # V3_comp = V3_real + 1j * V3_imag
                                 # I_comp = I_real + 1j * I_imag
-                                Z1 = (V1_comp / np.conjugate(I_comp))
-                                Z2 = (V2_comp / np.conjugate(I_comp))
-                                Z3 = (V3_comp / np.conjugate(I_comp))
+                                Z1 = V1_comp / I_comp
+                                Z2 = V2_comp / I_comp
+                                Z3 = V3_comp / I_comp
 
                                 # Z1real, Z1imag = calibrator_c1.correct(sfreq, Z1.real, -Z1.imag)
                                 # print(f"Cell-1 Impedance: {Z1real} + ({Z1imag}j)")
