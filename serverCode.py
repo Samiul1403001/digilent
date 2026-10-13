@@ -517,6 +517,29 @@ try:
                                                             )
                                 
                                 print(f"Freq: {fi:.5f} Hz | I_amp: {I_amp:.2E} | I_phase: {I_phase:.2f} | 2nd Harmonic: {I_amp1:.2E} | 3rd Harmonic: {I_amp2:.2E}")
+                                
+                                fv, V_amp, V_phase, V_comp = FFT_peakAmp(
+                                                                buffer=V1meas,
+                                                                commanded_freq=f,
+                                                                sample_rate=sample_rate,
+                                                                band_factor=0.02  # Searches between 900 Hz and 1100 Hz
+                                                            )
+                                
+                                fv1, V_amp1, V_phase1, V_comp1 = FFT_peakAmp(
+                                                                buffer=V1meas,
+                                                                commanded_freq=2*fv,
+                                                                sample_rate=sample_rate,
+                                                                band_factor=0.02  # Searches between 900 Hz and 1100 Hz
+                                                            )
+                                
+                                fv2, V_amp2, V_phase2, V_comp2 = FFT_peakAmp(
+                                                                buffer=V1meas,
+                                                                commanded_freq=3*fv,
+                                                                sample_rate=sample_rate,
+                                                                band_factor=0.02  # Searches between 900 Hz and 1100 Hz
+                                                            )
+                                
+                                print(f"Freqs: {[fv, fv1, fv2]:.5f} Hz | V_amp: {V_amp:.2E} | V_phase: {V_phase:.2f} | 2nd Harmonic: {V_amp1:.2E} | 3rd Harmonic: {V_amp2:.2E}")
                                 # f1, V1_amp, V1_phase, V1_comp = FFT_peakAmp(
                                 #                                 buffer=V1meas,
                                 #                                 commanded_freq=f,
