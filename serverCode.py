@@ -725,7 +725,7 @@ try:
 
                                 i_idx += 1
                                 mainloop = False 
-                                sleep(0.5)
+                                sleep(3)
 
                         if not client_connected: break
 
