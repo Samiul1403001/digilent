@@ -353,8 +353,8 @@ fsample_max = 1e6
 print(f"Max buffer size per channel: {max_buf}, Max sampling rate: {fsample_max}")
 
 # --- Frequency Setup ---
-# f_freq = [1e3, 1e2, 1e1, 1e0, 1e-1, 1e-2]
-f_freq = [1e-2]
+f_freq = [1e3, 1e2, 1e1, 1e0]#, 1e-1, 1e-2]
+# f_freq = [1e-2]
 finit_idx = 0
 fperdecade = 10
 FREQ_TEMPLATE = []
@@ -502,62 +502,24 @@ try:
                                                                 band_factor=0.02  # Searches between 900 Hz and 1100 Hz
                                                             )
                                 
-                                fi1, I_amp1, I_phase1, I_comp1 = FFT_peakAmp(
-                                                                buffer=Imeas,
-                                                                commanded_freq=2*f,
-                                                                sample_rate=sample_rate,
-                                                                band_factor=0.02  # Searches between 900 Hz and 1100 Hz
-                                                            )
-                                
-                                fi2, I_amp2, I_phase2, I_comp2 = FFT_peakAmp(
-                                                                buffer=Imeas,
-                                                                commanded_freq=3*f,
-                                                                sample_rate=sample_rate,
-                                                                band_factor=0.02  # Searches between 900 Hz and 1100 Hz
-                                                            )
-                                
-                                print(f"Freq: {fi:.5f} Hz | I_amp: {I_amp:.2E} | I_phase: {I_phase:.2f} | 2nd Harmonic: {I_amp1:.2E} | 3rd Harmonic: {I_amp2:.2E}")
-                                
-                                fv, V_amp, V_phase, V_comp = FFT_peakAmp(
+                                f1, V1_amp, V1_phase, V1_comp = FFT_peakAmp(
                                                                 buffer=V1meas,
                                                                 commanded_freq=f,
                                                                 sample_rate=sample_rate,
                                                                 band_factor=0.02  # Searches between 900 Hz and 1100 Hz
                                                             )
-                                
-                                fv1, V_amp1, V_phase1, V_comp1 = FFT_peakAmp(
-                                                                buffer=V1meas,
-                                                                commanded_freq=2*fv,
+                                f2, V2_amp, V2_phase, V2_comp = FFT_peakAmp(
+                                                                buffer=V2meas,
+                                                                commanded_freq=f,
                                                                 sample_rate=sample_rate,
                                                                 band_factor=0.02  # Searches between 900 Hz and 1100 Hz
                                                             )
-                                
-                                fv2, V_amp2, V_phase2, V_comp2 = FFT_peakAmp(
-                                                                buffer=V1meas,
-                                                                commanded_freq=3*fv,
+                                f3, V3_amp, V3_phase, V3_comp = FFT_peakAmp(
+                                                                buffer=V3meas,
+                                                                commanded_freq=f,
                                                                 sample_rate=sample_rate,
                                                                 band_factor=0.02  # Searches between 900 Hz and 1100 Hz
                                                             )
-                                
-                                print(f"Freqs: [{fv:.5f}, {fv1:.5f}, {fv2:.5f}] Hz | V_amp: {V_amp:.2E} | V_phase: {V_phase:.2f} | 2nd Harmonic: {V_amp1:.2E} | 3rd Harmonic: {V_amp2:.2E}")
-                                # f1, V1_amp, V1_phase, V1_comp = FFT_peakAmp(
-                                #                                 buffer=V1meas,
-                                #                                 commanded_freq=f,
-                                #                                 sample_rate=sample_rate,
-                                #                                 band_factor=0.02  # Searches between 900 Hz and 1100 Hz
-                                #                             )
-                                # f2, V2_amp, V2_phase, V2_comp = FFT_peakAmp(
-                                #                                 buffer=V2meas,
-                                #                                 commanded_freq=f,
-                                #                                 sample_rate=sample_rate,
-                                #                                 band_factor=0.02  # Searches between 900 Hz and 1100 Hz
-                                #                             )
-                                # f3, V3_amp, V3_phase, V3_comp = FFT_peakAmp(
-                                #                                 buffer=V3meas,
-                                #                                 commanded_freq=f,
-                                #                                 sample_rate=sample_rate,
-                                #                                 band_factor=0.02  # Searches between 900 Hz and 1100 Hz
-                                #                             )
                                 
                                 # Imeas_filtered = I_amp * np.cos(2.0 * np.pi * f1 * np.arange(buffer_size)/sample_rate + np.radians(I_phase))
                                 # V1meas_filtered = V1_amp * np.cos(2.0 * np.pi * f1 * np.arange(buffer_size)/sample_rate + np.radians(V1_phase))
@@ -635,9 +597,9 @@ try:
                                 # V2_comp = V2_real + 1j * V2_imag
                                 # V3_comp = V3_real + 1j * V3_imag
                                 # I_comp = I_real + 1j * I_imag
-                                # Z1 = (V1_comp / np.conjugate(I_comp))
-                                # Z2 = (V2_comp / np.conjugate(I_comp))
-                                # Z3 = (V3_comp / np.conjugate(I_comp))
+                                Z1 = (V1_comp / np.conjugate(I_comp))
+                                Z2 = (V2_comp / np.conjugate(I_comp))
+                                Z3 = (V3_comp / np.conjugate(I_comp))
 
                                 # Z1real, Z1imag = calibrator_c1.correct(sfreq, Z1.real, -Z1.imag)
                                 # print(f"Cell-1 Impedance: {Z1real} + ({Z1imag}j)")
@@ -649,32 +611,32 @@ try:
                                 # print(f"Cell-3 Impedance: {Z3real} + ({Z3imag}j)")
                                 
                                 # Pass the previous Z and the tolerance into the function
-                                Z1 = calculate_tolerated_impedance(
-                                    v_buffer=V1meas, 
-                                    i_buffer=Imeas, 
-                                    target_freq=f,
-                                    sample_rate=sample_rate, 
-                                    prev_Z_complex=Z1, 
-                                    tolerance=0.03  # 3% boundary
-                                )
+                                # Z1 = calculate_tolerated_impedance(
+                                #     v_buffer=V1meas, 
+                                #     i_buffer=Imeas, 
+                                #     target_freq=f,
+                                #     sample_rate=sample_rate, 
+                                #     prev_Z_complex=Z1, 
+                                #     tolerance=0.03  # 3% boundary
+                                # )
                                 
-                                Z2 = calculate_tolerated_impedance(
-                                    v_buffer=V2meas, 
-                                    i_buffer=Imeas, 
-                                    target_freq=f,
-                                    sample_rate=sample_rate, 
-                                    prev_Z_complex=Z2, 
-                                    tolerance=0.03  # 3% boundary
-                                )
+                                # Z2 = calculate_tolerated_impedance(
+                                #     v_buffer=V2meas, 
+                                #     i_buffer=Imeas, 
+                                #     target_freq=f,
+                                #     sample_rate=sample_rate, 
+                                #     prev_Z_complex=Z2, 
+                                #     tolerance=0.03  # 3% boundary
+                                # )
                                 
-                                Z3 = calculate_tolerated_impedance(
-                                    v_buffer=V3meas, 
-                                    i_buffer=Imeas, 
-                                    target_freq=f,
-                                    sample_rate=sample_rate, 
-                                    prev_Z_complex=Z3, 
-                                    tolerance=0.03  # 3% boundary
-                                )
+                                # Z3 = calculate_tolerated_impedance(
+                                #     v_buffer=V3meas, 
+                                #     i_buffer=Imeas, 
+                                #     target_freq=f,
+                                #     sample_rate=sample_rate, 
+                                #     prev_Z_complex=Z3, 
+                                #     tolerance=0.03  # 3% boundary
+                                # )
                                 
                                 Z1real, Z1imag = Z1.real, -Z1.imag
                                 Z2real, Z2imag = Z2.real, -Z2.imag
@@ -692,21 +654,21 @@ try:
                                 #     break
                                 
                                 sample_c1[i_idx, 0] = np.mean(data_sets[1])
-                                sample_c1[i_idx, 1] = np.log10(f)
+                                sample_c1[i_idx, 1] = np.log10(f1)
                                 sample_c1[i_idx, 2] = Z1real
                                 sample_c1[i_idx, 3] = Z1imag
                                 sample_c1[i_idx, 4] = np.abs(Z1real - 1j*Z1imag)
                                 sample_c1[i_idx, 5] = np.angle(Z1real - 1j*Z1imag, deg=True)
 
                                 sample_c2[i_idx, 0] = np.mean(data_sets[2])
-                                sample_c2[i_idx, 1] = np.log10(f)
+                                sample_c2[i_idx, 1] = np.log10(f2)
                                 sample_c2[i_idx, 2] = Z2real
                                 sample_c2[i_idx, 3] = Z2imag
                                 sample_c2[i_idx, 4] = np.abs(Z2real - 1j*Z2imag)
                                 sample_c2[i_idx, 5] = np.angle(Z2real - 1j*Z2imag, deg=True)
 
                                 sample_c3[i_idx, 0] = np.mean(data_sets[3])
-                                sample_c3[i_idx, 1] = np.log10(f)
+                                sample_c3[i_idx, 1] = np.log10(f3)
                                 sample_c3[i_idx, 2] = Z3real
                                 sample_c3[i_idx, 3] = Z3imag
                                 sample_c3[i_idx, 4] = np.abs(Z3real - 1j*Z3imag)
@@ -763,7 +725,7 @@ try:
 
                                 i_idx += 1
                                 mainloop = False 
-                                sleep(int(3*(3-np.log10(f))))
+                                sleep(int(3*(3-np.log10(f1))))
 
                         if not client_connected: break
 
