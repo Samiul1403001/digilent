@@ -496,7 +496,7 @@ try:
                                 # V3meas, _ = remove_baseline_full(data_sets[3], sample_rate, f)
                                 
                                 fi, I_amp, I_phase, I_comp = FFT_peakAmp(
-                                                                buffer=Imeas,
+                                                                buffer=Imeas*-1.0,
                                                                 commanded_freq=f,
                                                                 sample_rate=sample_rate,
                                                                 band_factor=0.02  # Searches between 900 Hz and 1100 Hz
