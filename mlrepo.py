@@ -2,19 +2,24 @@ import numpy as np
 
 class NumpySimpleSoHLSTM:
     def __init__(self, npz_path):
+        # 1. Load the compressed dictionary
         weights = np.load(npz_path)
         
-        # Extract LSTM Layer 0
+        # 2. Extract LSTM Layer 0
         self.w_ih = weights['lstm.weight_ih_l0']
         self.w_hh = weights['lstm.weight_hh_l0']
         self.b_ih = weights['lstm.bias_ih_l0']
         self.b_hh = weights['lstm.bias_hh_l0']
         
-        # Extract Linear Layers
+        # 3. Extract Linear Layers
         self.fc1_w = weights['fc1.weight']
         self.fc1_b = weights['fc1.bias']
         self.fc2_w = weights['fc2.weight']
         self.fc2_b = weights['fc2.bias']
+        
+        # 4. Extract Scaler Parameters
+        self.scaler_mean = weights['scaler_mean']
+        self.scaler_scale = weights['scaler_scale']
         
         self.hidden_size = self.w_hh.shape[1]
 
@@ -41,29 +46,35 @@ class NumpySimpleSoHLSTM:
 
     def predict(self, sample):
         """
-        sample: NumPy array of shape (1, 6, 31)
-                (Batch_size, Features, Seq_Length)
+        sample: NumPy array of RAW data of shape (1, Features, Seq_Length)
+                Since we dropped Real/Imaginary, shape is (1, 4, 31)
         """
-        # 1. Remove the batch dimension -> shape becomes (6, 31)
-        # 2. Transpose to iterate over time steps -> shape becomes (31, 6)
-
+        # 1. Remove the batch dimension -> shape becomes (4, 31)
+        # 2. Transpose to iterate over time steps -> shape becomes (31, 4)
         sequence = sample[0].T
         
         h = np.zeros(self.hidden_size)
         c = np.zeros(self.hidden_size)
         
-        for x_t in sequence:
+        for raw_x_t in sequence:
             # 3. Check for zero-padding. If the row is all zeros, 
             # we've reached the end of the actual data. Break early.
-            if np.all(x_t == 0):
+            if np.all(raw_x_t == 0):
                 break
                 
-            h, c = self.lstm_step(x_t, h, c)
+            # 4. SCALE the raw data point using the training parameters
+            # Math: (X - Mean) / Standard_Deviation
+            scaled_x_t = (raw_x_t - self.scaler_mean) / self.scaler_scale
+                
+            h, c = self.lstm_step(scaled_x_t, h, c)
             
-        # 4. Pass the LAST valid hidden state through linear layers
+        # 5. Pass the LAST valid hidden state through linear layers
         out = np.dot(self.fc1_w, h) + self.fc1_b
         out = self.leaky_relu(out)
         out = np.dot(self.fc2_w, out) + self.fc2_b
+        
+        # 6. Apply final Sigmoid activation matching PyTorch model
+        out = self.sigmoid(out)
         
         return float(out[0])
 

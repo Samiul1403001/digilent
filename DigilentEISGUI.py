@@ -271,7 +271,7 @@ class MainWindow(QMainWindow):
             self.style_soh_label(self.lbl_soh_c3, c3_soh, "Cell 3 SoH")
 
             # Update Progress (Using log math to prevent zero-span errors)
-            start_log, stop_log = np.log10(10), np.log10(0.011) 
+            start_log, stop_log = np.log10(1000), np.log10(0.011) 
             fraction = (start_log - np.log10(Freq)) / (start_log - stop_log)
             self.progress_bar.setValue(max(0, min(100, int(fraction * 100))))
 

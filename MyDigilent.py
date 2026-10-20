@@ -4,6 +4,34 @@ from os import sep                # OS specific file path separators
 import inspect, numpy as np       # caller function data
 import dwfconstants as constants
 
+def remove_baseline_full(raw_signal, sample_rate, target_freq):
+    """
+    Removes low-frequency baseline drift across the ENTIRE signal 
+    without shortening the array (equivalent to mode='same').
+    Keeps all 32,500 points intact.
+    """
+    # 1. Calculate window size in points for exactly 1 cycle
+    window_size = int(sample_rate / target_freq)
+    
+    if window_size < 2 or len(raw_signal) < window_size:
+        return raw_signal, np.zeros_like(raw_signal)
+        
+    # 2. Calculate padding to keep the output array length 100% identical to input
+    pad_left = window_size // 2
+    pad_right = window_size - 1 - pad_left
+    
+    # Pad the edges using edge-replication to prevent boundary artifacts
+    padded_signal = np.pad(raw_signal, (pad_left, pad_right), mode='edge')
+    
+    # 3. Compute the ultra-fast cumulative sum moving average
+    cs = np.cumsum(np.insert(padded_signal, 0, 0))
+    drift_baseline = (cs[window_size:] - cs[:-window_size]) / float(window_size)
+    
+    # 4. Subtract the baseline from the full-length raw signal
+    clean_ac_signal = raw_signal - drift_baseline
+    
+    return clean_ac_signal, drift_baseline
+
 def smooth_impedance_array(data_array, window_size=5):
     """
     Smooths the impedance columns of a [Freq, Zreal, Zimag] array using a pure NumPy 
@@ -114,6 +142,189 @@ class HolderCalibrator:
             return float(Z_out.real[0]), float(Z_out.imag[0])
             
         return Z_out.real, Z_out.imag
+
+def calculate_tolerated_impedance(v_buffer, i_buffer, target_freq, sample_rate, prev_Z_complex=None, tolerance=0.05, band_factor=0.1):
+    """
+    Computes complex impedance by searching a local frequency sweep band for the value 
+    that best matches the previously measured impedance.
+    
+    Parameters:
+    - prev_Z_complex: The complex impedance from the previous frequency step (None for step 1).
+    - tolerance: The acceptable error boundary (e.g., 0.05 for 5%).
+    - band_factor: The width of the local sweep around target_freq (0.1 = ±10%).
+    
+    Returns:
+    - best_Z_complex: The single complex impedance value that best fits the tolerance.
+    """
+    v_arr = np.asarray(v_buffer, dtype=float)
+    i_arr = np.asarray(i_buffer, dtype=float) * -1.0  # Correct 180-degree hardware shift
+    
+    N = v_arr.size
+    if N == 0:
+        return 0.0j
+
+    fs = float(sample_rate)
+    window = np.hanning(N)
+    
+    # 1. Perform a single FFT to capture all frequencies at once
+    V_fft = np.fft.rfft(v_arr * window)
+    I_fft = np.fft.rfft(i_arr * window)
+    freqs = np.fft.rfftfreq(N, d=1.0 / fs)
+
+    # 2. Define the local frequency sweep band
+    f_min = target_freq * (1.0 - band_factor)
+    f_max = target_freq * (1.0 + band_factor)
+    mask = (freqs >= f_min) & (freqs <= f_max)
+    
+    if not np.any(mask):
+        # Fallback if band is too narrow for resolution
+        mask = np.zeros_like(freqs, dtype=bool)
+        mask[np.argmin(np.abs(freqs - target_freq))] = True
+
+    # 3. Calculate complex impedance for every single frequency bin in the sweep band
+    Z_band = V_fft[mask] / I_fft[mask]
+    band_frequencies = freqs[mask]
+
+    # 4. Selection Logic
+    if prev_Z_complex is None:
+        # First point: No previous impedance. Pick the bin with the strongest voltage response.
+        _, _, _, I_comp = FFT_peakAmp(
+                                        buffer=i_buffer,
+                                        commanded_freq=target_freq,
+                                        sample_rate=fs,
+                                        band_factor=0.02  # Searches between 900 Hz and 1100 Hz
+                                    )
+        _, _, _, V_comp = FFT_peakAmp(
+                                        buffer=v_buffer,
+                                        commanded_freq=target_freq,
+                                        sample_rate=fs,
+                                        band_factor=0.02  # Searches between 900 Hz and 1100 Hz
+                                    )
+        best_Z_complex = V_comp/np.conjugate(I_comp)
+    else:
+        # Subsequent points: Find the impedance closest to prev_Z_complex
+        # Calculate relative error for every candidate in the sweep band
+        errors = np.abs(Z_band - prev_Z_complex) / np.abs(prev_Z_complex)
+        
+        # Find the minimum error
+        best_idx = np.argmin(errors)
+        min_error = errors[best_idx]
+        best_Z_complex = Z_band[best_idx]
+        
+        # Optional: Warn if the best option is still outside the target tolerance
+        if min_error > tolerance:
+            actual_f = band_frequencies[best_idx]
+            print(f"Warning: Best impedance at {actual_f:.1f}Hz has {min_error*100:.1f}% error, exceeding {tolerance*100}% tolerance.")
+
+    return best_Z_complex
+
+def FFT_sfreq(raw_signal, sample_rate, target_freq=1000.0):
+    """
+    Extracts the primary frequency, physical amplitude, and phase of a signal 
+    by enforcing integer-cycle truncation and evaluating the unwindowed FFT.
+    """
+    signal = np.asarray(raw_signal, dtype=float)
+    
+    # 1. Integer Cycle Truncation
+    samples_per_cycle = sample_rate / target_freq
+    num_full_cycles = int(len(signal) / samples_per_cycle)
+    
+    if num_full_cycles == 0:
+        print(f"Error: Buffer does not contain a full cycle of {target_freq} Hz.")
+        return 0.0, 0.0, 0.0, 0.0
+        
+    valid_length = int(num_full_cycles * samples_per_cycle)
+    integer_signal = signal[:valid_length]
+    N = len(integer_signal)
+    
+    # 2. DC Detrending
+    clean_signal = integer_signal - np.mean(integer_signal)
+    
+    # 3. Unwindowed FFT
+    X_fft = np.fft.rfft(clean_signal)
+    freqs = np.fft.rfftfreq(N, d=1.0 / sample_rate)
+    
+    # 4. Find the exact target frequency bin
+    idx = np.argmin(np.abs(freqs - target_freq))
+    actual_freq = freqs[idx]
+    
+    # 5. Extract Complex Properties
+    X_peak = X_fft[idx]
+    
+    # Amplitude: Multiply by 2 (single-sided spectrum) and divide by N
+    amplitude = 2.0 * np.abs(X_peak) / N
+    
+    # Phase: Extract the angle from the complex number
+    phase_rad = np.angle(X_peak)
+    phase_deg = np.degrees(phase_rad)
+    
+    return actual_freq, amplitude, phase_rad, phase_deg
+
+def FFT_peakAmp(buffer, commanded_freq, sample_rate, band_factor=0.1):
+    """
+    Extracts the actual fundamental frequency, true peak amplitude, and phase 
+    from a raw signal buffer using a localized FFT band search.
+    
+    Parameters:
+    - buffer: Raw signal array (e.g., Voltage z or Current)
+    - commanded_freq: Target frequency commanded to the converter (e.g., 1000.0 Hz)
+    - sample_rate: Sampling frequency in Hz (e.g., 65535.0)
+    - band_factor: Search window fraction around commanded_freq (0.1 means ±10%, i.e., 900Hz to 1100Hz)
+    
+    Returns:
+    - actual_freq: The true fundamental frequency generated by hardware
+    - amplitude: True peak signal amplitude (corrected for windowing)
+    - phase_deg: Phase angle in degrees
+    - X_complex: The raw complex FFT value at the peak
+    """
+    x = np.asarray(buffer, dtype=float)
+    N = x.size
+    if N == 0:
+        return 0.0, 0.0, 0.0, 0.0j
+
+    fs = float(sample_rate)
+    
+    # 1. Remove DC offset/mean to center the signal at 0
+    x_centered = x - np.mean(x)
+
+    # 2. Apply Hanning window to prevent spectral leakage
+    window = np.hanning(N)
+    windowed_signal = x_centered * window
+    
+    # Compute Real Fast Fourier Transform (RFFT)
+    X = np.fft.rfft(windowed_signal)
+    freqs = np.fft.rfftfreq(N, d=1.0 / fs)
+
+    # 3. Define local search band (e.g., 900Hz to 1100Hz for a 1000Hz command)
+    f_min = commanded_freq * (1.0 - band_factor)
+    f_max = commanded_freq * (1.0 + band_factor)
+    band_mask = (freqs >= f_min) & (freqs <= f_max)
+
+    # 4. Find the peak within the band
+    if not np.any(band_mask):
+        # Fallback to closest single bin if window is narrower than frequency resolution
+        idx = np.argmin(np.abs(freqs - commanded_freq))
+    else:
+        band_mag = np.abs(X[band_mask])
+        local_peak_idx = np.argmax(band_mag)
+        # Map back to global index of the full frequency array
+        idx = np.where(band_mask)[0][local_peak_idx]
+
+    # 5. Extract results from the peak bin
+    actual_freq = freqs[idx]
+    X_complex = X[idx]
+
+    # 6. Calculate True Amplitude (Compensating for Hanning Window loss)
+    # For a Hanning window, the coherent gain is 0.5 (sum of window weights = N / 2).
+    # Peak Amplitude = (2 * |X|) / (Sum of Window Weights) = (4 * |X|) / N
+    window_sum = np.sum(window)
+    amplitude = (2.0 * np.abs(X_complex)) / window_sum
+
+    # 7. Calculate Phase (in degrees and radians)
+    phase_rad = np.angle(X_complex)
+    phase_deg = np.degrees(phase_rad)
+
+    return actual_freq, amplitude, phase_deg, X_complex
 
 def fir_bandpass(signal, fs, f_low, f_high, num_taps=None):
     """
@@ -242,63 +453,142 @@ def clean_buffer(y_buffer, signal_freq, sample_rate):
     
     return y_clean, (amplitude, phase, c)
 
-def freq_selection_signal(y_buffer, freq_sweep, sample_rate):
-    mamp = 0
-    freq = []
-    c = 0
-    if freq_sweep[0]/0.9999 >= 0.1:
-        freq_int = 0.1 * freq_sweep[0]/0.9999
-    else:
-        freq_int = 1e-5 * freq_sweep[0]/0.9999
-
-    for f in np.arange(freq_sweep[0], freq_sweep[1], freq_int):
-        _, params = clean_buffer(y_buffer, f, sample_rate)
-        if params[0] > mamp:
-            mamp = params[0]
-            freq.append(f)
-        else:
-            c += 1
-            if c >= 3:
-                break
-    return freq[-1]
-
-def FFT(buffer, freq_sweep=[0, 100e3], sample_rate=100):
+def extract_freq_fft(signal_buffer, target_freq, sample_rate, band_factor=0.1):
     """
-    Compute single-sided magnitude spectrum and frequency vector (in MHz)
-    buffer : iterable of voltage samples (float)
-    freq_sweep : [start_freq, stop_freq] in Hz (only for frequency cropping)
-    Returns: (spectrum_magnitude, frequency_mhz_array)
+    Uses FFT to find the exact frequency peak of a signal within a specified band 
+    and extracts its complex response.
+    
+    Parameters:
+    - signal_buffer: iterable of raw signal samples (e.g., Imeas)
+    - target_freq: target excitation frequency in Hz (e.g., f)
+    - sample_rate: sampling frequency in Hz
+    - band_factor: fraction around target_freq for the band (default 0.1 means ±10%)
+    
+    Returns:
+    - actual_freq: exact frequency of the peak bin found within the band
+    - complex_val: Full complex number of the signal at that peak
     """
-    # convert to numpy array
-    x = np.asarray(buffer, dtype=float)
-    N = x.size
+    arr = np.asarray(signal_buffer, dtype=float)
+    N = arr.size
+    
     if N == 0:
-        return np.array([]), np.array([])
+        return 0.0, 0.0j
 
-    # Sampling frequency is in scope.data.sampling_frequency (Hz)
-    fs = sample_rate
+    fs = float(sample_rate)
 
-    # compute FFT
-    X = np.fft.rfft(x * np.hanning(N))   # window to reduce leakage (Hann)
-    freqs = np.fft.rfftfreq(N, d=1.0 / fs)  # Hz
+    # 1. Apply Hanning window and compute RFFT
+    window = np.hanning(N)
+    X_fft = np.fft.rfft(arr * window)
+    freqs = np.fft.rfftfreq(N, d=1.0 / fs)
 
-    # magnitude (abs) and optionally normalize (divide by N)
-    # Extract components
-    real_part = X.real
-    imag_part = X.imag
-    mag = np.abs(X) / N
+    # 2. Define the frequency band (e.g., f * 0.9 to f * 1.1)
+    f_min = target_freq * (1.0 - band_factor)
+    f_max = target_freq * (1.0 + band_factor)
+    
+    # Create a boolean mask to "zoom" into only this frequency band
+    band_mask = (freqs >= f_min) & (freqs <= f_max)
+    
+    if not np.any(band_mask):
+        # Fallback to the closest single bin if the window is too narrow
+        idx = np.argmin(np.abs(freqs - target_freq))
+    else:
+        # Within the band, find the peak magnitude bin
+        band_mag = np.abs(X_fft[band_mask])
+        
+        # Locate the index of the peak within the band
+        local_peak_idx = np.argmax(band_mag)
+        
+        # Map the local index back to the global index of the full FFT array
+        global_indices = np.where(band_mask)[0]
+        idx = global_indices[local_peak_idx]
 
-    # Crop to requested freq_sweep range
-    start_freq = float(freq_sweep[0])
-    stop_freq = float(freq_sweep[1])
-    mask = (freqs >= start_freq) & (freqs <= stop_freq)
+    actual_freq = freqs[idx]
+    
+    # 3. Extract the complex component at this specific bin
+    complex_val = X_fft[idx]
+    
+    return actual_freq, complex_val
 
-    freqs = freqs[mask]
-    mag = mag[mask]
-    real_part = real_part[mask]
-    imag_part = imag_part[mask]
+def calculate_impedance_fft_band(v_buffer, i_buffer, target_freq, sample_rate, band_factor=0.1):
+    """Core FFT math to extract impedance at a specific frequency peak."""
+    v_arr = np.asarray(v_buffer, dtype=float)
+    # Multiply by -1.0 to correct the 180-degree hardware current phase shift
+    i_arr = np.asarray(i_buffer, dtype=float) * -1.0 
+    
+    N = v_arr.size
+    if N == 0:
+        return 0.0, 0.0, 0.0, 0.0j
 
-    return freqs, mag, real_part, imag_part, freqs[np.argmax(mag)]
+    fs = float(sample_rate)
+    window = np.hanning(N)
+    
+    V_fft = np.fft.rfft(v_arr * window)
+    I_fft = np.fft.rfft(i_arr * window)
+    freqs = np.fft.rfftfreq(N, d=1.0 / fs)
+
+    f_min = target_freq * (1.0 - band_factor)
+    f_max = target_freq * (1.0 + band_factor)
+    band_mask = (freqs >= f_min) & (freqs <= f_max)
+    
+    if not np.any(band_mask):
+        idx = np.argmin(np.abs(freqs - target_freq))
+    else:
+        band_mag = np.abs(V_fft[band_mask])
+        local_peak_idx = np.argmax(band_mag)
+        idx = np.where(band_mask)[0][local_peak_idx]
+
+    actual_freq = freqs[idx]
+    V_f = V_fft[idx]
+    I_f = I_fft[idx]
+    
+    Z_complex = V_f / I_f
+    z_real = np.real(Z_complex)
+    z_imag = -np.imag(Z_complex) 
+    
+    return actual_freq, z_real, z_imag, Z_complex
+
+def find_converged_impedance(v_buffer, i_buffer, commanded_freq, sample_rate, prev_impedance, tolerance=0.3, search_range=0.01, max_steps=20):
+    """
+    Sweeps locally around the commanded frequency using calculate_impedance_fft_band 
+    to find an impedance within the error boundary of the previous measurement.
+    """
+    # If no previous impedance exists (first point in the whole sweep), skip iteration
+    if prev_impedance is None:
+        actual_f, z_real, z_imag, Z_complex = calculate_impedance_fft_band(
+            v_buffer, i_buffer, commanded_freq, sample_rate, band_factor=search_range
+        )
+        return actual_f, Z_complex, (z_real, z_imag), True
+
+    # Generate the local frequency sweep
+    f_min = commanded_freq * (1.0 - search_range)
+    f_max = commanded_freq * (1.0 + search_range)
+    candidate_freqs = np.linspace(f_min, f_max, num=max_steps)
+    
+    best_freq = commanded_freq
+    best_Z = None
+    best_results = (0.0, 0.0)
+    min_error = float('inf')
+    converged = False
+
+    for f_test in candidate_freqs:
+        actual_f, z_real, z_imag, Z_complex = calculate_impedance_fft_band(
+            v_buffer, i_buffer, f_test, sample_rate, band_factor=search_range
+        )
+        
+        error = np.abs(Z_complex - prev_impedance) / np.abs(prev_impedance)
+        
+        # Track the minimum error in case it never fully converges
+        if error < min_error:
+            min_error = error
+            best_freq = actual_f
+            best_Z = Z_complex
+            best_results = (z_real, z_imag)
+            
+        if error <= tolerance:
+            converged = True
+            break
+
+    return best_freq, best_Z, best_results, converged
 
 class data:
     """ stores the device handle, the device name and the device data """
@@ -589,7 +879,7 @@ class MyDigilent:
                 self.uart_write("\0")
             i += 1
 
-    def scope_setup(self, channels=[1, 2]):
+    def scope_setup(self, channels=[1, 2], range_volts=5.0, offset_volts=0.0):
         self.channels = channels
         print(f"Configuring {len(self.channels)} channel(s)...")
 
@@ -598,9 +888,9 @@ class MyDigilent:
             # Enable channel
             self.dwf.FDwfAnalogInChannelEnableSet(self.dev.handle, ctypes.c_int(i-1), ctypes.c_bool(True))
             # Set Range (e.g., 5V peak-to-peak)
-            self.dwf.FDwfAnalogInChannelRangeSet(self.dev.handle, ctypes.c_int(i-1), ctypes.c_double(5.0))
+            self.dwf.FDwfAnalogInChannelRangeSet(self.dev.handle, ctypes.c_int(i-1), ctypes.c_double(range_volts))
             # Set Offset (0V)
-            self.dwf.FDwfAnalogInChannelOffsetSet(self.dev.handle, ctypes.c_int(i-1), ctypes.c_double(0.0))
+            self.dwf.FDwfAnalogInChannelOffsetSet(self.dev.handle, ctypes.c_int(i-1), ctypes.c_double(offset_volts))
 
     def scope_record(self, sample_rate=1e3, buffer_size=300):
         # Set Master Acquisition Parameters
