@@ -3,66 +3,55 @@ import socket
 import struct
 import numpy as np
 from PyQt6.QtWidgets import (QProgressBar, QApplication, QMainWindow, QPushButton, 
-                             QVBoxLayout, QHBoxLayout, QWidget, QLabel, QFileDialog)
+                             QVBoxLayout, QHBoxLayout, QGridLayout, QWidget, QLabel, QFileDialog)
 from PyQt6.QtCore import QThread, pyqtSignal, Qt, pyqtSlot
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
 # --- CONFIGURATION ---
-# The IP Address of your Digilent ADP3450
 SERVER_IP = '10.115.78.182' 
 SERVER_PORT = 5005
 
 # --- WORKER THREAD (Handles Networking as CLIENT) ---
 class NetworkThread(QThread):
-    # Signals to communicate with the GUI (Main Thread)
-    data_received = pyqtSignal(float, float, float, float) # Sends (Freq, Zreal, -Zimag)
-    status_update = pyqtSignal(str, str)     # Sends (Color, Message)
+    # Update signal to send a single numpy array containing all 21 elements
+    data_received = pyqtSignal(np.ndarray) 
+    status_update = pyqtSignal(str, str)     
     
     def __init__(self):
         super().__init__()
-        self.sock = None # We will store the active socket here
+        self.sock = None 
         self.running = True
 
     def run(self):
-        """This function runs in the background."""
-        
         self.status_update.emit("orange", f"Connecting to {SERVER_IP}...")
         
         try:
-            # Create a socket object
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.sock.settimeout(5) # 5-second timeout for the initial connection
-            
-            # CONNECT to the Server (ADP3450)
+            self.sock.settimeout(5) 
             self.sock.connect((SERVER_IP, SERVER_PORT))
-            self.sock.settimeout(None) # Remove timeout for the data loop
+            self.sock.settimeout(None) 
             
             self.status_update.emit("green", f"Connected to ADP3450!")
             
-            # --- Data Reception Loop ---
             while self.running:
-                # 1. Read Header (4 bytes) to know message size
                 header = self.sock.recv(4)
-                if not header: break # Server closed connection
+                if not header: break 
                 
                 msg_len = struct.unpack('>I', header)[0]
                 
-                # 2. Read Payload (The float data)
                 data_bytes = b''
                 while len(data_bytes) < msg_len:
                     packet = self.sock.recv(msg_len - len(data_bytes))
                     if not packet: break
                     data_bytes += packet
                 
-                # 3. Convert bytes back to numpy array
-                # Server sends [Freq, Z_real, Z_imag]
+                # Convert the 21-element bytes array back to numpy array
                 eis_data = np.frombuffer(data_bytes, dtype=np.float64)
                 
-                # 4. Send Data to GUI
-                # Check if we got the expected 3 values
-                if len(eis_data) >= 5:
-                    self.data_received.emit(10**eis_data[1], eis_data[2], eis_data[3], eis_data[6])
+                # Check if we got all data for 3 cells (3 * 7 = 21 elements)
+                if len(eis_data) >= 21:
+                    self.data_received.emit(eis_data)
                 
         except socket.timeout:
             self.status_update.emit("red", "Connection Timed Out.")
@@ -74,7 +63,6 @@ class NetworkThread(QThread):
             if self.sock: self.sock.close()
 
     def send_command(self, command_str):
-        """Helper to send commands (START/STOP) to ADP3450"""
         if self.sock:
             try:
                 self.sock.sendall(command_str.encode('utf-8'))
@@ -87,215 +75,241 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         
-        self.recorded_data = [] 
+        # Store data separately for the 3 cells
+        self.data_c1 = [] 
+        self.data_c2 = []
+        self.data_c3 = []
         
-        # Initialize UI first so window appears instantly
         self.initUI()
         
-        # Start the Network Thread
         self.worker = NetworkThread()
-        # Connect Signals from Thread -> GUI functions
         self.worker.data_received.connect(self.update_plot)
         self.worker.status_update.connect(self.update_status_display)
         self.worker.start()
 
+    def create_plot_widget(self, title):
+        """Helper to create a standard Nyquist plot widget"""
+        figure = Figure(facecolor='#F0F0F0')
+        canvas = FigureCanvas(figure)
+        ax = figure.add_subplot(111)
+        ax.set_ylabel("-Z_imag (\u03A9)")
+        ax.set_xlabel("Z_real (\u03A9)")
+        ax.set_title(title, fontweight="bold")
+        ax.grid(True, linestyle='--', alpha=0.5)
+        
+        scatter = ax.scatter([], [], c='blue', s=60, alpha=0.6, edgecolors='none')
+        return canvas, ax, scatter
+    
+    def create_btn_style(self, base_color, hover_color, pressed_color):
+            return f"""
+                QPushButton {{ 
+                    font-size: 16px; 
+                    font-weight: bold; 
+                    border-radius: 8px; 
+                    padding: 12px; 
+                    color: white; 
+                    border: 1px solid rgba(0, 0, 0, 0.1);
+                    background-color: {base_color}; 
+                }}
+                QPushButton:hover {{ 
+                    background-color: {hover_color}; 
+                }}
+                QPushButton:pressed {{ 
+                    background-color: {pressed_color}; 
+                }}
+                QPushButton:disabled {{
+                    background-color: #CFD8DC; 
+                    color: #90A4AE;
+                    border: none;
+                }}
+            """
+
     def initUI(self):
-        self.setWindowTitle("ADP3450 Host Controller")
-        self.resize(1280, 720)
+        self.setWindowTitle("ADP3450 Tri-Cell Analyzer")
+        self.resize(1400, 900)
         self.setStyleSheet("background-color: #F0F0F0;")
 
-        # --- Styles ---
-        btn_style = "QPushButton { font-size: 16px; font-weight: bold; border-radius: 8px; padding: 10px; color: white; }"
-        start_style = btn_style + "QPushButton { background-color: #2E7D32; }"
-        stop_style =  btn_style + "QPushButton { background-color: #C62828; }"
-        save_style =  btn_style + "QPushButton { background-color: #1565C0; }"
-
-        # --- Left Panel ---
-        left_layout = QVBoxLayout()
-
-        # Status Section
+        # --- 1. Control Panel (Bottom Right Corner) ---
+        control_layout = QVBoxLayout()
+        control_layout.setContentsMargins(20, 20, 20, 20)
+        
+        # Status
         self.status_light = QLabel()
         self.status_light.setFixedSize(20, 20)
         self.status_light.setStyleSheet("background-color: grey; border-radius: 10px; border: 1px solid #555;")
-        
         self.status_text = QLabel("Initializing...")
         self.status_text.setStyleSheet("font-size: 16px; font-weight: bold; color: #333;")
-
         status_layout = QHBoxLayout()
         status_layout.addWidget(self.status_light)
         status_layout.addWidget(self.status_text)
         status_layout.addStretch()
+        control_layout.addLayout(status_layout)
+        control_layout.addSpacing(15)
 
-        left_layout.addLayout(status_layout)
-        left_layout.addSpacing(20)
-
-        # Progress Bar Section
+        # Progress
         self.progress_bar = QProgressBar()
         self.progress_bar.setRange(0, 100)
         self.progress_bar.setValue(0)
         self.progress_bar.setTextVisible(True)
         self.progress_bar.setStyleSheet("""
-            QProgressBar {
-                border: 2px solid grey;
-                border-radius: 5px;
-                text-align: center;
-                height: 25px;
-            }
-            QProgressBar::chunk {
-                background-color: #4CAF50; /* Green Chunk */
-                width: 10px;
-            }
+            QProgressBar { border: 2px solid grey; border-radius: 5px; text-align: center; height: 25px; }
+            QProgressBar::chunk { background-color: #4CAF50; width: 10px; }
         """)
+        control_layout.addWidget(QLabel("Global Sweep Progress:"))
+        control_layout.addWidget(self.progress_bar)
+        control_layout.addSpacing(15)
+
+        # 3 SoH Indicators
+        self.lbl_soh_c1 = QLabel("Cell 1 SoH: -- %")
+        self.lbl_soh_c2 = QLabel("Cell 2 SoH: -- %")
+        self.lbl_soh_c3 = QLabel("Cell 3 SoH: -- %")
         
-        left_layout.addWidget(QLabel("Sweep Progress:"))
-        left_layout.addWidget(self.progress_bar)
-        left_layout.addSpacing(20)
+        base_soh_style = "font-size: 14px; font-weight: bold; color: #333; padding: 5px; border: 1px solid #CCC; background-color: white; border-radius: 4px;"
+        self.lbl_soh_c1.setStyleSheet(base_soh_style)
+        self.lbl_soh_c2.setStyleSheet(base_soh_style)
+        self.lbl_soh_c3.setStyleSheet(base_soh_style)
+        
+        control_layout.addWidget(self.lbl_soh_c1)
+        control_layout.addWidget(self.lbl_soh_c2)
+        control_layout.addWidget(self.lbl_soh_c3)
+        control_layout.addSpacing(20)
 
-        # --- SoH Indicator ---
-        self.lbl_soh = QLabel("Estimated SoH (progressive): ")
-        self.lbl_soh.setStyleSheet("""
-            font-size: 14px; 
-            font-weight: bold; 
-            color: #333; 
-            padding: 5px; 
-            border: 1px solid #CCC; 
-            background-color: white; 
-            border-radius: 4px;
-        """)
-        left_layout.addWidget(self.lbl_soh)
-        left_layout.addSpacing(20)
+        # Buttons
+        # Generate the specific styles using the helper function
+        style_start = self.create_btn_style("#4CAF50", "#43A047", "#2E7D32") # Green
+        style_stop = self.create_btn_style("#F44336", "#E53935", "#C62828")  # Red
+        style_save = self.create_btn_style("#2196F3", "#1E88E5", "#1565C0")  # Blue
 
-        # Buttons Section
+        # Create and Apply to Buttons
         self.btn_start = QPushButton("START CAPTURE")
-        self.btn_start.setStyleSheet(start_style)
+        self.btn_start.setStyleSheet(style_start)
         self.btn_start.clicked.connect(self.send_start)
 
         self.btn_stop = QPushButton("STOP CAPTURE")
-        self.btn_stop.setStyleSheet(stop_style)
+        self.btn_stop.setStyleSheet(style_stop)
         self.btn_stop.clicked.connect(self.send_stop)
         self.btn_stop.setEnabled(False) 
 
-        self.btn_save = QPushButton("SAVE DATA")
-        self.btn_save.setStyleSheet(save_style)
+        self.btn_save = QPushButton("SAVE ALL DATA")
+        self.btn_save.setStyleSheet(style_save)
         self.btn_save.clicked.connect(self.save_data)
         self.btn_save.setEnabled(False)
 
-        left_layout.addWidget(self.btn_start)
-        left_layout.addWidget(self.btn_stop)
-        left_layout.addWidget(self.btn_save)
-        left_layout.addStretch() 
+        # Add to Layout
+        control_layout.addWidget(self.btn_start)
+        control_layout.addWidget(self.btn_stop)
+        control_layout.addWidget(self.btn_save)
+        control_layout.addStretch()
         
-        left_widget = QWidget()
-        left_widget.setLayout(left_layout)
-        left_widget.setFixedWidth(300)
+        control_widget = QWidget()
+        control_widget.setLayout(control_layout)
 
-        # --- Right Panel (SCATTER PLOT) ---
-        self.figure = Figure(facecolor='#F0F0F0')
-        self.canvas = FigureCanvas(self.figure)
-        self.ax = self.figure.add_subplot(111)
-        self.ax.set_ylabel("-Z_imag (\u03A9)")
-        self.ax.set_xlabel("Z_real (\u03A9)")
-        self.ax.set_title("Nyquist Plot")
-        self.ax.grid(True, linestyle='--', alpha=0.5)
-        self.ax.margins(0.001)
+        # --- 2. Build the 2x2 Grid Layout ---
+        grid = QGridLayout()
         
-        self.scatter = self.ax.scatter([], [], c='blue', s=60, alpha=0.6, edgecolors='none')
+        # Create the 3 plots
+        self.canvas1, self.ax1, self.scatter1 = self.create_plot_widget("Cell 1 Nyquist")
+        self.canvas2, self.ax2, self.scatter2 = self.create_plot_widget("Cell 2 Nyquist")
+        self.canvas3, self.ax3, self.scatter3 = self.create_plot_widget("Cell 3 Nyquist")
 
-        # --- Main Layout ---
-        main_layout = QHBoxLayout()
-        main_layout.addWidget(left_widget)
-        main_layout.addWidget(self.canvas)
+        # Top-Left: Cell 1
+        grid.addWidget(self.canvas1, 0, 0)
+        # Top-Right: Cell 2
+        grid.addWidget(self.canvas2, 0, 1)
+        # Bottom-Left: Cell 3
+        grid.addWidget(self.canvas3, 1, 0)
+        # Bottom-Right: Controls
+        grid.addWidget(control_widget, 1, 1)
+
         central_widget = QWidget()
-        central_widget.setLayout(main_layout)
+        central_widget.setLayout(grid)
         self.setCentralWidget(central_widget)
 
-    # --- SLOTS (Responding to Signals) ---
-    @pyqtSlot(float, float, float, float)
-    def update_plot(self, Freq, Z_real, Z_imag, SoH):
-        """Updates Progress Bar and Plot"""
+    def style_soh_label(self, label_widget, soh_val, prefix):
+        """Helper to update SoH text and color dynamically"""
+        label_widget.setText(f"{prefix}: {soh_val:.2f} %")
+        if soh_val < 80:
+            label_widget.setStyleSheet("font-size: 14px; font-weight: bold; color: red; background-color: #FFEBEE; border: 1px solid red; padding: 5px; border-radius: 4px;")
+        else:
+            label_widget.setStyleSheet("font-size: 14px; font-weight: bold; color: #2E7D32; background-color: #E8F5E9; border: 1px solid #2E7D32; padding: 5px; border-radius: 4px;")
+
+    def apply_smart_zoom(self, ax, data_list):
+        """Helper to apply percentile zooming to a specific axis"""
+        if len(data_list) > 2:
+            arr = np.array(data_list)
+            x_min = np.percentile(arr[:, 1], 5)
+            x_max = np.percentile(arr[:, 1], 95)
+            y_min = np.percentile(arr[:, 2], 10)
+            y_max = np.percentile(arr[:, 2], 95)
+        else:
+            arr = np.array(data_list)
+            x_min, x_max = 0, arr[:, 1].max()
+            y_min, y_max = arr[:, 2].min(), arr[:, 2].max()
         
-        # 1. Update Progress Bar (Logarithmic)
+        x_span = x_max - x_min if x_max != x_min else 1.0
+        y_span = y_max - y_min if y_max != y_min else 1.0
+
+        ax.set_xlim(x_min + (x_span * 0.05), x_max + (x_span * 0.05))
+        ax.set_ylim(y_min - (y_span * 0.1), y_max + (y_span * 0.1))
+
+    @pyqtSlot(np.ndarray)
+    def update_plot(self, eis_data):
+        """Unpacks the 21-element array and updates all plots"""
         try:
-            start_log = np.log10(10)  # 3.0
-            stop_log  = np.log10(0.011)  # -2.0
-            span      = start_log - stop_log 
-            current_log = np.log10(Freq)
+            # Reconstruct Frequency from log10(Freq)
+            Freq = 10 ** eis_data[1] 
             
-            # Progress calculation (High -> Low sweep)
-            fraction = (start_log - current_log) / span
-            percent = np.clip(int(fraction * 100), 0, 100)
-            self.progress_bar.setValue(max(0, min(100, percent)))
+            # --- Extract Data for 3 Cells ---
+            # Indices match your server concatenation: [Row1(6), SoH1(1), Row2(6), SoH2(1), Row3(6), SoH3(1)]
+            c1_real, c1_imag, c1_soh = eis_data[2], eis_data[3], eis_data[6]
+            c2_real, c2_imag, c2_soh = eis_data[9], eis_data[10], eis_data[13]
+            c3_real, c3_imag, c3_soh = eis_data[16], eis_data[17], eis_data[20]
 
-            # 3. Update the Text
-            self.lbl_soh.setText(f"Estimated SoH (progressive): {SoH:.2f} %")
-            
-            # Optional: Change color if SoH is bad
-            if SoH < 80:
-                self.lbl_soh.setStyleSheet("font-size: 14px; font-weight: bold; color: red; background-color: #FFEBEE; border: 1px solid red; padding: 5px; border-radius: 4px;")
-            else:
-                self.lbl_soh.setStyleSheet("font-size: 14px; font-weight: bold; color: #2E7D32; background-color: #E8F5E9; border: 1px solid #2E7D32; padding: 5px; border-radius: 4px;")
-        except:
-            self.lbl_soh.setText("SoH Error")
-        
-        # 2. Update Scatter Plot
-        self.recorded_data.append((Freq, Z_real, Z_imag))
-        
-        # Keep only recent points to prevent lag if necessary (optional)
-        # points_to_plot = self.recorded_data[-200:] 
-        points_to_plot = self.recorded_data
-        
-        if len(points_to_plot) > 0:
-            # Extract Z_real (Index 1) and Z_imag (Index 2)
-            # We convert list of tuples -> numpy array
-            arr = np.array(points_to_plot)
-            # Scatter Plot X = Z_real, Y = -Z_imag (Nyquist Convention)
-            xy_data = np.column_stack((arr[:, 1], arr[:, 2]))
-            
-            self.scatter.set_offsets(xy_data)
+            # Update SoH Labels
+            self.style_soh_label(self.lbl_soh_c1, c1_soh, "Cell 1 SoH")
+            self.style_soh_label(self.lbl_soh_c2, c2_soh, "Cell 2 SoH")
+            self.style_soh_label(self.lbl_soh_c3, c3_soh, "Cell 3 SoH")
 
-            # --- SMART ZOOM (Percentile Based) ---
-            # Only switch to smart zoom if we have enough points (e.g., > 10)
-            # Otherwise, standard min/max is safer for the start.
-            if len(points_to_plot) > 2:
-                # Get the 5th and 95th percentiles (ignores top/bottom 5% outliers)
-                x_min = np.percentile(arr[:, 1], 5)
-                x_max = np.percentile(arr[:, 1], 95)
-                y_min = np.percentile(arr[:, 2], 10)
-                y_max = np.percentile(arr[:, 2], 95)
-            else:
-                # Standard Min/Max for the first few points
-                x_min, x_max = 0, arr[:, 1].max()
-                y_min, y_max = arr[:, 2].min(), arr[:, 2].max()
-            
-            # Calculate Padding (10% of the visible range)
-            x_span = x_max - x_min
-            y_span = y_max - y_min
-            
-            # Prevent crash if all points are identical (span = 0)
-            if x_span == 0: x_span = 1.0
-            if y_span == 0: y_span = 1.0
+            # Update Progress (Using log math to prevent zero-span errors)
+            start_log, stop_log = np.log10(10), np.log10(0.011) 
+            fraction = (start_log - np.log10(Freq)) / (start_log - stop_log)
+            self.progress_bar.setValue(max(0, min(100, int(fraction * 100))))
 
-            # Apply Limits with Padding
-            self.ax.set_xlim(x_min + (x_span * 0.05), x_max + (x_span * 0.05))
-            self.ax.set_ylim(y_min - (y_span * 0.1), y_max + (y_span * 0.1))
+            # Save incoming point to respective lists
+            self.data_c1.append((Freq, c1_real, c1_imag))
+            self.data_c2.append((Freq, c2_real, c2_imag))
+            self.data_c3.append((Freq, c3_real, c3_imag))
 
-            self.canvas.draw()
+            # Update Scatter Plots & Zooms
+            for data_list, scatter_obj, ax_obj, canvas_obj in [
+                (self.data_c1, self.scatter1, self.ax1, self.canvas1),
+                (self.data_c2, self.scatter2, self.ax2, self.canvas2),
+                (self.data_c3, self.scatter3, self.ax3, self.canvas3)
+            ]:
+                if len(data_list) > 0:
+                    arr = np.array(data_list)
+                    # Set X = Z_real, Y = -Z_imag (Nyquist)
+                    scatter_obj.set_offsets(np.column_stack((arr[:, 1], arr[:, 2])))
+                    self.apply_smart_zoom(ax_obj, data_list)
+                    canvas_obj.draw()
+
+        except Exception as e:
+            print(f"Update Plot Error: {e}")
 
     @pyqtSlot(str, str)
     def update_status_display(self, color, text):
-        if color == "red": hex_c = "#FF5252"
-        elif color == "orange": hex_c = "#FF9800"
-        elif color == "green": hex_c = "#00E676"
-        else: hex_c = "grey"
-        
+        hex_c = {"red": "#FF5252", "orange": "#FF9800", "green": "#00E676"}.get(color, "grey")
         self.status_light.setStyleSheet(f"background-color: {hex_c}; border-radius: 10px;")
         self.status_text.setText(text)
 
     # --- BUTTON HANDLERS ---
     def send_start(self):
-        self.recorded_data = [] 
-        self.scatter.set_offsets(np.empty((0, 2)))
-        self.canvas.draw()
+        # Clear previous data
+        self.data_c1, self.data_c2, self.data_c3 = [], [], []
+        
+        for scatter_obj, canvas_obj in [(self.scatter1, self.canvas1), (self.scatter2, self.canvas2), (self.scatter3, self.canvas3)]:
+            scatter_obj.set_offsets(np.empty((0, 2)))
+            canvas_obj.draw()
         
         self.worker.send_command("START")
         
@@ -310,7 +324,7 @@ class MainWindow(QMainWindow):
         self.btn_save.setEnabled(True)
 
     def save_data(self):
-        if not self.recorded_data: return
+        if not self.data_c1: return
 
         filename, _ = QFileDialog.getSaveFileName(self, "Save Data", "", "CSV Files (*.csv)")
 
@@ -318,8 +332,20 @@ class MainWindow(QMainWindow):
             try:
                 with open(filename, 'w', newline='') as f:
                     writer = csv.writer(f)
-                    writer.writerow(["Frequency (Hz)", "Z_real (Ohms)", " -Z_imag (Ohms)"])
-                    writer.writerows(self.recorded_data)
+                    writer.writerow([
+                        "Frequency (Hz)", 
+                        "C1_Z_real", "C1_-Z_imag", 
+                        "C2_Z_real", "C2_-Z_imag", 
+                        "C3_Z_real", "C3_-Z_imag"
+                    ])
+                    # Iterate through the arrays simultaneously
+                    for i in range(len(self.data_c1)):
+                        writer.writerow([
+                            self.data_c1[i][0], # Freq
+                            self.data_c1[i][1], self.data_c1[i][2],
+                            self.data_c2[i][1], self.data_c2[i][2],
+                            self.data_c3[i][1], self.data_c3[i][2]
+                        ])
                 self.status_text.setText("Status: Data Saved!")
             except Exception as e:
                 self.status_text.setText("Status: Error Saving")
