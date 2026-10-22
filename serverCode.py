@@ -458,14 +458,14 @@ try:
                                 buffer_size = int(max_buf)
                                 if f > 6500:
                                     # Handles the sudden drop at the top of the table (e.g., 10000Hz -> 3023)
-                                    ncycle = int(0.3023 * f)
+                                    ncycle = int(0.3023 * f * 2.0)
                                     sample_rate = int(f*buffer_size/ncycle)
                                 elif f >= 2.0:
                                     # The main linear regime (e.g., 100Hz -> 50, 1000Hz -> 503)
-                                    ncycle = int(np.round(0.504 * f))
+                                    ncycle = int(np.round(0.504 * f * 2.0))
                                 else:
                                     # Hard cap for very low frequencies
-                                    ncycle = 1
+                                    ncycle = 2
                                 sample_rate = int(f*buffer_size/ncycle)
                                 sleep(0.5)
 
