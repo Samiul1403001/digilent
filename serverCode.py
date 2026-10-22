@@ -602,14 +602,14 @@ try:
                                 Z2 = V2_comp / I_comp
                                 Z3 = V3_comp / I_comp
 
-                                Z1real, Z1imag = calibrator_c1.correct(f1, Z1.real, -Z1.imag)
-                                print(f"Cell-1 Impedance: {Z1real} + ({Z1imag}j)")
+                                # Z1real, Z1imag = calibrator_c1.correct(f1, Z1.real, -Z1.imag)
+                                # print(f"Cell-1 Impedance: {Z1real} + ({Z1imag}j)")
 
-                                Z2real, Z2imag = calibrator_c2.correct(f2, Z2.real, -Z2.imag)
-                                print(f"Cell-2 Impedance: {Z2real} + ({Z2imag}j)")
+                                # Z2real, Z2imag = calibrator_c2.correct(f2, Z2.real, -Z2.imag)
+                                # print(f"Cell-2 Impedance: {Z2real} + ({Z2imag}j)")
 
-                                Z3real, Z3imag = calibrator_c3.correct(f3, Z3.real, -Z3.imag)
-                                print(f"Cell-3 Impedance: {Z3real} + ({Z3imag}j)")
+                                # Z3real, Z3imag = calibrator_c3.correct(f3, Z3.real, -Z3.imag)
+                                # print(f"Cell-3 Impedance: {Z3real} + ({Z3imag}j)")
                                 
                                 # Pass the previous Z and the tolerance into the function
                                 # Z1 = calculate_tolerated_impedance(
