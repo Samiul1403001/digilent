@@ -485,40 +485,40 @@ try:
                                 #             fmt="%.6f")
 
                                 # Calculation Logic
-                                Imeas = (data_sets[0] - np.mean(data_sets[0])) / 0.033
+                                Imeas = (data_sets[0] - np.mean(data_sets[0])) / -0.033
                                 V1meas = data_sets[1] - np.mean(data_sets[1])
                                 V2meas = data_sets[2] - np.mean(data_sets[2])
                                 V3meas = data_sets[3] - np.mean(data_sets[3])
 
-                                Imeas, _ = remove_baseline_full(Imeas*-1.0, sample_rate, f)
-                                V1meas, _ = remove_baseline_full(V1meas, sample_rate, f)
-                                V2meas, _ = remove_baseline_full(V2meas, sample_rate, f)
-                                V3meas, _ = remove_baseline_full(V3meas, sample_rate, f)
+                                # Imeas, _ = remove_baseline_full(Imeas, sample_rate, f)
+                                # V1meas, _ = remove_baseline_full(V1meas, sample_rate, f)
+                                # V2meas, _ = remove_baseline_full(V2meas, sample_rate, f)
+                                # V3meas, _ = remove_baseline_full(V3meas, sample_rate, f)
 
                                 fi, I_amp, I_phase, I_comp = FFT_peakAmp(
                                                                 buffer=Imeas,
                                                                 commanded_freq=f,
                                                                 sample_rate=sample_rate,
-                                                                band_factor=0.02  # Searches between 900 Hz and 1100 Hz
+                                                                band_factor=0.05  # Searches between 900 Hz and 1100 Hz
                                                             )
                                 
                                 f1, V1_amp, V1_phase, V1_comp = FFT_peakAmp(
                                                                 buffer=V1meas,
                                                                 commanded_freq=f,
                                                                 sample_rate=sample_rate,
-                                                                band_factor=0.02  # Searches between 900 Hz and 1100 Hz
+                                                                band_factor=0.05  # Searches between 900 Hz and 1100 Hz
                                                             )
                                 f2, V2_amp, V2_phase, V2_comp = FFT_peakAmp(
                                                                 buffer=V2meas,
                                                                 commanded_freq=f,
                                                                 sample_rate=sample_rate,
-                                                                band_factor=0.02  # Searches between 900 Hz and 1100 Hz
+                                                                band_factor=0.05  # Searches between 900 Hz and 1100 Hz
                                                             )
                                 f3, V3_amp, V3_phase, V3_comp = FFT_peakAmp(
                                                                 buffer=V3meas,
                                                                 commanded_freq=f,
                                                                 sample_rate=sample_rate,
-                                                                band_factor=0.02  # Searches between 900 Hz and 1100 Hz
+                                                                band_factor=0.05  # Searches between 900 Hz and 1100 Hz
                                                             )
                                 
                                 # Imeas_filtered = I_amp * np.cos(2.0 * np.pi * f1 * np.arange(buffer_size)/sample_rate + np.radians(I_phase))
