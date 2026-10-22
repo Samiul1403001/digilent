@@ -639,9 +639,9 @@ try:
                                 #     tolerance=0.03  # 3% boundary
                                 # )
                                 
-                                # Z1real, Z1imag = Z1.real, -Z1.imag
-                                # Z2real, Z2imag = Z2.real, -Z2.imag
-                                # Z3real, Z3imag = Z3.real, -Z3.imag
+                                Z1real, Z1imag = Z1.real, -Z1.imag
+                                Z2real, Z2imag = Z2.real, -Z2.imag
+                                Z3real, Z3imag = Z3.real, -Z3.imag
 
                                 # Z1real, Z1imag = z1_real, z1_imag
                                 # Z2real, Z2imag = z2_real, z2_imag
