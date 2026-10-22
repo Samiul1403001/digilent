@@ -574,29 +574,29 @@ try:
 
                                 # sfreq = (f1+f2+f3) / 3.0  # Average frequency from the three channels
                                 
-                                # Iamp, Iphase = dual_phase_demod(Imeas_filtered, fi, sample_rate)
-                                # V1amp, V1phase = dual_phase_demod(V1meas_filtered, f1, sample_rate)
-                                # V2amp, V2phase = dual_phase_demod(V2meas_filtered, f2, sample_rate)
-                                # V3amp, V3phase = dual_phase_demod(V3meas_filtered, f3, sample_rate)
+                                I_amp, I_phase = dual_phase_demod(Imeas, fi, sample_rate)
+                                V1_amp, V1_phase = dual_phase_demod(V1meas, f1, sample_rate)
+                                V2_amp, V2_phase = dual_phase_demod(V2meas, f2, sample_rate)
+                                V3_amp, V3_phase = dual_phase_demod(V3meas, f3, sample_rate)
 
                                 print(f"Freq: [{f1:.5f}, {f2:.5f}, {f3:.5f}] Hz | V_amp: [{V1_amp:.2E}, {V2_amp:.2E}, {V3_amp:.2E}] | I_amp: {I_amp:.2E}")
 
                                 # # if np.max(V1meas) > 1:
                                 # #     break
 
-                                # I_real = I_amp * np.cos(np.radians(I_phase)+np.pi)
-                                # I_imag = I_amp * np.sin(np.radians(I_phase)+np.pi)
-                                # V1_real = V1_amp * np.cos(np.radians(V1_phase))
-                                # V1_imag = V1_amp * np.sin(np.radians(V1_phase))
-                                # V2_real = V2_amp * np.cos(np.radians(V2_phase))
-                                # V2_imag = V2_amp * np.sin(np.radians(V2_phase))
-                                # V3_real = V3_amp * np.cos(np.radians(V3_phase))
-                                # V3_imag = V3_amp * np.sin(np.radians(V3_phase))
+                                I_real = I_amp * np.cos(np.radians(I_phase)+np.pi)
+                                I_imag = I_amp * np.sin(np.radians(I_phase)+np.pi)
+                                V1_real = V1_amp * np.cos(np.radians(V1_phase))
+                                V1_imag = V1_amp * np.sin(np.radians(V1_phase))
+                                V2_real = V2_amp * np.cos(np.radians(V2_phase))
+                                V2_imag = V2_amp * np.sin(np.radians(V2_phase))
+                                V3_real = V3_amp * np.cos(np.radians(V3_phase))
+                                V3_imag = V3_amp * np.sin(np.radians(V3_phase))
 
-                                # V1_comp = V1_real + 1j * V1_imag
-                                # V2_comp = V2_real + 1j * V2_imag
-                                # V3_comp = V3_real + 1j * V3_imag
-                                # I_comp = I_real + 1j * I_imag
+                                V1_comp = V1_real + 1j * V1_imag
+                                V2_comp = V2_real + 1j * V2_imag
+                                V3_comp = V3_real + 1j * V3_imag
+                                I_comp = I_real + 1j * I_imag
                                 Z1 = V1_comp / I_comp
                                 Z2 = V2_comp / I_comp
                                 Z3 = V3_comp / I_comp
